@@ -1,0 +1,771 @@
+% Packages and bibliography
+\documentclass[english,a4paper,12pt,oneside]{scrbook}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amsthm, amssymb}
+\usepackage[english]{babel}
+\usepackage{marvosym}
+\usepackage{graphics}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{mathtools}
+\usepackage{calrsfs}
+\usepackage[toc,page]{appendix}
+\usepackage{xcolor}
+\usepackage{cleveref}
+\usepackage[backend=bibtex]{biblatex}
+\usepackage[nottoc,notlot,notlof]{tocbibind}
+\addbibresource{Bibliography/bibliography.bib}
+
+% Formatting options
+\setlength{\parindent}{0em}
+\parskip = 0.35cm \relax
+%\renewcommand{\baselinestretch}{1.25}
+
+% Equations and theorems style
+\counterwithin*{equation}{section}
+\counterwithin*{equation}{subsection}
+\renewcommand{\theequation}{%
+  \thesection.%
+  \ifnum\value{subsection}>0 \arabic{subsection}.\fi
+  \arabic{equation}%
+}
+\newtheoremstyle{break}
+  {\topsep}{\topsep}%
+  {\upshape}{}%
+  {\bfseries}{}%
+  {\newline}{}%
+\theoremstyle{break}
+\newtheorem{thm}[equation]{Theorem}
+\newtheorem{cor}[equation]{Corollary}
+\newtheorem{lemma}[equation]{Lemma}
+\newtheorem{defn}[equation]{Definition}
+\newtheorem{prop}[equation]{Proposition}
+\newtheorem{ass}[equation]{Assumption}
+\newtheorem{pb}[equation]{Problem}
+\newenvironment{mproof}[1][\proofname]{%
+  \begin{proof}[#1]$ $\par\nobreak\ignorespaces
+}{%
+  \end{proof}
+}
+\renewcommand*{\proofname}{Proof}
+\theoremstyle{remark}
+\newtheorem{oss}[equation]{Observation}
+\newtheorem{es}[equation]{Example}
+
+% Useful commands
+\newcommand{\mR}{\mathbb{R}}
+\newcommand{\ds}{\displaystyle}
+\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+\newcommand{\HN}[1]{\norm{#1}_{H}}
+\newcommand{\VN}[1]{\norm{#1}_{V}}
+\newcommand{\VSN}[1]{\norm{#1}_{V^*}}
+\newcommand{\tr}{\text{tr}}
+\newcommand{\cc}{\subset\subset}
+\newcommand{\emb}{\hookrightarrow}
+
+\begin{document}
+
+% Titelseite
+\pagestyle{empty}       % keine Seitennummer
+  \parbox{1.5cm}{\resizebox*{110pt}{!}{\includegraphics{Logos/blau/2015_Logo_TUM_CMYK.pdf}}}\hspace{310pt}%
+  \parbox{1.5cm}{\resizebox*{90pt}{!}{\includegraphics{Logos/08_Mathematik/MA_blau/FAK_MA_CMYK.pdf}}}%
+\vspace*{1.5cm}
+\begin{center}
+{\Huge Technical University of Munich}
+\\
+\vspace*{1.5cm}
+{\huge \textsc{Department of Mathematics}}
+\\
+\vspace*{3cm}
+{\Huge \textbf{[Thesis Title]}}
+\\
+\vspace*{3cm}
+{\Large Master's Thesis}\linebreak \\
+{\Large von}\linebreak \\
+{\Large [First Name Last Name]}\\
+\vspace*{3cm}
+{\Large 
+\begin{tabular}{ll}
+Supervisor: & Prof. Dr. [First Name Last Name]\\
+Advisor: & [First Name Last Name]\\
+Submission Date: & [Day. Month. Year]
+\end{tabular}
+}
+\end{center}
+\newpage    % Seitenwechsel
+
+% Seite 2
+\vspace*{18cm}
+\noindent
+I hereby declare that this thesis is my own work and that no other sources have been used except those clearly indicated and referenced.
+\\[2cm]
+Place, Date\\
+original, hand-written signature
+\newpage
+
+% vertikaler Leerraum
+\vspace*{2.2cm}
+\noindent %kein Einzug
+{\Huge \textbf{Acknowledgements}} \\
+\vspace*{1.6cm} \\
+% Seitennummerierung "rï¿½misch
+\pagenumbering{roman}
+% Kopfzeilen (automatisch erzeugt)
+\pagestyle{headings}
+[text of acknowledgements]
+
+% Seite 3
+\newpage
+\section*{German Abstract}
+[abstract text]
+\section*{English Abstract}
+[abstract text]
+%Seite 4
+\newpage
+\tableofcontents  
+
+\pagenumbering{arabic}  % Nummerierung der Seiten in 'arabisch' % neues Kapitel mit Namen "Introduction"
+
+\chapter{Introduction}  \setcounter{page}{1}   % setzt Seitenzaehlung auf 1
+\label{chp:intro}
+For referencing a book or an article. Said $ \ds \int_\Omega $.
+
+Moreover 
+\begin{align}
+\label{something}
+\left ( \bigcup_i B_i \right )
+\end{align}
+
+Moreover we get 
+\begin{equation}
+\label{fact}
+	1+1=2
+\end{equation}
+
+As seen in \ref{something} and \cref{fact}. Interestingly enough:
+
+\begin{thm}
+\label{thm:obvious}
+	We are happy.
+\end{thm}
+
+Here is a reference to \cref{thm:obvious} and \cref{chp:intro}
+
+\chapter{Chapter 2}
+
+\chapter{Chapter 3}
+
+\appendix
+
+\chapter{Bochner spaces}
+
+Here are some useful results about Bochner spaces.
+
+\begin{prop}[Bochner integral and bounded operators]
+\label{prop:bochner_bound}
+Let $X,Y$ be separable Banach, let $T \in L(X,T)$ be a linear bounded operator. For $f \in L^1(I,X)$ define $Tf (t):= T(f(t))$. Then $Tf \in L^1(I,Y)$ with $T\int_I f = \int_I Tf$.
+\end{prop}
+\begin{mproof}
+Let $f_n$ be simple, $f_n\rightarrow f $ a.e., with $\lim_n \int_I f_n = \int_I f$ adn $\norm{f_n}_X \leq C \norm{f}_X$ (see page 6, and corollary 2.7 at page 8 of \cite{kreuter}).
+
+\underline{Measurability}
+
+For almost all $t$, $T(f_n(t)) \rightarrow T(f(t))=Tf(t)$ in $Y$, so that $Tf$ is measurable (strongly).
+
+\underline{Integrability}
+
+By the assumptions, $\norm{Tf_n}\leq \norm{T}\norm{f_n}\leq C\norm{f}\in L^1(I)$, so that by dominated convergence (corollary 2.6 of \cite{kreuter}) $Tf$ is integrable too. Thus $\int_T Tf = \lim_n \int_I  Tf_n = \lim_n T\int_I  f_n$, because $f_n$ is simple. And now, by the choice of $f_n$, $\int_T Tf = \lim_n T\int_I  f_n = T \lim_n \int_I  f_n = T \int_I f$.
+
+\end{mproof}
+
+\begin{prop}	[Derivations and bounded operators]
+\label{lemma:bochner_Hk_map}
+As before, let $X,Y$ be separable Banach, let $T \in L(X,T)$ be a linear bounded operator.
+
+For $k\geq 0$, $f \in H^k(I,X)\implies Tf \in H^k(I,Y)$, with weak derivatives $\partial_{t^i}Tf = T\partial_{t^i}f$, $0\leq i \leq k$.
+
+The map $f \mapsto Tf$, $H^k(I,X)\rightarrow H^k(I,Y)$ is linear bounded.
+\end{prop}
+\begin{mproof}
+The case $k=0$ is proved above.
+
+We prove now that $\partial_{t^i}Tf = T\partial_{t^i}f$ for $i=1$. Note that $T\partial_t f \in L^2(I,Y)$, which qualifies as weak derivative.
+
+In fact, for $\phi \in C_c^\infty(I)$, we have $\int_I \phi T\partial_i f = \int_I T(\phi\partial_t f) = T \int_I\phi\partial_t f = -T\int_I\phi'f=-\int_I\phi'Tf$.
+
+Higher weak derivatives are treated analogously and the rest of the claims follow from the time stationarity of $T$ and by $\norm{\partial_{t^i}Tf}=\norm{T\partial_{t^i}f}\leq \norm{T}\norm{\partial_{t^i}f}$.
+
+\end{mproof}
+
+\begin{prop}[Continuous representatives]
+\label{prop:cts_repr}
+Let $X$ be separable Banach. $f \in L^1(I,X)$ has at most a continuous representative on $[0,T]$.
+\end{prop}
+\begin{mproof}
+Assume there exists two such continuous representatives, so that we get a function $\delta: [0,T] \rightarrow X$ that is zero almost everywhere and continuous. Hence, $[0,T] \ni t \mapsto \norm{\delta(t)}$ is continuous in $\mR$ and zero a.e., so that it must be zero everywhere.
+\end{mproof}
+
+\begin{prop}[Weak derivatives and Gelfand triples]
+\label{prop:sob_implies_W}
+Let $H\subseteq V$ be separable Hilbert spaces, $H$ densely embedded in $V$.
+
+Then $y \in L^2(I,V)\cap H^1(I,H) \subseteq W(I,V)$.
+\end{prop}
+\begin{mproof}
+We note that $V$ is Hilbert separable, so, reflexive Banach and separable, so that $V^*$ is separable too. Then, call $i$ the embedding $H \emb V^*$.
+
+For $\phi \in C^\infty_c(I)$ we obtain $\int_I i(y_t)\phi=\int_I i(y_t\phi)= i \left ( \int_I y_t\phi \right )$ by \cref{prop:bochner_bound}. Therefore $\int_I i(y_t)\phi=-i \left ( \int_I y\phi' \right ) =\int_I i(y)\phi'  $ , proving that $y \in W(I,V)$.
+
+\end{mproof}
+
+We now check that a vector valued test function has weak derivatives of all orders.
+
+\begin{prop}[Weak derivatives of test functions]
+\label{prop:weak_class}
+Let $\phi \in C^\infty_c(I,X)$, for $X$ separable Banach. It means that the limit the difference quotients $\phi^{(k)}(t)$ exists for all $k$, for all points of $I$, and $t\mapsto \phi^{(k)}$ is continuous.
+
+Then these classical derivatives coincide a.e. with the weak derivatives of $u$.
+
+\end{prop}
+\begin{mproof}
+
+We rely on proposition 3.8 of \cite{kreuter} at page 26.
+
+\underline{Absolute continuity}
+
+Consider $\epsilon >0$. Divide $[0,T]$ into a partition $t_i=i/n$. By theorem 6 at page 146 of \cite{mvt}, we get that $\ds \norm{\phi(t_i)-\phi(t_{i-1})}_X \leq (t_i-t_{i-1})\norm{\phi(\xi_i)}_X\leq \norm{\phi'}_{\infty}/n$, and by choosing $n$ small enough, we conclude that $\phi$ is (locally) absolutely continuous.
+
+\underline{Weak derivative}
+
+Therefore, $\phi$ is locally $AC$, differentialble everywhere and $\phi'$ is bounded, so that $\phi \in H^1(I,X)$ and weak and classical derivatives coincide. 
+
+\end{mproof}
+
+\chapter{Parabolic equations}
+
+\begin{ass}[Basic assumption for parabolic problems]
+\label{ass:basic_par}
+
+Let $V\subseteq H$ be real separable Hilbert spaces, $V$ dense in $H$. Then $H\hookrightarrow V^*$ is also dense, as stated in \cite{trol} at page 147. This embedding is $H \ni f \mapsto (f, \cdot )_H$. We thus obtain a Gelfand triple, and we have $W(I,V)\subseteq C(I,H)$.
+
+Let $A:V\rightarrow V^* $ be linear bounded, $u \in W(I;V)$, $f \in L^2(I,V^*)$ and $u_0 \in H$.
+
+We also assume that $\langle Av, v \rangle_{V^*,V}+ \lambda \HN{v}^2\geq \alpha \VN{v}^2$ for $\lambda \geq 0, \alpha >0$.
+\end{ass}
+
+We are interested in the following problem:
+
+\begin{pb}[Abstract parabolic equation]
+\label{eqn:general_parabolic}
+\begin{align}
+	u_t+Au=f \text{ in }V^* \text{ and for a.e. } t \in (0,T)\\
+	u(0)=u_0
+\end{align}
+\end{pb}
+
+\begin{thm}[Basic well posedness of \cref{eqn:general_parabolic}]
+\label{thm:well_pos_parabolic}
+Under \cref{ass:basic_par}, \cref{eqn:general_parabolic} has a unique solution $u$. Moreover $u$ satisfies the energy estimate:
+\begin{equation}
+	\label{eqn:en_est}
+	\norm{u}_{W(I,V)} + \norm{u}_{C([0,T],H)}\leq c(\lambda, \alpha, \VSN{A}, T)(\HN{u_0}+\norm{f}_{L^2(I,V^*)})
+\end{equation} 
+\end{thm}
+\begin{mproof}
+See \cite{gilardi} at page 19, theorem 26.
+\end{mproof}
+
+We can also obtain additional regularity. Here are further assumptions to make this possible.
+
+\begin{ass}[Assumptions for additional regularity]
+\label{ass:reg_par}
+We assume $u_0 \in V$, $f = f_1+f_2 \in L^2(I,H)+H^1(I,V^*)$. We also need $A$ to be symmetric (i.e. $\langle Au,v \rangle_{V^*,V} = \langle Av,u \rangle_{V^*,V}$.
+\end{ass}
+
+\begin{thm}[Regularity of time derivative]
+\label{thm:reg_time}
+Suppose \cref{ass:basic_par} and \cref{ass:reg_par}. Then $u_t \in L^2(I, H)$ with the estimate:
+\begin{align}
+	\norm{u}_{W(I,V)} + \norm{u}_{C(I,H)} + \norm{u_t}_{L^2(I,H)} \leq\\ c(\lambda, \alpha, \VSN{A}, T)(\VN{u_0}+\norm{f_1}_{L^2(I,H)} + \norm{f_2}_{H^1(I,V^*)})
+\end{align}
+\end{thm}
+\begin{mproof}
+We refer to page 26 of \cite{gilardi}, theorem 28, and only prove the necessary modifications.
+
+\underline{Product rule for $A$}
+
+We have 
+
+\begin{align*}
+\int_0^t \langle Au_n,u_n' \rangle_{V^*,V} = \sum_{k,l\leq n} \langle Aw^n_k,w^n_l \rangle_{V^*,V} \int_0^t g_k^n g_l^{n '} = \\
+\sum_{k,l\leq n} \langle Aw^n_k,w^n_l \rangle_{V^*,V} \left (-\int_0^t g_k^{n'} g_l^n + g_k^n(t) g_l^n(t)-g_k^n(0) g_l^n(0) \right )
+\end{align*}
+
+By linearity at first and then symmetry we get:
+
+\begin{align*}
+	= \langle Au_n,u_n \rangle_{V^*,V}(t)-\langle Au_n,u_n' \rangle_{V^*,V}(0)-\int_0^t\langle Au_n',u_n \rangle_{V^*,V}=\\
+	= \langle Au_n,u_n \rangle_{V^*,V}(t)-\langle Au_n,u_n' \rangle_{V^*,V}(0)-\int_0^t\langle Au_n,u_n' \rangle_{V^*,V}
+\end{align*}
+
+so that:
+
+\begin{align*}
+	\int_0^t \langle Au_n,u_n' \rangle_{V^*,V} = \frac{1}{2}\left( \langle Au_n,u_n \rangle_{V^*,V}(t)-\langle Au_n,u_n' \rangle_{V^*,V}(0) \right )
+\end{align*}
+
+\underline{Estimate for right hand side}
+
+We have:
+
+\begin{align*}
+	\int_0^t \langle f_2,u_n' \rangle_{V^*,V} = \sum_{k\leq n}\int_0^tg_k^{n'}\langle f_2,w_k^n \rangle_{V^*,V}
+\end{align*}
+
+By the smoothness of $f_2$ we have that $t \mapsto \langle f_2(t),w_k^n \rangle_{V^*,V}$ is $H^1(0,T)$, in particular $AC[0,t]$, so that we can integrate by parts:
+
+\begin{align*}
+	 = - \sum_{k\leq n}\int_0^tg_k^{n}\langle f_2',w_k^n \rangle_{V^*,V} + \sum_{k\leq n} g_k^{n}(t)\langle f_2(t),w_k^n \rangle_{V^*,V} - \sum_{k\leq n} g_k^{n}(0)\langle f_2(0),w_k^n \rangle_{V^*,V} = \\
+	 -\int_0^t \langle f_2',u_n \rangle_{V^*,V} + \langle f_2,u_n \rangle_{V^*,V}(t)-\langle f_2,u_n \rangle_{V^*,V}(0)=
+\end{align*}
+
+Here we have used \cref{lemma:bochner_Hk_map} to take the derivative inside the bracket.
+
+
+Going to the absolute values:
+
+\begin{align*}
+	\left | \int_0^t \langle f_2,u_n' \rangle_{V^*,V}\right | \leq 
+	\int_0^T |\langle f_2',u_n \rangle_{V^*,V}|+ \VSN{f_2(t)}\VN{u_n(t)}+\VSN{f_2(0)}\VN{u_n(0)} \leq \\
+	\frac{1}{2}\norm{f_2'}_{L^2(I,V^*)}^2 + \frac{1}{2}\norm{u_n}_{L^2(I,V)}^2 + \frac{\alpha}{4}\VN{u_n(t)}^2 +\\
+	+ \frac{4}{\alpha}\norm{f_2}_{L^\infty(I,V^*)}^2+ \frac{1}{2}\norm{f_2}_{L^\infty(I,V^*)}^2+\frac{1}{2}\VN{u_{n0}}^2
+\end{align*}
+
+Now, $u_n$ converges weakly in $L^2(I,V)$ by estimate (59) of \cite{gilardi} and thus $\frac{1}{2}\norm{u_n}_{L^2(I,V)}$ is bounded. The term $\frac{\alpha}{4}\VN{u_n(t)}$ can be pulled to the left hand side, $u_{0n}$ is $V$ convergent hence bounded. Therefore as in \cite{gilardi} we are able to conclude that $u_n'$ is bounded in $L^2(I,H)$ and that $u_t$ is bounded by $c(\alpha)(\norm{f_2}_{L^\infty(I,V^*)}+\norm{f_2}_{L^2(I,V^*)}+\VN{u_0}+\norm{u}_{L^2(I,V)})$.
+
+Note that, by \cite{evans}, theorem 2 of page 286, we can estimate $\norm{f_2}_{L^\infty(I,V^*)}$ by $c(T)\norm{f_2}_{H^1(I,V^*)}$, so that the claim for the time derivative $u_t$ is proven.
+
+\end{mproof}
+
+For the case where $H=L^2$, $H^1\supseteq V\supseteq H^1_0$,  $f_2|_{H^1_0}=0$ we have even more regularity available.
+
+\begin{thm}[Additional regularity]
+\label{thm:par_reg}
+Suppose \cref{ass:basic_par} and \cref{ass:reg_par}. 
+
+Let additionally $H=L^2$, $H^1\supseteq V\supseteq H^1_0$,  $f_2|_{H^1_0}=0$. Then $Au|_{H^1_0}$ extends to $\overline{Au_{H^1_0}} \in L^2(I,H)$ with:
+\begin{align}
+	\norm{u}_{W(I,V)} + \norm{u}_{C([0,T],H)} + \norm{u_t}_{L^2(I,H)} +\norm{\overline{Au|_{H^1_0}}}_{L^2(I,H)}\leq\\ c(\lambda, \alpha, \VSN{A}, T)(\VN{u_0}+\norm{f_1}_{L^2(I,H)} + \norm{f_2}_{H^1(I,V^*)})
+\end{align}
+
+Moreover $u_t+\overline{Au_{H^1_0}}=f_1$ in $L^2(0,T,L^2)\cong L^2(Q)$ and $\overline{Au|_{H^1_0}}=Au$ on $H^1_0$.
+
+\end{thm}
+\begin{mproof}
+
+For $v \in H^1_0$ we get $ \langle Au,v \rangle_{V^*,V} =  \langle f_1-u_t,v \rangle_{V^*,V} = ( f_1-u_t,v )_H$, for almost all $t \in (0,T)$. From here we conclude that $Au(t)$ extends for a.a. $t$ to an element of $H$ with $(\overline{Au}-f_1+u_t,v)_{L^2}=0$ for all $v \in H^1_0$, almost all $t$. By density, $\overline{Au}-f_1+u_t=0$ in $H$ for almost all $t$, so that $\overline{Au}=f_1-u_t$ in $L^2(0,T,L^2)\cong L^2(Q)$.
+
+This isometric isomorphism is stated in \cite{trol}, page 144. 
+
+\end{mproof}
+
+For our applications we also need to track the constants more precisely, which is accomplished in the next proposition.
+
+\begin{prop}[Tracking the costants]
+\label{thm:const_track}
+With \cref{ass:basic_par} there holds:
+\begin{align}
+\norm{u}^2_{C([0;T],H)}+\alpha\norm{u}_{L^2(I,V)}^2\leq \exp(2\lambda T)(\HN{u_0}^2+\alpha^{-1}\norm{f}^2_{L^2(I,V^*)})\\
+\norm{u'}_{L^2(I,V^*)}\leq \norm{A}_{L(V,V^*)}\alpha^{-1/2}\sqrt{\exp(2\lambda T)}\HN{u_0} +\\\left (\norm{A}_{L(V,V^*)}\alpha^{-1}\sqrt{\exp(2\lambda T)}+1\right ) \norm{f}_{L^2(I,V^*)}
+\end{align}
+
+With additionally \cref{ass:reg_par} we obtain:
+
+\begin{align}
+C\norm{u'}^2_{L^2(I,H)}\leq 
+(1+(1+C_0)\alpha^{-1})\norm{f_2}_{H^1(I,V^*)}^2+\\
+(1+\norm{A}_{L(V,V^*)})\VN{u_{0}}^2+C_0\HN{u_0}^2+\\
+\norm{f_1}_{L^2(I,H)}^2+C_0\alpha^{-1}\norm{f_1}^2_{L^2(I,V^*)}
+\end{align}
+
+with $C>0$ a number independent of the problem.
+
+Here $C_0 = \ds 2^{-1}\max(1,\lambda)\max(1,\alpha^{-1})\exp(2\lambda T)$.
+
+\end{prop}
+\begin{mproof}
+
+\underline{No regularity}
+
+From page 21 of \cite{gilardi} we obtain that $\norm{u}^2_{C([0;T],H)}+\alpha\norm{u}_{L^2(I,V)}^2\leq \exp(2\lambda T)(\HN{u_0}^2+\alpha^{-1}\norm{f}^2_{L^2(I,V^*)})$.
+
+In particular, $\sqrt{\alpha}\norm{u}_{L^2(I,V)}\leq 	\sqrt{\exp(2\lambda T)}(\HN{u_0}+\alpha^{-1/2}\norm{f}_{L^2(I,V^*)})$, or $\norm{u}_{L^2(I,V)}\leq 	\alpha^{-1/2}\sqrt{\exp(2\lambda T)}(\HN{u_0}+\alpha^{-1/2}\norm{f}_{L^2(I,V^*)})$.
+
+Moreover $\norm{u'}_{L^2(I,V^*)}\leq \norm{Au}_{L^2(I,V^*)}+\norm{f}_{L^2(I,V^*)}\leq \norm{A}\norm{u}_{L^2(I,V)}+\norm{f}_{L^2(I,V^*)}$.
+
+All in all, we obtain:
+
+$$\norm{u}^2_{C([0;T],H)}+\alpha\norm{u}_{L^2(I,V)}^2\leq \exp(2\lambda T)(\HN{u_0}^2+\alpha^{-1}\norm{f}^2_{L^2(I,V^*)})$$
+
+and:
+
+$$\norm{u'}_{L^2(I,V^*)}\leq \norm{A}_{L(V,V^*)}	\alpha^{-1/2}\sqrt{\exp(2\lambda T)}(\HN{u_0}+\alpha^{-1/2}\norm{f}_{L^2(I,V^*)})+\norm{f}_{L^2(I,V^*)}$$
+
+\underline{More regularity}
+
+We tie back to page 25 of \cite{gilardi}. In particular:
+
+\begin{align*}
+\int_0^t\HN{u_n'}^2+\int_0^t\langle A u_n, u_n'\rangle_{V^*,V}=\int_0^t(f_1,u_n')_H+\int_0^t \langle f_2, u_n'\rangle_{V^*,V}
+\end{align*}
+
+%Now, taking $u_{n0}$ to be the orthogonal projection of $u_0$ onto $V_n$ with the scalar product of $V$, we can assume $\VN{u_{n0}}\leq\VN{u_0}$.
+
+Then:
+\begin{align*}
+\int_0^t\langle A u_n, u_n'\rangle_{V^*,V}\geq \frac{\alpha}{2}\VN{u_n(t)}^2-\frac{\lambda}{2}\HN{u_n(t)}^2-\frac{\norm{A}}{2}\VN{u_{n0}}
+\end{align*}
+
+whereas, as in the proof of \cref{thm:reg_time}:
+\begin{align*}
+	\left | \int_0^t \langle f_2,u_n' \rangle_{V^*,V}\right | \leq
+	\frac{1}{2}\norm{f_2'}_{L^2(I,V^*)}^2 + \frac{1}{2}\norm{u_n}_{L^2(I,V)}^2 + \frac{\alpha}{4}\VN{u_n(t)}^2 +\\
+	+ \frac{4}{\alpha}\norm{f_2}_{L^\infty(I,V^*)}^2+ \frac{1}{2}\norm{f_2}_{L^\infty(I,V^*)}^2+\frac{1}{2}\VN{u_{n0}}^2
+\end{align*}
+
+Also:
+\begin{align*}
+\int_0^t(f_1,u_n')_H\leq \frac{1}{2}\norm{f_1}_{L^2(I,H)}^2+\frac{1}{2}\int_0^t\HN{u_n'}^2
+\end{align*}
+
+Putting all together:
+
+\begin{align*}
+\int_0^t\HN{u_n'}^2+\frac{\alpha}{2}\VN{u_n(t)}^2-\frac{\lambda}{2}\HN{u_n(t)}^2-\frac{\norm{A}}{2}\VN{u_{n0}} \\
+\frac{1}{2}\norm{f_2'}_{L^2(I,V^*)}^2 + \frac{1}{2}\norm{u_n}_{L^2(I,V)}^2 + \frac{\alpha}{4}\VN{u_n(t)}^2 +\\
++ \frac{4}{\alpha}\norm{f_2}_{L^\infty(I,V^*)}^2+ \frac{1}{2}\norm{f_2}_{L^\infty(I,V^*)}^2+\frac{1}{2}\VN{u_{n0}}^2+\\
++ \frac{1}{2}\norm{f_1}_{L^2(I,H)}^2+\frac{1}{2}\int_0^t\HN{u_n'}^2
+\end{align*}
+
+which brings us to:
+
+\begin{align*}
+\frac{1}{2}\int_0^t\HN{u_n'}^2+\frac{\alpha}{4}\VN{u_n(t)}^2-\frac{\lambda}{2}\HN{u_n(t)}^2\leq \\
+\frac{1}{2}\norm{f_2'}_{L^2(I,V^*)}^2 + \frac{1}{2}\norm{u_n}_{L^2(I,V)}^2 +\\
++ \frac{8+\alpha}{2\alpha}\norm{f_2}_{L^\infty(I,V^*)}^2+\frac{1+\norm{A}}{2}\VN{u_{n0}}^2+\\
++\frac{1}{2}\norm{f_1}_{L^2(I,H)}^2
+\end{align*}
+
+and thus, because norms are lower semicontinuous and because we have weak convergence of the time derivative, and $V$-strong convergence of the initial data:
+
+\begin{align*}
+\frac{1}{2}\int_0^T\HN{u'}^2\leq 
+\frac{1}{2}\norm{f_2'}_{L^2(I,V^*)}^2 
++ \frac{8+\alpha}{2\alpha}\norm{f_2}_{L^\infty(I,V^*)}^2+\frac{1+\norm{A}}{2}\VN{u_{0}}^2+
+\frac{1}{2}\norm{f_1}_{L^2(I,H)}^2+\\
+\text{limsup}_n \left ( \frac{\lambda}{2}\norm{u_n}_{C([0,T],H)}^2 + \frac{1}{2}\norm{u_n}_{L^2(I,V)}^2 \right )
+\end{align*}
+
+Using a purely numeric constant $C$  without dependences on the problem we can write:
+
+\begin{align*}
+\int_0^T\HN{u'}^2\leq 
+\norm{f_2'}_{L^2(I,V^*)}^2+C(1+\alpha^{-1})\norm{f_2}_{L^\infty(I,V^*)}^2+C(1+\norm{A})\VN{u_{0}}^2+\norm{f_1}_{L^2(I,H)}^2+\\
+C\text{limsup}_n \left ( \frac{\lambda}{2}\norm{u_n}_{C([0,T],H)}^2 + \frac{1}{2}\norm{u_n}_{L^2(I,V)}^2 \right )
+\end{align*}
+
+
+For the last term, employing the exact argument as in the first part of the proof:
+
+\begin{align*}
+\text{limsup}_n \left ( \frac{\lambda}{2}\norm{u_n}_{C([0,T],H)}^2 + \frac{1}{2}\norm{u_n}_{L^2(I,V)}^2 \right )\leq\\
+2^{-1}\max(1,\lambda)\max(1,\alpha^{-1}) \text{limsup}_n \left ( \norm{u_n}_{C([0,T],H)}^2 + {\alpha}\norm{u_n}_{L^2(I,V)}^2 \right )\leq\\
+2^{-1}\max(1,\lambda)\max(1,\alpha^{-1})\exp(2\lambda T)(\HN{u_0}^2+\alpha^{-1}\norm{f_1+f_2}^2_{L^2(I,V^*)}) \leq \\
+2^{-1}\max(1,\lambda)\max(1,\alpha^{-1})\exp(2\lambda T)(\HN{u_0}^2+2\alpha^{-1}\norm{f_1}^2_{L^2(I,V^*)}+2\alpha^{-1}\norm{f_2}^2_{L^2(I,V^*)}) \leq \\
+C C_0(\HN{u_0}^2+\alpha^{-1}\norm{f_1}^2_{L^2(I,V^*)}+\alpha^{-1}\norm{f_2}^2_{L^2(I,V^*)})
+\end{align*}
+
+
+where $C_0 = \ds 2^{-1}\max(1,\lambda)\max(1,\alpha^{-1})\exp(2\lambda T)$ and $C$ is a purely numeric constant without dependences on the problem.
+
+Therefore:
+
+\begin{align*}
+C\int_0^T\HN{u'}^2\leq 
+\norm{f_2'}_{L^2(I,V^*)}^2+(1+\alpha^{-1})\norm{f_2}_{L^\infty(I,V^*)}^2+(1+\norm{A})\VN{u_{0}}^2+\norm{f_1}_{L^2(I,H)}^2+\\
+C_0(\HN{u_0}^2+\alpha^{-1}\norm{f_1}^2_{L^2(I,V^*)}+\alpha^{-1}\norm{f_2}^2_{L^2(I,V^*)})
+\end{align*}
+
+
+The embedding $H^1(I,V^*)\emb C([0,T],V^*)$ has norm that only depends on $T$, which follows from the equality $f_2(t)=f_2(s)+\int_s^tf_2'$, for $0\leq s \leq t \leq T$, a bound being $1+T$.
+
+Thus:
+
+\begin{align*}
+C\int_0^T\HN{u'}^2\leq 
+(1+(1+C_0)\alpha^{-1})\norm{f_2}_{H^1(I,V^*)}^2+\\
+(1+\norm{A})\VN{u_{0}}^2+C_0\HN{u_0}^2+\\
+\norm{f_1}_{L^2(I,H)}^2+C_0\alpha^{-1}\norm{f_1}^2_{L^2(I,V^*)}
+\end{align*}
+
+
+\end{mproof}
+
+\section{Application to inhomogeneous parabolic problems}
+
+\subsection{Inhomogeneous Dirichlet problem}
+
+We make the following assumption.
+
+\begin{ass}[Assumptions for \cref{pb:diri}]
+\label{ass:diri}
+We assume $\Omega \cc D $ to be a bounded Lipschitz domain, so that $U:=D\setminus \Omega$ is bounded Lipschitz too and  the trace operator is bounded surjective onto $H^{1/2}(\partial U)$, with a right inverse $E$ (see theorem 3.37 at page 102 of \cite{mclean}). For such a choice we also have $H^1_0=H^1\cap \text{ker }\tr$, see \cite{leoni}, page 595, theorem 18.7.
+
+Moreover, we select $f \in H^1(I, H^{1/2}(\Gamma_f))$, $f(0)=0$.
+\end{ass}
+
+Note that, given a bounded extension operator $E: H^{1/2}(\partial U) \rightarrow H^1(U)$, we obtain by \cref{lemma:bochner_Hk_map} that $Ef \in H^2(I, H^1(U))$. We have defined $\tr u (t):= tr(u(t))$ and analogously $Eu(t):=E(u(t))$.
+
+Call $H=L^2(U)$, $V=\{ v \in H^1(U), \tr u = 0 \text{ on } \Gamma_m\}=:H^1_c$. $V$ is a closed subspace of $H^1$, which is Hilbert separable, hence also Hilbert separable. We norm it with the full $H^1$ norm. Because $H^1_0(U)$ is dense in $H$, so is $V$ and we obtain a Gelfand triple. 
+
+We define $A:= H^1 \rightarrow H^{1*}$ by $(Au)v:=\int_u\nabla u \nabla v$. This operator can be the restricted to $V\rightarrow H^{-1}$ and $V\rightarrow V^*$.
+
+The problem under consideration is the following. For $U = D\setminus \Omega$ we have:
+
+\begin{pb}[Inhomogeneous heat equation, Dirichlet conditions]
+\label{pb:diri}
+\begin{align}
+u_t - \Delta u = 0 \text{ in } (0,T)\times U\\
+u(\Sigma_f)=f\\
+u(\Sigma_m)=0\\
+u(0)=0
+\end{align}
+
+By this we mean:
+
+\begin{align}
+u \in W(I,H^1_c) \\
+u_t|_{H^{-1}} + A u = 0 \text{ in }H^{-1} \text{ and for a.e. } t \in (0,T) \\
+\tr u = f \text{ on } \Sigma_f\\
+u(0)=0
+\end{align}
+
+\end{pb}
+
+Note that $u_t \in L^2(I, V^*)$, so $u_t \in V^*$ for a.a. $t$ and so, we can say that $u_t \in H^{-1}$ for a.a. $t$.
+
+\begin{thm}[Well posedness and regularity for \cref{pb:diri}]
+Given \cref{ass:diri}, the solution $u$ to \cref{pb:diri} is unique with $u_t \in L^2(I,H)$. The uniqueness holds in more generally in $L^2(I,V)\cap H^1(I, H^{-1})$.
+
+The problem is equivalent to:
+
+\begin{pb}[Equivalent formulation with extension]
+\label{pb:diri_ext}
+\begin{align}
+u_0 \in W(I,H^1_0) \\
+u_0' + A u_0 = -((\bar{u}',\cdot)_H+A \bar{u}) \text{ in }H^{-1} \text{ and for a.e. } t \in (0,T) \\
+u_0(0)=0
+\end{align}
+\end{pb}
+
+with $\bar{u}$ any given $\bar{u}\in H^1(I,H^1_c(U))$ such that $\tr \bar{u} =f$ on $\Sigma_f$, and with $\bar{u}(0)=0$. This means that $u$ solves \cref{pb:diri} $\implies$ $u-\bar{u}$ solves \cref{pb:diri_ext}, and if $u_0(\bar{u})$ solves  \cref{pb:diri_ext}, then $\bar{u}+u_0(\bar{u})$ solves \cref{pb:diri}.
+
+Furthermore: 
+
+\begin{align}
+\norm{u}^2_{C([0;T],H)}+\norm{u}_{L^2(I,H)}^2+ \norm{\nabla u}_{L^2(I,H)}^2 + \norm{u'}^2_{L^2(I,H)}\leq C(T)\norm{\bar{u}}_{H^1(I,V)}^2
+\end{align}
+
+with $C>1$, only dependent on $T$, smoothly, exploding for large $T$.
+
+
+There holds the estimate:
+\end{thm}
+\begin{mproof}
+
+\underline{Extension of the boundary data and existence}
+
+Let $\bar{u}\in H^1(I,H^1_c(U))$ be such that $\tr \bar{u} =f$ on $\Sigma_f$, and with $\bar{u}(0)=0$. We can choose for instance $E\tilde{f}$, where $\tilde{f}=0$ on $\Sigma_m$, $\tilde{f}=f$ on $\Sigma_f$. $\tilde{f} \in H^1(I,H^{1/2}(\partial U))$, because $\Gamma_f$ and $\Gamma_m$ have positive distance (see the definition of the norm in \cite{grisvard}, page 20).  That $\tr E \tilde{f}=\tilde{f}$ is easily seen for a.a. $t$, and by \cref{lemma:bochner_Hk_map}, we get $\bar{u} \in H^1(I,H^1_c(U))$. The last result could be applied since $H^{1/2}(\partial U)$ is the continuous image of a separable space, hence it is separable, and it is also Banach (again by \cite{grisvard}, page 20).
+
+
+The initial value of $\bar{u}$ is null. To see this, we know that the unique time-continuous representative $U\tilde{f}$ of $\tilde{f}$ (\cite{evans}, page 286, theorem 2, and \cref{prop:cts_repr}) satisfies $\lim_{t\rightarrow 0^+}U\tilde{f}(t)=0$, the limit being in $H^{1/2}(\partial U)$. We also know that $\bar{u}$ has a unique continuous representative $U\bar{u}$ by similar arguments, and $U\bar{u}(t) \rightarrow U\bar{u}(0)$ for $t\rightarrow 0^+$. Now, $ [U\tilde{f}] = \tilde{f} = \tr \bar{u} =[ \tr U\bar{u} ]$, where the square brackets are equivalence classes in time. Thus $U\tilde{f} =  \tr U\bar{u}$ for all $t$, and thus $\tr U\bar{u}\rightarrow 0$ for small times. Applying $E$ we get $U\bar{u}\rightarrow 0$ which is what we wanted to show.
+
+Now, consider the problem: 
+
+\begin{align}
+u_0 \in W(I,H^1_0) \\
+u_0' + A u_0 = -(f_1+f_2) \text{ in }H^{-1} \text{ and for a.e. } t \in (0,T) \\
+u_0(0)=0
+\end{align}
+
+Here, $\bar{u}$ is $H^1(I,H^1_c(U))$, so $f_1:=\bar{u}' \in L^2(I,H)$. Moreover, $A \in L(V, H^{-1})$, so, by \cref{lemma:bochner_Hk_map}, $f_2:=A\bar{u} \in H^1(I, H^{-1})$.
+
+By \cref{thm:par_reg} we get a solution of the above problem with $u_0' \in L^2(I, H)$. 
+
+And now, let $u:=\bar{u}+u_0$. We have $u \in L^2(I, V)$ and $u_t=\bar{u}_t + u_0' \in L^2(0,T,H)$. Thus, $u \in W(I,V)$ by \cref{prop:sob_implies_W} and $u(0)=0$, together with $\tr u = f$ on $\Sigma_f$. 
+
+We conclude that $u$ solves \cref{pb:diri}. In fact, for $v \in H^1_0$,  $(\bar{u}'+u_0',v)_H +(\nabla(\bar{u}+u_0),\nabla v)_H=(u_0',v)_H +(\nabla u_0,\nabla v)_H +(\bar{u}',v)_H+(\nabla \bar{u}, \nabla v)_H=\langle u_0'+A u_0,v\rangle_{H^{-1},H^1_0}+(f_1,v)_H+\langle f_2,v\rangle_{H^{-1},H^1_0}=0$.
+
+\underline{Uniqueness}
+
+For two solutions $u_1, u_2$ of $\ref{pb:diri}$ we can form $d:=u_1-u_2 \in L^2(I,H^1_0)\cap H^1(I,V^*)\subseteq L^2(I,H^1_0)\cap H^1(I,H^{-1})=W(I,H^1_0)$. This is made precise by observing that the restriction $R$ of functionals $V^*\rightarrow H^{-1}$ onto $H^{1}_0$, composed with the Gelfand triple embedding $V\emb_{i_V} V^*$, is exactly the Gelfand triple embedding $H^1_0\emb_{i_{H^1_0}} H^{-1}$. We can then write $\int_I R(i_V(d)')\phi=R\int_I i_V(d)'\phi = -R\int_I i_V(d)\phi'=\int_I i_{H^1_0}(d)\phi'$, so that $d$ is really $W(I,H^1_0)$.
+
+By uniqueness stated in \cref{thm:well_pos_parabolic} we obtain $d=0$ in $L^2(I,H)$, so that the solution is unique and doesn't depend on the choice of the extension of the Dirichlet datum.
+
+\underline{Reformulation}
+
+Therefore $u=\bar{u}+u_0$ above is the unique solution of \cref{pb:diri}. So, given any $\bar{u}\in H^1(I,H^1_c(U))$ such that $\tr \bar{u} =f$ on $\Sigma_f$, and with $\bar{u}(0)=0$, we can construct $u_0$ as above and get $u=\bar{u}+u_0$ solving \cref{pb:diri}.
+
+Viceversa, let $u$ solve \cref{pb:diri}. Call $u_0 = u- \bar{u}$. Then:
+
+\begin{itemize}
+\item $u_0 \in L^2(I,H^1_0)$
+\item $u_0' \in L^2(I,V^*)+L^2(I,H)\subseteq L^2(I,H^{-1})$
+\item $u_0(0)=0$ in $H$
+\item $u_0$ solves $u_0' + A u_0 = -((\bar{u}',\cdot)_H+\langle A \bar{u},\cdot\rangle_{H^{-1},H^1_0})$
+\end{itemize}
+
+\underline{Stability}
+
+Let $\bar{u}\in H^1(I,H^1_c(U))$ such that $\tr \bar{u} =f$ on $\Sigma_f$, and with $\bar{u}(0)=0$. Consider $u_0$. Then, by \ref{thm:const_track}:
+
+
+\begin{align*}
+\norm{u_0}^2_{C([0;T],H)}+\alpha\norm{u_0}_{L^2(I,H^1_0)}^2\leq \exp(2\lambda T)\alpha^{-1}\norm{(\bar{u}',\cdot)_H+ A \bar{u}}^2_{L^2(I,H^{-1})}
+\end{align*}
+
+\begin{align*}
+C\norm{u_0'}^2_{L^2(I,H)}\leq 
+(1+(1+C_0)\alpha^{-1})\norm{A \bar{u}}^2_{H^1(I, H^{-1})}+\\
+\norm{(\bar{u}',\cdot)_H}_{L^2(I,H)}^2+C_0\alpha^{-1}\norm{(\bar{u}',\cdot)_H}^2_{L^2(I,H^{-1})}
+\end{align*}
+
+$C_0 = \ds 2^{-1}\max(1,\lambda)\max(1,\alpha^{-1})\exp(2\lambda T)$.
+
+We norm $H^1_0$ with the full $H^1$ norm too. Then:
+\begin{align*}
+\norm{(\bar{u}',\cdot)_H+ A \bar{u}}_{L^2(I,H^{-1})}\leq \\
+\sup_{\norm{v}_{L^2(I,H^{1}_0)}=1}\norm{\bar{u}'}_{L^2(I,H)}\norm{v}_{L^2(I,H)}+\norm{\nabla \bar{u}}_{L^2(I,H)}\norm{\nabla v}_{L^2(I,H)}\leq \\C(\norm{\bar{u}'}_{L^2(I,H)}+\norm{\nabla \bar{u}}_{L^2(I,H)})
+\end{align*}
+
+By \cref{lemma:bochner_Hk_map}, $\norm{A \bar{u}}_{H^1(I, H^{-1})}\leq \norm{A}_{L(V,H^{-1})}\norm{\bar{u}}_{H^1(I,V)}$ (we could apply it since $H^{-1}$ is separable, as a dual of a reflexive Banach space).
+
+Finally, $\norm{(\bar{u}',\cdot)_H}^2_{L^2(I,H^{-1})}\leq \norm{\bar{u}'}_{L^2(I,H)}$.
+
+We can then say:
+
+\begin{align*}
+\norm{u_0}^2_{C([0;T],H)}+C\alpha\norm{u_0}_{L^2(I,H^1_0)}^2\leq \exp(2\lambda T)\alpha^{-1}\norm{\bar{u}}^2_{H^1(I,V)}\\
+C\norm{u_0'}^2_{L^2(I,H)}\leq 
+((1+(1+C_0)\alpha^{-1})\norm{A}_{L(V,H^{-1})}^2 +1 +C_0\alpha^{-1})\norm{\bar{u}}^2_{H^1(I,V)}
+\end{align*}
+
+Now, $\langle Av, v\rangle_{H^{-1}, H^1_0} + 1\cdot  \HN{v}^2 = 1\cdot \norm{v}_{H^1_0}^2$, so that $\alpha=\lambda=1$. Moreover, $\langle Au, v\rangle_{H^{-1}, H^1_0}\leq \VN{u}\norm{v}_{H^1_0}$, i.e. $\norm{A}_{L(V,H^{-1})}\leq 1$.
+
+Therefore $\norm{u_0}^2_{C([0;T],H)}+\norm{u_0}_{L^2(I,H^1_0)}^2 + \norm{u_0'}^2_{L^2(I,H)}\leq C(T)\norm{\bar{u}}_{H^1(I,V)}^2$ with $C>1$, only dependent on $T$, smoothly, exploding for large $T$.
+
+Now, let's analyse the norms of $\bar{u}$. Because $\bar{u}\in H^1(I,V)$, then, $\bar{u} \in C([0,T],V)\emb C([0,T],H)$, where the embedding is non-expansive by the choice of the norm of $V$. Therefore $\bar{u}_{C([0;T],H)}\leq \bar{u}_{C([0;T],V)}\leq (1+T)\bar{u}_{H^1(I,V)}$. We can therefore conclude that $\norm{u}^2_{C([0;T],H)}+\norm{u}_{L^2(I,H^1_0)}^2 + \norm{u'}^2_{L^2(I,H)}\leq C(T)\norm{\bar{u}}_{H^1(I,V)}^2$ with $C>1$, only dependent on $T$, smoothly, exploding for large $T$.
+
+
+
+\end{mproof}
+
+\subsection{Inhomogeneous Neumann-Dirichlet problem}
+
+We make the following assumption.
+
+\begin{ass}[Assumptions for \cref{pb:diri}]
+\label{ass:neu}
+We keep \cref{ass:diri} (apart from the Dirichlet datum). We consired $g \in H^1(I, L^2(\Gamma_f))$, $g(0)=0$.
+\end{ass}
+
+Again, call $H=L^2(U)$, $V=\{ v \in H^1(U), \tr u = 0 \text{ on } \Gamma_m\}=:H^1_c$. $H,V$ induce a Gelfand triple as seen before. 
+
+
+The problem under consideration is:
+
+\begin{pb}[Inhomogeneous heat equation, Neumann conditions]
+\label{pb:neu}
+\begin{align}
+u_t - \Delta u = 0 \text{ in } (0,T)\times U\\
+\partial_\nu u(\Sigma_f)=g\\
+u(\Sigma_m)=0\\
+u(0)=0
+\end{align}
+
+By this we mean:
+
+\begin{align}
+u \in W(I,H^1_c) \\
+u_t + A u = G \text{ in } V^* \text{ and for a.e. } t \in (0,T) \\
+u(0)=0
+\end{align}
+
+where $\langle G(t), v \rangle_{V^*,V}:=\int_{\Gamma_f} g(t)\tr v d\sigma$, $\sigma$ the $1$-codimensional Hausdorff measure, and $A$ was introduced before in $L(V,H^{-1})$.
+
+\end{pb}
+
+By \cref{lemma:bochner_Hk_map}, $G \in H^1(I,V^*)$. In fact, define $T: L^2(\Sigma_f)\rightarrow V^*$ by $\langle Tg,v \rangle_{V^*,V}:=\int_{\Gamma_f} g\tr v d\sigma$. Then, $\langle Tg,v \rangle_{V^*,V} \leq \norm{g}_{L^2(\Gamma_f)} \VN{v}$ by trace theory. Now, $G(t)=Tg(t)$.
+
+Moreover, $\langle A v, v \rangle_{V^*,V}+ 1 \cdot \HN{v} = 1\cdot \norm{V}$, so that we can immediately conclude:
+
+\begin{thm}[Well posedness and regularity for \cref{pb:neu}]
+Given \cref{ass:neu}, the solution $u$ to \cref{pb:neu} is unique with $u_t \in L^2(I,H)$.
+
+Furthermore: 
+
+\begin{align}
+\norm{u}^2_{C([0;T],H)}+\norm{u}_{L^2(I,H)}^2+ \norm{\nabla u}_{L^2(I,H)}^2 + \norm{u'}^2_{L^2(I,H)}\leq C(T)\norm{g}_{H^1(I,L^2(\Gamma_f))}^2
+\end{align}
+
+with $C>1$, only dependent on $T$, smoothly, exploding for large $T$.
+\end{thm}
+\begin{mproof}
+
+It is an application of \cref{thm:well_pos_parabolic}, \cref{thm:reg_time} and \cref{thm:const_track}.
+\end{mproof}
+
+\section{Reformulation of parabolic equations}
+
+We just saw that the two parabolic equations of interest can be recasted into the problem of finding $u\in W(I,V)$, $u(0)=0$, $u_t+Au=f$ for a.e. $t$ in $V^*$, with notation from preceding sections.
+
+In particular, $f \in L^2(I, V^*)$ and so is $Au$ (because $A\in L(V,V^*)$, and by \ref{lemma:bochner_Hk_map}).
+
+Call then $E(u):=u_t+Au-f \in L^2(I,V^*)$ and $W_0(I,V)$ the $W(I,V)$ functions with zero initial value. Then, the differential equation reads $\langle E(u)(t),v\rangle_{V^,V}=0$ for all $v\in V$, for a.a. $t$, equivalently, $E(u)=0$. Thus, we are interested in the abstract problem:
+
+\begin{pb}[Even more abstract parabolic equation]
+\label{pb:more_abstr_par}
+Given a function $E: W(I,V)\rightarrow L^2(I,V^*)$, find $u\in W_0(I,V)$, such that $E(u)=0$
+\end{pb}
+ 
+We can view $L^2(I,V^*)\cong L^2(I,V)^*$.
+
+Hence $\langle E(u), v\rangle_{L^2(I,V)^*, L^2(I,V)}=\int_I \langle E(u)(t),v(t) \rangle_{V^*,V} dt$ (see \cite{hinze}, theorem 1.31 at page 39).
+
+Now, by \cref{prop:weak_class} and \ref{prop:sob_implies_W}, we get $C_c^\infty(I,V) \subseteq L^2(I,V)\cap H^1(I,H) \subseteq W(I,V)$. Actually, $C_c^\infty(I,V) \subseteq  W^0(I,V)$, the functions of $W(I,V)$ having zero terminal values.
+
+We have therefore $C_c^\infty(I,V) \subseteq  W^0(I,V) \subseteq L^2(I,V)$, which implies that $  W^0(I,V)\subseteq L^2(I,V)$ is dense in $L^2(I,V)$. We can then formulate:
+
+\begin{prop}[Equivalent testing]
+Let $E: W(I,V)\rightarrow L^2(I,V^*)$, and $u\in W_0(I,V)$.
+
+Then:
+
+\begin{align*}
+E(u)=0 \\
+\iff \\
+\langle E(u), v\rangle_{L^2(I,V)^*, L^2(I,V)}=0 \quad \forall v \in L^2(I,V)\\
+\iff \\
+\langle E(u), v\rangle_{L^2(I,V)^*, L^2(I,V)}=0 \quad \forall v \in W^0(I,V)
+\end{align*}
+
+\end{prop}
+
+
+
+\printbibliography[title={Bibliography}]
+
+\addcontentsline{toc}{chapter}{Bibliography}
+
+\end{document}
