@@ -158,6 +158,39 @@ Here is a reference to \cref{thm:obvious} and \cref{chp:intro}
 
 \appendix
 
+\chapter{Sobolev spaces}
+
+\begin{prop}[Characterization of $W^{1,\infty}$]
+Let $\Omega$ be a bounded Lipschitz domain, or $\mathbb{R}^n$. Then $W^{1,\infty}(\Omega) = C^{0,1}\cap L^\infty(\Omega)$.
+
+This means that $u\in W^{1,\infty}(\Omega)$ if and only if $u$ has a (unique) representative that is bounded, Lipschitz continuous. Weak and classical derivatives coincide a.e.
+\end{prop}
+\begin{mproof}
+
+%\underline{ACL characterization}
+%
+%Let $\Omega$ be just a domain.
+%
+%Consider a line $\gamma$ intersecting $\Omega$. Then, the intersection is a disjoint union of open segments $\gamma_i$. We say $u\in AC_\gamma(\Omega)$ if and only if $u$ is $AC[a,b]$ for every $[a,b]\cc\eta_i$ for all $i$, for almost all lines $\eta$ parallel to $\gamma$ and intersecting $\Omega$.
+%
+%We say $u \in ACL(\Omega)$ if $u$ is $AC_{e_i}(\Omega)$ for all coordinate axis $e_i$. We also call $BL(\Omega)$ the set of $u$ with a representative $\tilde{u}$, with $\tilde{u}\in ACL(\Omega), \tilde{u}, \nabla \tilde{u} \in L^\infty$, $\nabla u$ being the classical (a.e.) gradient.
+%
+%We have the following result (see \cite{kufner}, page 276, theorem 5.6.5.): $u \in W^{1,\infty}(\Omega)$ if and only if $u$ has a representative $\tilde{u} \in BL(\Omega)$. Classical and weak derivatives then coincide a.e..
+
+\underline{Extension}
+
+In the case $\Omega$ is bounded Lipschitz, then $\Omega$ is an extension domain for $W^{1,\infty}(\Omega)$, meaning that there is $E: W^{1,\infty}(\Omega)\rightarrow W^{1,\infty}(\mathbb{R}^n)$ linear bounded with $Eu=u$ a.e. on $\Omega$ (see \cite{leoni}, theorem 13.17 at page 425, 13.13 at page 424, and definition 9.57 at page 273).
+
+\underline{The proof}
+
+Let $u \in  W^{1,\infty}(\Omega)$. By \cite{leoni}, 11.50 at page 339, because $\Omega$ is an extension domain, we obtain that $u$ has a representative $\bar{u}$ that is bounded Lipschitz. Let $\phi \in C_c^\infty(\Omega)$. By The Kirszbraun theorem (see e.g. \cite{kirszbraun}), we can extend $\bar{u}$ to a Lipschitz function $e$ on $\mathbb{R}^n$. Then, for a large enough cube $Q$ containing $\Omega$, $\ds \int_\Omega\bar{u}\partial_i\phi = \int_Q e \partial_i \phi  = -\int_Q \partial_i e \phi $, by Fubini's theorem and integration by parts for AC functions.
+
+Because $e=\bar{u}$	on $\Omega$, we conclude $\ds \int_\Omega\bar{u}\partial_i\phi =-\int_{\Omega} \partial_i \bar{u} \phi $, so that $\nabla \bar{u} = \nabla u$ almost everywhere.
+
+Conversely, let $u$ be bounded Lipschitz. The above reasoning shows that $u$ has essentially bounded weak derivatives equal to the a.e. classical derivatives.
+
+\end{mproof}
+
 \chapter{Bochner spaces}
 
 Here are some useful results about Bochner spaces.
@@ -167,6 +200,9 @@ Here are some useful results about Bochner spaces.
 Let $X,Y$ be separable Banach, let $T \in L(X,T)$ be a linear bounded operator. For $f \in L^1(I,X)$ define $Tf (t):= T(f(t))$. Then $Tf \in L^1(I,Y)$ with $T\int_I f = \int_I Tf$.
 \end{prop}
 \begin{mproof}
+
+First of all, a clarification on the definition. What is really happening is that from the time equivalence class $f$, we select a $g$, and then $Tf(t):=T(g(t))$. $Tf$ is then the equivalence class of $t\mapsto Tf(t)$. The definition is well posed, because $g_1(t)=g_2(t)\implies T(g_1(t))=T(g_2(t))$.
+
 Let $f_n$ be simple, $f_n\rightarrow f $ a.e., with $\lim_n \int_I f_n = \int_I f$ adn $\norm{f_n}_X \leq C \norm{f}_X$ (see page 6, and corollary 2.7 at page 8 of \cite{kreuter}).
 
 \underline{Measurability}
@@ -223,22 +259,92 @@ We now check that a vector valued test function has weak derivatives of all orde
 
 \begin{prop}[Weak derivatives of test functions]
 \label{prop:weak_class}
-Let $\phi \in C^\infty_c(I,X)$, for $X$ separable Banach. It means that the limit the difference quotients $\phi^{(k)}(t)$ exists for all $k$, for all points of $I$, and $t\mapsto \phi^{(k)}$ is continuous.
+Let $\phi \in C^1([0,T],X)$, for $X$ separable Banach. It means that the limit of the difference quotients exists for all points of $I$, that $t\mapsto \phi(t), \phi'(t)$ are continuous, and that they can be continuously extended to $[0,T]$.
 
 Then these classical derivatives coincide a.e. with the weak derivatives of $u$.
 
 \end{prop}
 \begin{mproof}
 
+
 We rely on proposition 3.8 of \cite{kreuter} at page 26.
 
 \underline{Absolute continuity}
 
-Consider $\epsilon >0$. Divide $[0,T]$ into a partition $t_i=i/n$. By theorem 6 at page 146 of \cite{mvt}, we get that $\ds \norm{\phi(t_i)-\phi(t_{i-1})}_X \leq (t_i-t_{i-1})\norm{\phi(\xi_i)}_X\leq \norm{\phi'}_{\infty}/n$, and by choosing $n$ small enough, we conclude that $\phi$ is (locally) absolutely continuous.
+Consider $\epsilon >0$. Divide $[a,b] \cc (0,T)$ into a uniform partition $t_i$. By theorem 6 at page 146 of \cite{mvt}, we get that $\ds \norm{\phi(t_i)-\phi(t_{i-1})}_X \leq (t_i-t_{i-1})\norm{\phi(\xi_i)}_X\leq (b-a) \norm{\phi'}_{\infty}/n$, and by choosing $n$ small enough, we conclude that $\phi$ is (locally) absolutely continuous.
 
 \underline{Weak derivative}
 
 Therefore, $\phi$ is locally $AC$, differentialble everywhere and $\phi'$ is bounded, so that $\phi \in H^1(I,X)$ and weak and classical derivatives coincide. 
+
+\end{mproof}
+
+And now, introduce a time dependent version of the trace operator which is useful for our computations, although "non-optimal" from a smoothness point of view.
+
+\begin{defn}[Time dependent trace]
+Let $\Omega$ be a bounded Lipschitz domain. For $k\geq 0$ we define $\tr: H^k(I,H^1(\Omega))\rightarrow H^k(I, H^{1/2} (\partial \Omega))$ by $\tr(u)(t):=\tr(u(t))$
+\end{defn}
+
+Below are some properties of this operator.
+
+\begin{prop}[Properties of trace operator]
+\label{prop:trace}
+The trace operator just defined:
+\begin{enumerate}
+\item is well posed
+\item is linear bounded
+\item admits a linear bounded right inverse, for instance, $E(g)(t):=E(g(t))$ (for $E$ a right inverse of the static trace)
+\item $\tr$ and $E$, in the case of $k \in \mathbb{N}_0$, coincide (in the time a.e. sense) for the case $l\geq k$
+\item for $k\geq 1$, $\tr u(0)=0 \iff u(0)=0$
+\item it coincides with the trace treated for instance in \cite{lions}
+\end{enumerate}
+\end{prop}
+\begin{mproof}
+
+\underline{Proof of the proposition}
+
+We recall that the trace operator is bounded surjective onto $H^{1/2}(\partial \Omega)$, with a right inverse $E$ (see theorem 3.37 at page 102 of \cite{mclean}).
+
+The first three points are consequences of this fact and of \cref{prop:bochner_bound}.
+
+The fourth property follows by the definition of $\tr, E$ and the fact that $H^l\subseteq H^k$, for $k\leq l$.
+
+Let now $k\geq 1$. We know that $H^1, H^{1/2}$ are separable and Banach (the latter is separable because the continuos image of $H^1$ separable, and Banach because of the existence of $E$, for instance). Therefore, by \cite{evans}, theorem 2 of page 286, we obtain the embeddings $H^k(I,H^1)\emb C([0,T],H^1)$ and the same goes for $H^k(I,H^{1/2})$. The embedding is $U$, the unique continuous representative of a certain time equivalence class (\cref{prop:cts_repr}). We also introduce brackets to indicate equivalence classes in time, so, $u = [Uu]$.
+
+We want to prove $(Uu)(0)=0 \iff U(\tr u)(0)=0$. But we have $[t \mapsto U(\tr u )(t)]=tru:=[t \mapsto \tr((Uu)(t))]$. So, $U(\tr u )(t)=\tr((Uu)(t))$ for all $t\in[0,T]$ by continuity. 
+
+For the last point, let $k=0$. We have:
+
+\begin{enumerate}
+\item $H^1(\Omega)\cap C^1(\overline{\Omega})$ is dense in $H^1(\Omega)$ (see \cite{adams}, theorem 3.18 at page 54, where being $\Omega$ bounded Lipschitz is important)
+\item functions $\sum_{i\leq m} \phi_i(t)f_i$ for $\phi_i \in C_c^\infty(I), f_i \in H^1(\Omega)\cap C^1(\overline{\Omega})$ are dense in $L^2(I,H^1)$ (see \cite{hinze}, page 39, lemma 1.9)
+\end{enumerate}
+
+It follows by the third point that $C^1(\overline{\Omega\times I})$ is dense in $L^2(I,H^1)$, so that $u\mapsto u|_{I\times \partial \Omega}$ admits a unique extension by continuity to $L^2(I,H^1)$, so that this definition of trace coincides with the one from the literature in the case of the space $H^{1,0}:=L^2(I,H^1)$ (see \cite{lions}, theorem 4.1), we expand this argument below.
+
+\underline{Proof of leftover facts}
+
+We call $C^k(\overline{\Omega}):=\{u \in C^k(\Omega) \text{ with }\partial_\alpha f \text{ extendable by continuity to } \overline{\Omega} \}$. 
+
+Consider $u(x,t):=\phi(t)v(x)$, for $\phi \in C^1([0,T]), v \in C^1(\overline{\Omega})$. Then, it has partial derivatives $u_t = \phi_t v, u_i = \phi u_i$. $u$ and all its partial derivatives are continuous on $I\times \Omega$, meaning that $u \in C^1(\Omega \times I)$.
+
+Moreover, $u, u_i, u_t \in C([0,T], C(\overline{\Omega}))$. We claim $ C([0,T], C(\overline{\Omega})) = C(\overline{\Omega\times I})$. In fact, one direction is trivial, and so, let $f \in C([0,T], C(\overline{\Omega})) = C(\overline{\Omega})$. Fix $(t,x) \in \overline{\Omega\times I}$. Then, $|f(s,y)-f(t,x)|\leq |f(t,y)-f(t,x)|+|f(t,y)-f(s,y)|\leq  |f(t,y)-f(t,x)|+\norm{f(t, \cdot)-f(s,\cdot)}_{\infty}$. If now $s$ is close to $t$, and $y$ is close to $x$, then $|f(s,y)-f(t,x)|$ is small.
+
+This shows $u, u_i, u_t \in C([0,T], C(\overline{\Omega})) \in C(\overline{\Omega\times I}) $, i.e. $u \in C^1(\overline{Q\times I})$.
+
+To conclude, let $u \in L^2(I,H^1)$. Approximate $u$ by $u_k:=\sum_{i\leq m_k} \phi_i^k(t)f_i^k$ as in point 2, and approximate $f_i^k$ by suitable $g_i^k \in H^1(\Omega)\cap C^1(\overline{\Omega})$, to obtain $u_k:=\sum_{i\leq m_k} \phi_i^k(t)g_i^k$
+
+Then $\norm{u-w_k}_{L^2(I,H^1)}\leq \norm{u_k-w_k}_{L^2(I,H^1)}+\norm{u_k-u}_{L^2(I,H^1)}$. We only need to estimate $ \norm{u_k-w_k}_{L^2(I,H^1)}\leq\ds  T \sum_{i\leq m_k} \norm{\phi_i^k}_\infty\norm{f_i^k-g_i^k}_{H^1}$. By the first point, $\norm{f_i^k-g_i^k}_{H^1}$ can be made as small as it is necessary to conclude.
+
+\underline{Last remarks}
+
+Again with reference to \cite{lions}, consider the anisotropic spaces $H^{r,s}:=L^2(I,H^r)\cap H^s(I,L^2)$. We restrict to the case $r = 1$, $s\geq 0$. Denote the traces $\tr_s$ defined in theorem 4.1, mapping $H^{1,s}(\Omega \times I)\rightarrow H^{1/2, s/2}(\partial \Omega \times I)$. For $\partial \Omega$ Lipschitz this theorem is still valid, as $1/2\leq 1$, see the discussion above lemma 2.4 in \cite{costabel}. As stated in \cite{lions}, $\tr_s$ is an extension of  $u\mapsto u|_{I\times \partial \Omega}$, defined on the dense suspace $C^\infty(\overline{Q\times I})$ of $H^{1,s}$ (that this space is dense can be proved as in lemma 2.22 of \cite{costabel}). So, let $C^\infty(\overline{Q\times I})\ni u_n \rightarrow_{H^{r,s}} u \in H^{1,s}$.
+ 
+We have $\tr_s u_n = \tr_0 u_n$. Then, $u_n \rightarrow_{H^{1,s}} u$, $u_n \rightarrow_{H^{1,0}} u$, so that $\tr_s u_n \rightarrow_{H^{1/2,s/2}}\tr_s u$ (hence $\tr_0 u_n \rightarrow_{H^{1/2,0}}\tr_s u$) and $\tr_0 u_n  \rightarrow_{H^{1/2,0}} \tr_\sigma u$.
+
+Thus $\tr_0 u = \tr_s u$.
+
+Using what we derived before, we can conclude the characterization of the traces in the anisotropic settign define 
 
 \end{mproof}
 
@@ -586,10 +692,12 @@ There holds the estimate:
 
 \underline{Extension of the boundary data and existence}
 
-Let $\bar{u}\in H^1(I,H^1_c(U))$ be such that $\tr \bar{u} =f$ on $\Sigma_f$, and with $\bar{u}(0)=0$. We can choose for instance $E\tilde{f}$, where $\tilde{f}=0$ on $\Sigma_m$, $\tilde{f}=f$ on $\Sigma_f$. $\tilde{f} \in H^1(I,H^{1/2}(\partial U))$, because $\Gamma_f$ and $\Gamma_m$ have positive distance (see the definition of the norm in \cite{grisvard}, page 20).  That $\tr E \tilde{f}=\tilde{f}$ is easily seen for a.a. $t$, and by \cref{lemma:bochner_Hk_map}, we get $\bar{u} \in H^1(I,H^1_c(U))$. The last result could be applied since $H^{1/2}(\partial U)$ is the continuous image of a separable space, hence it is separable, and it is also Banach (again by \cite{grisvard}, page 20).
+Let $\bar{u}\in H^1(I,H^1_c(U))$ be such that $\tr \bar{u} =f$ on $\Sigma_f$, and with $\bar{u}(0)=0$. We can choose for instance $E\tilde{f}$, see \cref{prop:trace}, where $\tilde{f}=0$ on $\Sigma_m$, $\tilde{f}=f$ on $\Sigma_f$. $\tilde{f} \in H^1(I,H^{1/2}(\partial U))$, because $\Gamma_f$ and $\Gamma_m$ have positive distance (see the definition of the norm in \cite{grisvard}, page 20).  
 
-
-The initial value of $\bar{u}$ is null. To see this, we know that the unique time-continuous representative $U\tilde{f}$ of $\tilde{f}$ (\cite{evans}, page 286, theorem 2, and \cref{prop:cts_repr}) satisfies $\lim_{t\rightarrow 0^+}U\tilde{f}(t)=0$, the limit being in $H^{1/2}(\partial U)$. We also know that $\bar{u}$ has a unique continuous representative $U\bar{u}$ by similar arguments, and $U\bar{u}(t) \rightarrow U\bar{u}(0)$ for $t\rightarrow 0^+$. Now, $ [U\tilde{f}] = \tilde{f} = \tr \bar{u} =[ \tr U\bar{u} ]$, where the square brackets are equivalence classes in time. Thus $U\tilde{f} =  \tr U\bar{u}$ for all $t$, and thus $\tr U\bar{u}\rightarrow 0$ for small times. Applying $E$ we get $U\bar{u}\rightarrow 0$ which is what we wanted to show.
+%That $\tr E \tilde{f}=\tilde{f}$ is easily seen for a.a. $t$, and by \cref{lemma:bochner_Hk_map}, we get $\bar{u} \in H^1(I,H^1_c(U))$. The last result could be applied since $H^{1/2}(\partial U)$ is the continuous image of a separable space, hence it is separable, and it is also Banach (again by \cite{grisvard}, page 20).
+%
+%
+%The initial value of $\bar{u}$ is null. To see this, we know that the unique time-continuous representative $U\tilde{f}$ of $\tilde{f}$ (\cite{evans}, page 286, theorem 2, and \cref{prop:cts_repr}) satisfies $\lim_{t\rightarrow 0^+}U\tilde{f}(t)=0$, the limit being in $H^{1/2}(\partial U)$. We also know that $\bar{u}$ has a unique continuous representative $U\bar{u}$ by similar arguments, and $U\bar{u}(t) \rightarrow U\bar{u}(0)$ for $t\rightarrow 0^+$. Now, $ [U\tilde{f}] = \tilde{f} = \tr \bar{u} =[ \tr U\bar{u} ]$, where the square brackets are equivalence classes in time. Thus $U\tilde{f} =  \tr U\bar{u}$ for all $t$, and thus $\tr U\bar{u}\rightarrow 0$ for small times. Applying $E$ we get $U\bar{u}\rightarrow 0$ which is what we wanted to show.
 
 Now, consider the problem: 
 
