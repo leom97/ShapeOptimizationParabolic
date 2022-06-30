@@ -15,6 +15,7 @@
 \usepackage{cleveref}
 \usepackage[backend=bibtex]{biblatex}
 \usepackage[nottoc,notlot,notlof]{tocbibind}
+\usepackage{tikz-cd}
 \addbibresource{Bibliography/bibliography.bib}
 
 % Formatting options
@@ -63,6 +64,8 @@
 \newcommand{\tr}{\text{tr}}
 \newcommand{\cc}{\subset\subset}
 \newcommand{\emb}{\hookrightarrow}
+\newcommand{\ind}[1]{\{\text{ #1 }\}}
+\newcommand{\mind}[1]{$#1$}
 
 \begin{document}
 
@@ -242,18 +245,18 @@ Let $X$ be separable Banach. $f \in L^1(I,X)$ has at most a continuous represent
 Assume there exists two such continuous representatives, so that we get a function $\delta: [0,T] \rightarrow X$ that is zero almost everywhere and continuous. Hence, $[0,T] \ni t \mapsto \norm{\delta(t)}$ is continuous in $\mR$ and zero a.e., so that it must be zero everywhere.
 \end{mproof}
 
-\begin{prop}[Weak derivatives and Gelfand triples]
-\label{prop:sob_implies_W}
-Let $H\subseteq V$ be separable Hilbert spaces, $H$ densely embedded in $V$.
-
-Then $y \in L^2(I,V)\cap H^1(I,H) \subseteq W(I,V)$.
-\end{prop}
-\begin{mproof}
-We note that $V$ is Hilbert separable, so, reflexive Banach and separable, so that $V^*$ is separable too. Then, call $i$ the embedding $H \emb V^*$.
-
-For $\phi \in C^\infty_c(I)$ we obtain $\int_I i(y_t)\phi=\int_I i(y_t\phi)= i \left ( \int_I y_t\phi \right )$ by \cref{prop:bochner_bound}. Therefore $\int_I i(y_t)\phi=-i \left ( \int_I y\phi' \right ) =\int_I i(y)\phi'  $ , proving that $y \in W(I,V)$.
-
-\end{mproof}
+%\begin{prop}[Weak derivatives and Gelfand triples]
+%\label{prop:sob_implies_W}
+%Let $H\subseteq V$ be separable Hilbert spaces, $H$ densely embedded in $V$.
+%
+%Then $y \in L^2(I,V)\cap H^1(I,H) \subseteq W(I,V)$.
+%\end{prop}
+%\begin{mproof}
+%We note that $V$ is Hilbert separable, so, reflexive Banach and separable, so that $V^*$ is separable too. Then, call $i$ the embedding $H \emb V^*$.
+%
+%For $\phi \in C^\infty_c(I)$ we obtain $\int_I i(y_t)\phi=\int_I i(y_t\phi)= i \left ( \int_I y_t\phi \right )$ by \cref{prop:bochner_bound}. Therefore $\int_I i(y_t)\phi=-i \left ( \int_I y\phi' \right ) =\int_I i(y)\phi'  $ , proving that $y \in W(I,V)$.
+%
+%\end{mproof}
 
 We now check that a vector valued test function has weak derivatives of all orders.
 
@@ -348,6 +351,59 @@ Using what we derived before, we can conclude the characterization of the traces
 
 \end{mproof}
 
+And now some sanity checks in the case of Gelfand triples. 
+
+\begin{prop}(Sanity checks for Gelfand triples)
+\label{prop:sanity}
+
+Consider the following Gelfand triples:
+
+\[\begin{tikzcd}
+	{V} &&& {V^*} \\
+	& H & {H^*} \\
+	{W} &&& {W^*}
+	\arrow["c", hook, from=3-1, to=1-1]
+	\arrow["a", hook, from=1-1, to=2-2]
+	\arrow["b"', hook, from=3-1, to=2-2]
+	\arrow["{a^*}", hook, from=2-3, to=1-4]
+	\arrow["r", from=2-2, to=2-3]
+	\arrow["{b^*}"', hook, from=2-3, to=3-4]
+	\arrow["{c^*}", hook, from=1-4, to=3-4]
+\end{tikzcd}\]
+
+Here $W\subseteq V \subseteq H$ are all separable Hilbert spaces, $a,b,c$ the trivial injections, $r$ the Riesz isomorphism of $H$. We denote by $i_V$ the Gelfand triple embedding $V\emb V^*$, so, $i_V=a^*ra$.
+
+Then:
+
+\begin{enumerate}
+	\item $H^1(I,V)\subseteq W(I,V)$ with continuous embedding. The $W(I,V)$ derivative of $u \in H^1(I,V)$ is $i_V u_t$.
+	\item for $u \in W(I,W)$ with $(i_W u)'\in L^2(I,H)$ (i.e. $(i_W u)_t = b^*r h$ for $h$ in $L^2(I,H)$) we obtain $u \in W(I,V)$ (i.e. $cu \in W(I,V)$), with derivative $(i_V cu)'=a^*r h$, so that also $(i_V cu)' \in L^2(I,H)$. It also holds $(i_V cu)'|_W = (i_W u)'$. $h$ is also the weak derivative $L^2(I,H)$ of $bu$.
+	\item let $u, v \in W(I,V)$ with $u-v \in W$. Then $u-v \in W(I,W)$ with derivative $(i_W(u-v))'=(i_V u)'|_W-(i_V v)'|_W$.
+\end{enumerate}
+
+\end{prop}
+\begin{mproof}
+
+We use several times that time integrals and bounded linear static operators commute, see \cref{prop:bochner_bound}. $\phi$ denotes $\phi \in C^\infty_c(I)$.
+
+\underline{First point}
+
+We need to check that $a^* r a u \in H^1(I, V^*)$. This follows from \cref{lemma:bochner_Hk_map}, so that $(a^* r a u)_t = a^* r a u_t$.
+
+\underline{Second point}
+
+At first we claim that $h$ is a weak derivative of $bu \in L^2(I,H)$. In fact, $b^* r \int_I bu \phi' = \int_I (i_W u)\phi' = \ind{\mind{u \in W(I,W)}} =-\int_I(i_Wu)'\phi=-\int_I b^*r h = b^*r -\int_I h \phi$. By density (definition of Gelfand triple), $b^*$ is injective, $r$ is too, and thus $\int_I bu \phi' = -\int_I h \phi$, which shows that $bu$ has weak derivative $h$.
+
+And now $\int_I i_V c u \phi'= \int_I a^*racu \phi' = a^*r\int_I bu\phi' = \ind{by what we just proved}=-a^*r \int_I h \phi$, proving that $(i_V cu)'=a^*r h$.
+
+Morevoer $(i_V cu)'|_W = c^*a^*r h=b^*rh=\ind{assumption} = (i_wu)'$.
+
+\underline{Third point}
+
+We check the derivative. We have $\int_i i_W(u-v)\phi' =\ind{\mind{u-v \in W\subseteq V}} = \int_I b^* r a (u-v) = c^*\int_I(i_Vu - i_Vv)\phi' = -\int c^*((i_V u)'- (i_V v)')\phi$.
+
+\end{mproof}
+
 \chapter{Parabolic equations}
 
 \begin{ass}[Basic assumption for parabolic problems]
@@ -386,7 +442,7 @@ We can also obtain additional regularity. Here are further assumptions to make t
 
 \begin{ass}[Assumptions for additional regularity]
 \label{ass:reg_par}
-We assume $u_0 \in V$, $f = f_1+f_2 \in L^2(I,H)+H^1(I,V^*)$. We also need $A$ to be symmetric (i.e. $\langle Au,v \rangle_{V^*,V} = \langle Av,u \rangle_{V^*,V}$.
+We assume $u_0 \in V$, $f = f_1+f_2 \in L^2(I,H)+H^1(I,V^*)$. We also need $A$ to be symmetric (i.e. $\langle Au,v \rangle_{V^*,V} = \langle Av,u \rangle_{V^*,V}$).
 \end{ass}
 
 \begin{thm}[Regularity of time derivative]
@@ -395,6 +451,9 @@ Suppose \cref{ass:basic_par} and \cref{ass:reg_par}. Then $u_t \in L^2(I, H)$ wi
 \begin{align}
 	\norm{u}_{W(I,V)} + \norm{u}_{C(I,H)} + \norm{u_t}_{L^2(I,H)} \leq\\ c(\lambda, \alpha, \VSN{A}, T)(\VN{u_0}+\norm{f_1}_{L^2(I,H)} + \norm{f_2}_{H^1(I,V^*)})
 \end{align}
+
+That $u_t \in L^2(I, H)$ means precisely that there is $h \in L^2(I,H)$ with $a^* r h = (i_V u)'$, with the notation introduced in \cref{prop:sanity}.
+
 \end{thm}
 \begin{mproof}
 We refer to page 26 of \cite{gilardi}, theorem 28, and only prove the necessary modifications.
@@ -448,7 +507,11 @@ Going to the absolute values:
 	+ \frac{4}{\alpha}\norm{f_2}_{L^\infty(I,V^*)}^2+ \frac{1}{2}\norm{f_2}_{L^\infty(I,V^*)}^2+\frac{1}{2}\VN{u_{n0}}^2
 \end{align*}
 
-Now, $u_n$ converges weakly in $L^2(I,V)$ by estimate (59) of \cite{gilardi} and thus $\frac{1}{2}\norm{u_n}_{L^2(I,V)}$ is bounded. The term $\frac{\alpha}{4}\VN{u_n(t)}$ can be pulled to the left hand side, $u_{0n}$ is $V$ convergent hence bounded. Therefore as in \cite{gilardi} we are able to conclude that $u_n'$ is bounded in $L^2(I,H)$ and that $u_t$ is bounded by $c(\alpha)(\norm{f_2}_{L^\infty(I,V^*)}+\norm{f_2}_{L^2(I,V^*)}+\VN{u_0}+\norm{u}_{L^2(I,V)})$.
+Now, $u_n$ converges weakly in $L^2(I,V)$ by estimate (59) of \cite{gilardi} and thus $\frac{1}{2}\norm{u_n}_{L^2(I,V)}$ is bounded. The term $\frac{\alpha}{4}\VN{u_n(t)}$ can be pulled to the left hand side, $u_{0n}$ is $V$ convergent hence bounded. Therefore as in \cite{gilardi} we are able to conclude that $u_n'$ is bounded in $L^2(I,H)$. We want to conclude $u_t \in L^2(I,H)$. We know for sure that $\langle u_m',w_j\rangle_{V^*,V}=\langle f-Au_m,w_j\rangle_{V^*,V}$, so that muliplication by a test function and integration yields $\int_I \langle u_m',w_j\phi\rangle_{V^*,V}=\int_I \langle f-Au_m,w_j\phi\rangle_{V^*,V}$. Because $u_m\rightharpoonup u$ in $L^2(I,V)$ we observe that, by \cref{prop:bochner_bound} applied on $A \in L(V,V^*)$, it holds $\int_I \langle u_m',w_j\phi\rangle_{V^*,V}\rightarrow \int_I \langle u',w_j\phi\rangle_{V^*,V}$.
+
+What's more, is that $u_m' \rightharpoonup h$ in $L^2(I,H)$, so that $\int_I \langle h ,w_j\rangle_{V^*,V}\phi = \int_I \langle u',w_j\rangle_{V^*,V}\phi$. It means that for almost all $t$, $\langle h ,w_j\rangle_{V^*,V} = \langle u',w_j\rangle_{V^*,V}$. And now we can really say that $u' \in L^2(I,H)$, which even more precisely means $(i_Vu)' = a^* r h$ almost everywhere.
+
+We also obtain that $u_t$ is bounded by $c(\alpha)(\norm{f_2}_{L^\infty(I,V^*)}+\norm{f_2}_{L^2(I,V^*)}+\VN{u_0}+\norm{u}_{L^2(I,V)})$.
 
 Note that, by \cite{evans}, theorem 2 of page 286, we can estimate $\norm{f_2}_{L^\infty(I,V^*)}$ by $c(T)\norm{f_2}_{H^1(I,V^*)}$, so that the claim for the time derivative $u_t$ is proven.
 
@@ -626,7 +689,7 @@ We make the following assumption.
 
 \begin{ass}[Assumptions for \cref{pb:diri}]
 \label{ass:diri}
-We assume $\Omega \cc D $ to be a bounded Lipschitz domain, so that $U:=D\setminus \Omega$ is bounded Lipschitz too and  the trace operator is bounded surjective onto $H^{1/2}(\partial U)$, with a right inverse $E$ (see theorem 3.37 at page 102 of \cite{mclean}). For such a choice we also have $H^1_0=H^1\cap \text{ker }\tr$, see \cite{leoni}, page 595, theorem 18.7.
+We assume $\Omega \cc D $ to be bounded Lipschitz domains, so that $U:=D\setminus \Omega$ is bounded Lipschitz too and  the trace operator is bounded surjective onto $H^{1/2}(\partial U)$, with a right inverse $E$ (see theorem 3.37 at page 102 of \cite{mclean}). For such a choice we also have $H^1_0=H^1\cap \text{ker }\tr$, see \cite{leoni}, page 595, theorem 18.7.
 
 Moreover, we select $f \in H^1(I, H^{1/2}(\Gamma_f))$, $f(0)=0$.
 \end{ass}
@@ -690,16 +753,37 @@ There holds the estimate:
 \end{thm}
 \begin{mproof}
 
-\underline{Extension of the boundary data and existence}
+\underline{Extension of the boundary data}
 
 Let $\bar{u}\in H^1(I,H^1_c(U))$ be such that $\tr \bar{u} =f$ on $\Sigma_f$, and with $\bar{u}(0)=0$. We can choose for instance $E\tilde{f}$, see \cref{prop:trace}, where $\tilde{f}=0$ on $\Sigma_m$, $\tilde{f}=f$ on $\Sigma_f$. $\tilde{f} \in H^1(I,H^{1/2}(\partial U))$, because $\Gamma_f$ and $\Gamma_m$ have positive distance (see the definition of the norm in \cite{grisvard}, page 20).  
+
+\underline{Reformulation (first part)}
+
+Consider the following commutative diagram, where $V = H^1_c$:
+
+\[\begin{tikzcd}
+	{H^1_c} &&& {(H^1_c)^*} \\
+	& H & {H^*} \\
+	{H^1_0} &&& {H^{-1}}
+	\arrow["c", hook, from=3-1, to=1-1]
+	\arrow["a", hook, from=1-1, to=2-2]
+	\arrow["b"', hook, from=3-1, to=2-2]
+	\arrow["{a^*}", hook, from=2-3, to=1-4]
+	\arrow["r", from=2-2, to=2-3]
+	\arrow["{b^*}"', hook, from=2-3, to=3-4]
+	\arrow["{c^*}", hook, from=1-4, to=3-4]
+\end{tikzcd}\]
+
+Here, $a,b,c$ are the trivial injections, $r$ the Riesz isomorphism $h\mapsto(h,\cdot)_H$. 
+
+Now $(i_W (u-\bar{u}) )'+A(u - \bar{u}) = (i_Vu)'|_{H^{-1}}-(i_V\bar{u})'|_{H^{-1}}+Au - A\bar{u} = \ind{\cref{prop:sanity}}  = (i_Vu)'|_{H^{-1}}-(i_V\bar{u}_t)|_{H^{-1}}+Au - A\bar{u} = -(i_V\bar{u}_t)|_{H^{-1}}- A\bar{u}$ if $u$ solves \cref{pb:diri}, where $\bar{u}_t$ is the weak derivative of $\bar{u}$. Call $u_0 = u-\bar{u}$. By again \cref{prop:sanity}, $u_0 \in W(I,H^1_0)$.
 
 %That $\tr E \tilde{f}=\tilde{f}$ is easily seen for a.a. $t$, and by \cref{lemma:bochner_Hk_map}, we get $\bar{u} \in H^1(I,H^1_c(U))$. The last result could be applied since $H^{1/2}(\partial U)$ is the continuous image of a separable space, hence it is separable, and it is also Banach (again by \cite{grisvard}, page 20).
 %
 %
 %The initial value of $\bar{u}$ is null. To see this, we know that the unique time-continuous representative $U\tilde{f}$ of $\tilde{f}$ (\cite{evans}, page 286, theorem 2, and \cref{prop:cts_repr}) satisfies $\lim_{t\rightarrow 0^+}U\tilde{f}(t)=0$, the limit being in $H^{1/2}(\partial U)$. We also know that $\bar{u}$ has a unique continuous representative $U\bar{u}$ by similar arguments, and $U\bar{u}(t) \rightarrow U\bar{u}(0)$ for $t\rightarrow 0^+$. Now, $ [U\tilde{f}] = \tilde{f} = \tr \bar{u} =[ \tr U\bar{u} ]$, where the square brackets are equivalence classes in time. Thus $U\tilde{f} =  \tr U\bar{u}$ for all $t$, and thus $\tr U\bar{u}\rightarrow 0$ for small times. Applying $E$ we get $U\bar{u}\rightarrow 0$ which is what we wanted to show.
 
-Now, consider the problem: 
+This motivates us to consider the problem: 
 
 \begin{align}
 u_0 \in W(I,H^1_0) \\
@@ -707,32 +791,38 @@ u_0' + A u_0 = -(f_1+f_2) \text{ in }H^{-1} \text{ and for a.e. } t \in (0,T) \\
 u_0(0)=0
 \end{align}
 
-Here, $\bar{u}$ is $H^1(I,H^1_c(U))$, so $f_1:=\bar{u}' \in L^2(I,H)$. Moreover, $A \in L(V, H^{-1})$, so, by \cref{lemma:bochner_Hk_map}, $f_2:=A\bar{u} \in H^1(I, H^{-1})$.
+Here, $f_1:=(i_V\bar{u}_t)|_{H^{-1}}=c^*a^*ra\bar{u}_t = b^*r (a\bar{u}_t) \in L^2(I,H)$.
 
-By \cref{thm:par_reg} we get a solution of the above problem with $u_0' \in L^2(I, H)$. 
+Moreover, $A \in L(V, H^{-1})$, so, by \cref{lemma:bochner_Hk_map}, $f_2:=A\bar{u} \in H^1(I, H^{-1})$.
 
-And now, let $u:=\bar{u}+u_0$. We have $u \in L^2(I, V)$ and $u_t=\bar{u}_t + u_0' \in L^2(0,T,H)$. Thus, $u \in W(I,V)$ by \cref{prop:sob_implies_W} and $u(0)=0$, together with $\tr u = f$ on $\Sigma_f$. 
+\underline{Existence}
 
-We conclude that $u$ solves \cref{pb:diri}. In fact, for $v \in H^1_0$,  $(\bar{u}'+u_0',v)_H +(\nabla(\bar{u}+u_0),\nabla v)_H=(u_0',v)_H +(\nabla u_0,\nabla v)_H +(\bar{u}',v)_H+(\nabla \bar{u}, \nabla v)_H=\langle u_0'+A u_0,v\rangle_{H^{-1},H^1_0}+(f_1,v)_H+\langle f_2,v\rangle_{H^{-1},H^1_0}=0$.
+By \cref{thm:par_reg} we get a solution of the above problem with $u_0' \in L^2(I, H)$.
+
+And now, let $u:=\bar{u}+c u_0 =\bar{u}+ u_0 $. We claim it is a solution. The initial and boundary conditions are surely satisfied. We check it is in $W(I,V)$ and is satisfies the partial differential equation.
+
+By \cref{prop:sanity}, we have both $\bar{u}, c u_0 \in W(I,V)$. The derivatives are $i_V \bar{u}_t$ and $a^* r (b u_0)'$, with $(b u_0)'$ the $L^2(I,H)$ weak derivative of $bu_0$, which exists by \cref{prop:sanity}. Therefore $(i_V(\bar{u}+c u_0))'|_{H^1_0} = c^* (i_V(\bar{u}+c u_0))' = c^*i_V \bar{u}_t + c^*i_V(b u_0)' = b^*r (a\bar{u}_t) + i_W(u_0)'$ by \cref{prop:sanity}.
+
+Using the pde of $u_0$, $... = b^*r (a\bar{u}_t) - Au_0 -f_1 -f_2 = -A(u_0+\bar{u})$.
 
 \underline{Uniqueness}
 
-For two solutions $u_1, u_2$ of $\ref{pb:diri}$ we can form $d:=u_1-u_2 \in L^2(I,H^1_0)\cap H^1(I,V^*)\subseteq L^2(I,H^1_0)\cap H^1(I,H^{-1})=W(I,H^1_0)$. This is made precise by observing that the restriction $R$ of functionals $V^*\rightarrow H^{-1}$ onto $H^{1}_0$, composed with the Gelfand triple embedding $V\emb_{i_V} V^*$, is exactly the Gelfand triple embedding $H^1_0\emb_{i_{H^1_0}} H^{-1}$. We can then write $\int_I R(i_V(d)')\phi=R\int_I i_V(d)'\phi = -R\int_I i_V(d)\phi'=\int_I i_{H^1_0}(d)\phi'$, so that $d$ is really $W(I,H^1_0)$.
+For two solutions $u_1, u_2$ of $\ref{pb:diri}$ we can form $d:=u_1-u_2\in W(I,H^1_0)$ by \cref{prop:sanity}. Clearly, $d(0)=0$. Moreover, $(i_{H^1_0} d)' = \ind{\cref{prop:sanity}}=(i_V u_1)'|_{H^1_0}-(i_V u_2)'|_{H^1_0} = A(u_1-u_2)$.
 
 By uniqueness stated in \cref{thm:well_pos_parabolic} we obtain $d=0$ in $L^2(I,H)$, so that the solution is unique and doesn't depend on the choice of the extension of the Dirichlet datum.
 
-\underline{Reformulation}
+\underline{Reformulation (part 2)}
 
 Therefore $u=\bar{u}+u_0$ above is the unique solution of \cref{pb:diri}. So, given any $\bar{u}\in H^1(I,H^1_c(U))$ such that $\tr \bar{u} =f$ on $\Sigma_f$, and with $\bar{u}(0)=0$, we can construct $u_0$ as above and get $u=\bar{u}+u_0$ solving \cref{pb:diri}.
 
-Viceversa, let $u$ solve \cref{pb:diri}. Call $u_0 = u- \bar{u}$. Then:
+Viceversa, let $u$ solve \cref{pb:diri}. Call $u_0 = u- \bar{u}$. Then, as seen above, $u_0 \in W(I,H^1_0)$ and $(i_V (u-\bar{u}) )'|_{H^{-1}}+A(u - \bar{u}) = (i_Vu)'|_{H^{-1}}-(i_V\bar{u})'|_{H^{-1}}+Au - A\bar{u} = \ind{\cref{prop:sanity}}  = (i_Vu)'|_{H^{-1}}-(i_V\bar{u}_t)|_{H^{-1}}+Au - A\bar{u} = -(i_V\bar{u}_t)|_{H^{-1}}- A\bar{u}$ if $u$ solves \cref{pb:diri}, where $\bar{u}_t$ is the weak derivative of $\bar{u}$. Call $u_0 = u-\bar{u}$. By again \cref{prop:sanity}, $(i_W (u-\bar{u}) )'+A(u - \bar{u}) = (i_Vu)'|_{H^{-1}}-(i_V\bar{u})'|_{H^{-1}}+Au - A\bar{u} = (i_Vu)'|_{H^{-1}}-(i_V\bar{u}_t)|_{H^{-1}}+Au - A\bar{u} = -(i_V\bar{u}_t)|_{H^{-1}}- A\bar{u} = -b^*r(a\bar{u}_t)$. Moreover, $u_0(0)=0$, so that $u_0$ solves \cref{pb:diri_ext}.
 
-\begin{itemize}
-\item $u_0 \in L^2(I,H^1_0)$
-\item $u_0' \in L^2(I,V^*)+L^2(I,H)\subseteq L^2(I,H^{-1})$
-\item $u_0(0)=0$ in $H$
-\item $u_0$ solves $u_0' + A u_0 = -((\bar{u}',\cdot)_H+\langle A \bar{u},\cdot\rangle_{H^{-1},H^1_0})$
-\end{itemize}
+%\begin{itemize}
+%\item $u_0 \in L^2(I,H^1_0)$
+%\item $u_0' \in L^2(I,V^*)+L^2(I,H)\subseteq L^2(I,H^{-1})$
+%\item $u_0(0)=0$ in $H$
+%\item $u_0$ solves $u_0' + A u_0 = -((\bar{u}',\cdot)_H+\langle A \bar{u},\cdot\rangle_{H^{-1},H^1_0})$
+%\end{itemize}
 
 \underline{Stability}
 
@@ -840,18 +930,18 @@ We just saw that the two parabolic equations of interest can be recasted into th
 
 In particular, $f \in L^2(I, V^*)$ and so is $Au$ (because $A\in L(V,V^*)$, and by \ref{lemma:bochner_Hk_map}).
 
-Call then $E(u):=u_t+Au-f \in L^2(I,V^*)$ and $W_0(I,V)$ the $W(I,V)$ functions with zero initial value. Then, the differential equation reads $\langle E(u)(t),v\rangle_{V^,V}=0$ for all $v\in V$, for a.a. $t$, equivalently, $E(u)=0$. Thus, we are interested in the abstract problem:
+Call then $E(u):=u_t+Au-f \in L^2(I,V^*)$ and $W_0(I,V)$ the $W(I,V)$ functions with zero initial value. Then, the differential equation reads $\langle E(u)(t),v\rangle_{V^*,V}=0$ for all $v\in V$, for a.a. $t$, equivalently, $E(u)=0$ for a.a. $t$. Thus, we are interested in the abstract problem:
 
 \begin{pb}[Even more abstract parabolic equation]
 \label{pb:more_abstr_par}
-Given a function $E: W(I,V)\rightarrow L^2(I,V^*)$, find $u\in W_0(I,V)$, such that $E(u)=0$
+Given a function $E: W(I,V)\rightarrow L^2(I,V^*)$, find $u\in W_0(I,V)$, such that $E(u)=0$ for a.a. $t$.
 \end{pb}
  
 We can view $L^2(I,V^*)\cong L^2(I,V)^*$.
 
 Hence $\langle E(u), v\rangle_{L^2(I,V)^*, L^2(I,V)}=\int_I \langle E(u)(t),v(t) \rangle_{V^*,V} dt$ (see \cite{hinze}, theorem 1.31 at page 39).
 
-Now, by \cref{prop:weak_class} and \ref{prop:sob_implies_W}, we get $C_c^\infty(I,V) \subseteq L^2(I,V)\cap H^1(I,H) \subseteq W(I,V)$. Actually, $C_c^\infty(I,V) \subseteq  W^0(I,V)$, the functions of $W(I,V)$ having zero terminal values.
+Now, by \cref{prop:sob_implies_W}, we get $C_c^\infty(I,V) \cap H^1(I,V) \subseteq W(I,V)$. Actually, $C_c^\infty(I,V) \subseteq  W^0(I,V)$, the functions of $W(I,V)$ having zero terminal values.
 
 We have therefore $C_c^\infty(I,V) \subseteq  W^0(I,V) \subseteq L^2(I,V)$, which implies that $  W^0(I,V)\subseteq L^2(I,V)$ is dense in $L^2(I,V)$. We can then formulate:
 
