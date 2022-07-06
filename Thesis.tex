@@ -72,6 +72,9 @@
 \newcommand{\id}{\text{Id}}
 \newcommand{\te}{\theta}
 \newcommand{\Te}{\Theta}
+\newcommand{\tred}[1]{\textcolor{red}{#1}}
+\newcommand{\dive}{\text{div}}
+\newcommand{\weakc}{\rightharpoonup}
 
 \begin{document}
 
@@ -138,25 +141,618 @@ original, hand-written signature
 
 \chapter{Introduction}  \setcounter{page}{1}   % setzt Seitenzaehlung auf 1
 
-\chapter{Shape derivatives}
+\chapter{Continuous problem}
 
-We list here several assumptions to then formulate the shape optimization problem. For the sake of proving Gateaux differentiability, we only need to discuss concepts related to the $W^{1,\infty}$ topology.
+\section{Gateux differentiability}
+
+\begin{ass}[Geometry assumptions for the shape optimization problem]
+\label{ass:geo_sh}
+Let $D\subseteq \mR^n$ be a bounded Lipschitz domain, and $\Omega_r \cc D$ also bounded Lipschitz. Call $U_r:=D\setminus \Omega_r$, another bounded Lipschitz domain.
+\end{ass}
 
 \begin{defn}[Admissible transformations]
-Let $D\subseteq \mR^n$ be a bounded Lipschitz domain. Define $\Theta:=\{\theta \in W^{1,\infty}(\mR^n,\mR^n) \text{ with } \theta|_D\in W^{2,\infty}(D;\mR^n) \text{ and } \theta=0 \text{ on } \mR^n \setminus D\}$
+
+Given $D$, we consider the set $\cT$ as defined in \cref{def:adm}, based on the perturbations $\Te$, also defined in \cref{def:adm}.
+
+We consider $\cT_a:=\cT \cap \{ \tau \in W^{1,\infty}(\mR^n, \mR^n), \norm{\tau - \id}_{W^{1,\infty}(\mR^n, \mR^n)}<C(U_r)\}$, where $C(U_r)$ is given by \cref{thm:ptb_id_lip}.
+
+This ensures that $T(U_r)\cc D$ is also bounded Lipschitz, $T$ the unique Lipschitz continuous representive of any $\tau \in \cT_a$ (see \cref{prop:lipk}).
+
+Thanks to \cref{prop:ptb_id}, a small $\Te$ perturbation of $\tau \in \cT_a$ done in the $W^{1,\infty}(D;\mR^n)$ topology leaves us inside $\cT_a$.
+
 \end{defn}
 
-\begin{ass}[Assumptions for the shape optimization problem]
-We assume the following:
+Note, we need $T$ to have a Lipschitz inverse to conclude $T(U_r)\cc D$: for $x \in D$, we have $0<\delta = \inf_{d \in \partial D}|x-d|\leq \norm{T^{-1}}_{W^{1,\infty}(\mR^n,\mR^n)}\inf_{d \in \partial D}|T(x)-d|$.
+
+We are interested in solving the following problem.
+
+\begin{pb}[Shape optimization problem]
+\label{pb:shopt}
+Suppose \cref{ass:geo_sh}, \cref{ass:diri}, \cref{ass:neu} hold. Using the notation $T = U(\tau)$ for "unique continuous representative" of $\tau$, we want to solve:
+
+$$\inf_{\tau \in \cT_a}\frac{1}{2}\norm{v_\tau-w_\tau}_{L^2(I,H_T)}^2=:J(\tau)$$
+
+Here $v^\tau = v_0^\tau + \bar{u}$, and $v_0^\tau, w_\tau$ are given in \cref{pb:joint_mov} and $\bar{u}$ is given in \cref{pb:diri_ext}. The notation for the spaces also comes from  \cref{pb:joint_mov}, where $\cdot_T$ means a space defined on the moving domain, $H=L^2, W=H^1_0, V = H^1_c$ (and the last space is defined in \cref{subs:inh_diri}).
+
+\end{pb}
+
+\begin{obs}[Well posedness of $J$]
+
+We know from \cref{prop:diri_wp} that $v_0^T + \bar{u}$ doesn't depend on the particular choice of $\bar{u}$, therefore, for different $\tau$'s yielding the same domain, $J(\tau)$ doesn't change.
+
+\end{obs}
+
+Moreover, \cref{ass:geo_sh} ensures in particular \cref{ass:pull}, which enables the applicability of \cref{thm:eq_pde}.
+
+Now, let $U:=T(U_r)$, for $T \in \cT_a$ (we write $T \in \cT_a$ for $\tau \in \cT_a$, $U(\tau)=T$) and let $\delta \te \in \Te$. 
+
+We are interested in finding $J'(\tau) \in \Te^*$ such that, for all $\delta \te_k \rightarrow 0$ in $\Te$, we have:
+
+
+$$\lim_{k}\frac{|J(\tau+\delta \te_k)-J(\tau)-J'(\tau)(\delta \te_k)|}{\norm{\delta \te_k}_{\Te}}$$
+
+For simplificity we have put $\norm{\te}_\Te = \norm{\te}_{W^{1,\infty}(\mR^n;\mR^n)}=\norm{\te}_{W^{1,\infty}(D;\mR^n)}$.
+
+Note, $\tau+\delta \te_k \in \cT_a$ for large enough $k$. In fact, $\tau+\delta \te_k \in \cT$ for large $k$ as in \cref{prop:ptb_id}, and the condition on $C(U_r)$ is satisfied too, because $\te :=\tau-\id$ was already in the $W^{1,\infty}$ open ball of radius $C(U_r)$ centered at the origin, and so will be $\te + \delta_k\te$, always for large $k$.
+
+Now, $\tau+\delta \te_k  = (\id+\delta\te_k \circ \tau^{-1})\circ \tau$, and $\id+\delta\te_k \circ \tau^{-1}$ is in $\cT_a$ (it is in $\cT$ by \cref{prop:ptb_id} and the reasoning above shows it is also in $\cT_a$).
+
+We are then equivalently interested in:
+
+$$\lim_{k}\frac{|J((\id+\delta\te_k \circ \tau^{-1})\circ \tau)-J(\tau)-J'(\tau)(\delta \te_k)|}{\norm{\delta \te_k}_{\Te}}$$
+
+This amounts to setting the reference domain to $T(U_r)$ instead of $U_r$ and perturbing the former, at least for the sake of computing derivatives.
+
+We now introduce a Lagrangian.
+
+For $k\geq K(T)$ we define $T_k:=\id+\delta\te_k \circ \tau^{-1} \in \cT_a$, as seen above.
+
+With the help and the notation of \cref{thm:eq_pde} we can set:
+
+\begin{align*}
+L_T(k,w,v_0,q,p) = \\
+\frac{1}{2}\int_I \int_{T(U_r)}|v_0+\bar{u}_T\circ T_k - w|^2|\det(DT_k)|+\\
+\int_I ( w_t , q |\det(DT_k)|)_{H_T}+ (A_{T_k}\nabla w, \nabla q)_{H_T} -\int_I(g,\tr_{U} q)_{L^2(\Gamma_f)} +\\ \int_I (v_{0t},p |\det(DT_k)|)_{H_T} + (A_{T_k} \nabla v_0, \nabla p)_{H_T}+\\\int_I((\bar{u}\circ T_k)',p|\det(DT_k)|)_{H_T}+(A_{T_k} \nabla (\bar{u} \circ T_k), \nabla p)_{H_T}
+\end{align*}
+
+for $w \in Q_0(I, V_T), v_0 \in Q_0(I,W_T), q \in Q^0(I, V_T), p \in Q^0(I, W_T)$. Remember,  $A_T:=  (DT)^{-1}(DT)^{-t}|\det(DT)|$.
+
+Note that to be precise, $\bar{u}$ is an extension of the Dirichlet datum $f$, on the moving domain $T_k(T(U_r))$. Because of this, let's fix $\bar{u}_T$ with this property on $T(U_r)$. We show that $\bar{u}_T\circ T_k^{-1}$ satisfies the conditions stated in \cref{pb:diri_ext}. 
+
+In particular:
+
 \begin{itemize}
-	\item $\Omega_r \cc D $ are bounded Lipschitz domains in $\mathbb{R}^n$
-	\item $\tau: \mR^n\rightarrow\mR^n$ is a map in $\cT^{1,\infty}$, with $\tau-\id \in W^{2,\infty}(D)$, $\tau -\id = 0$ on $\partial D$
+	\item composition with $T$ preserves the smoothness of the extension, as seen in \cref{prop:bochner_bound}, given that $\circ T_k^{-1}$ is a linear bounded operator between $V_T$ and $V_{T_k \circ T}$
+	\item the initial value is preserved, as seen in the proof of \cref{prop:change_boch}
+	\item the trace on $\Sigma_f$ is preserved, because the trace on $\Gamma_f=\partial D$ is preserved, see \cref{thm:change}
 \end{itemize}
-\end{ass}
+
+Therefore we can state the following definition.
+
+\begin{defn}[Lagrangian]
+
+For a fixed $T \in \cT_a$ and  $k\geq K(T)$, for $T_k:=\id+\delta\te_k \circ \tau^{-1} \in \cT_a$, we define:
+
+\begin{align*}
+L_T(k,w,v_0,q,p) = \\
+\frac{1}{2}\int_I \int_{T(U_r)}|v_0+\bar{u} - w|^2|\det(DT_k)|+\\
+\int_I ( w_t , q |\det(DT_k)|)_{H_T}+ (A_{T_k}\nabla w, \nabla q)_{H_T} -\int_I(g,\tr_{U} q)_{L^2(\Gamma_f)} +\\ \int_I (v_{0t},p |\det(DT_k)|)_{H_T} + (A_{T_k} \nabla v_0, \nabla p)_{H_T}+\\\int_I(\bar{u}',p|\det(DT_k)|)_{H_T}+(A_{T_k} \nabla \bar{u} , \nabla p)_{H_T}
+\end{align*}
+
+$L_T$ is defined as a map $\{k\geq K(T)\}\times Q_0(I, V_T)\times Q_0(I,W_T)\times Q^0(I, V_T)\times Q^0(I, W_T)\rightarrow \mR$.
+
+We call $u = (w,v_0)$, $\pi = (q,p)$, $G(k,u,\pi) = L_T(k,w,v_0,q,p)$ to ease the notation.
+
+We also call $b(k, u) = \frac{1}{2}\int_I \int_{T(U_r)}|v_0+\bar{u}_T - w|^2|\det(DT_k)|$ and $a(k, u,\pi) = G(k,u,\pi)-b(k, u)$, $E = W_0(I, V_T)\times W_0(I,W_T)$, $F=W^0(I, V_T)\times W^0(I, W_T)$.
+
+\end{defn}
+
+\begin{prop}[Properties of the Lagrangian]
+\label{prop:lagr}
+
+$L_T$ satisfies the following properties:
+
+\begin{enumerate}
+	\item $\psi \mapsto a(k, \phi,\psi)$ is linear, no matter what $\phi,k$
+	\item $G$ is Frechet differentiable with respect to $\psi$ at $(k,\phi,0)$ for all $k, \phi$
+	\item $d_\psi G(k,\phi,0)[\delta \psi]=0$ for all $\delta \psi \in F$ admits a unique solution $\phi = u^k$
+	\item $[0,1]\ni s \mapsto G(k, su^k + (1-s)u^0,\psi)$ is $AC[0,1]$, no matter what $k, \psi$
+	\item $G$ is Frechet differentiable with respect to $\phi$ at $(k,\psi,\phi)$ for all $k, \psi, \phi$
+	\item $[0,1]\ni s \mapsto d_\phi G(k, su^k + (1-s)u^0,\psi)[\delta \phi]$ is $L^1(0,1)$, no matter what $k, \psi, \delta \phi$
+	\item there exists a unique solution $\psi = \pi^k$ to $\ds \int_0^1 d_\phi G(k, su^k + (1-s)u^0,\psi)[\delta \phi]ds =0$ for all $\delta \psi$ 
+\end{enumerate}
+
+In particular $\pi^k = (Q^k \circ \tau^k,P^k \circ \tau^k)$, where we introduced the average adjoint problems:
+
+\begin{pb}[Averaged adjoint equations]
+\label{pb:avg_adj_pb}
+\begin{align*}
+-Q^k_t-\Delta Q^k =\frac{v_0^k-w^k+v_0^0-w^0}{2}\circ T_k^{-1}+\bar{u}_T\circ T_k^{-1} \\
+Q^k(T)=0\\
+\partial_\nu Q^k = 0 \text{ on } \Sigma_f\\
+Q^k = 0 \text{ on } \Sigma_m
+\end{align*}
+
+and
+
+\begin{align*}
+-P^k_t-\Delta P^k =-\frac{v_0^k-w^k+v_0^0-w^0}{2}\circ T_k^{-1}-\bar{u}_T\circ T_k^{-1} \\
+P^k(T)=0\\
+P^k = 0 \text{ on } \Sigma_m \sqcup \Sigma_f
+\end{align*}
+\end{pb}
+
+\end{prop}
+
+\begin{mproof}
+
+The first point is immediate.
+
+\underline{Proof of 2}
+
+All the pieces are linear in $\psi$. We only check the boundedness of the various differentials. For simplicity, call $|\det(DT_k)|=d$, and note that   $\norm{qd}_{H_T}\leq C(d)\norm{q}_{H_T}$.
+
+And now, for instance:
+%\int_I \langle w_t , q |\det(DT_\e)|\rangle_{V^*_T,V_T}+ (A_{T_\e}\nabla w, \nabla q)_{H_T} -\int_I(g,\tr_{U} q)_{L^2(\Gamma_f)}
+\begin{align*}
+\int_I ( w_t , \delta q |\det(DT_k)|)_{H_T} = \int_I ( w_t , \delta q d )_{H_T}\leq\\ C(d) \int_I \norm{w_t}_{H_T}\norm{\delta q}_{H_T}\leq C(d) \norm{w_t}_{L^2(I,H_T)}\norm{\delta q}_{L^2(I,H_T)}\leq\\C(d) \norm{w}_{Q(I,V_T)}\norm{\delta q}_{Q(I,V_T)}\leq
+C(d) \norm{w}_{Q(I,V_T)}(\norm{\delta q}_{Q(I,V_T)}+\norm{\delta p}_{Q(I,V_T)}) =\\ C(d) \norm{w}_{Q(I,V_T)}\norm{\delta\psi}_F
+\end{align*}
+
+Or also:
+
+\begin{align*}
+\int_I(g,\tr_{U} \delta q)_{L^2(\Gamma_f)}\leq \int_I \norm{g}_{L^2(\Gamma_f)}\norm{\delta q}_{V_T}\leq \norm{g}_{H^1(I,L^2(\Gamma_f))}\norm{\delta\psi}_F
+\end{align*}
+
+and:
+
+\begin{align*}
+\int_I (A_{T_k} \nabla \bar{u}_T, \nabla\delta p)_{H_T}\leq C\norm{A_{T_k}}_{L^\infty(D;\mR^{n\times n})}\int_I \norm{\nabla \bar{u}_T}_{L^2(I,H_T)}\norm{\nabla\delta p}_{L^2(I,H_T)}\leq\\ C(T) \norm{\delta\psi}_F \norm{\bar{u}}_{H^1(I,V_T)}
+\end{align*}
+
+\underline{Proof of 3}
+
+We get back the state equations, thanks to linearity, and by testing separately with $\delta \psi =(\delta q, 0)$ and $\delta \psi = (0,\delta p)$, so that a unique solution exists by \cref{thm:eq_pde}.
+
+\underline{Proof of 4}
+
+Every piece but $b$ is linear or constant in the state $\phi$. We only need to prove that $[0,1]\ni s \mapsto b(k, su^k + (1-s)u^0)$ is $AC[0,1]$. But by the structure of the cost function $J$, transported on $T(U_r)$, we see that the latter is a quadratic polynomial in $s$, hence, absolutely continuous.
+
+\underline{Proof of 5}
+
+For the pieces with the gradients, it follows as above, by in case employing the simmetry of $A_{T_k}$.
+
+Now, for instance the linear form $\delta v_0 \mapsto \int_I (\delta v_{0t},p |\det(DT_k)|)_{H_T}$ is also bounded by $C(d) \norm{\delta v_0}_{Q(I,W_T)}\norm{\delta q}_{Q(I,V_T)}$ just like before.
+
+What remains to check is the Frechet differentiability of $b$.
+
+To do so, perturb $\phi$ by $\delta \phi$ and expanding the square:
+
+\begin{align*}
+\frac{1}{2}\int_I \int_{T(U_r)}|v_0+\delta v_0+\bar{u}_T - w-\delta w|^2|\det(DT_k)| = \\\frac{1}{2}\int_I \int_{T(U_r)}|v_0+\bar{u}_T - w|^2|\det(DT_k)|+\\\frac{1}{2}\int_I \int_{T(U_r)}|\delta v_0-\delta w|^2|\det(DT_k)|+\\\int_I \int_{T(U_r)}(v_0+\bar{u}_T - w)(\delta v_0-\delta w)|\det(DT_k)|
+\end{align*} 
+
+Now, $\ds \int_I \int_{T(U_r)}|\delta v_0-\delta w|^2|\det(DT_k)|\leq C(T_k)\norm{\delta v_0-\delta w}_{L^2(I,H_T)}^2\leq C(T_k)\norm{\phi}_E^2$, so that this term is of higher term.
+
+And $\int_I \int_{T(U_r)}(v_0+\bar{u}_T - w)(\delta v_0-\delta w)|\det(DT_k)|$ is linear and bounded by reasonings similar to the former ones.
+
+\underline{Proof of 6}
+
+By the last point:
+
+\begin{align*}
+d_\phi G(k, \phi ,\psi)[\delta \phi] =\\
+\int_I ((v_0+\bar{u}_T - w)|\det(DT_k)|,\delta v_0-\delta w)_{H_T}+\\
+\int_I (\delta w_t , q |\det(DT_k)|)_{H_T}+ (A_{T_k}\nabla \delta w, \nabla q)_{H_T}+\\
+\int_I (\delta v_{0t},p |\det(DT_k)|)_{H_T} + (A_{T_k} \nabla \delta v_0, \nabla p)_{H_T}
+\end{align*}
+
+so that:
+
+\begin{align*}
+d_\phi G(k, su^k + (1-s)u^0,\psi)[\delta \phi] = \\
+\int_I ((s(v_0^k+\bar{u}_T - w^k)+(1-s)(v_0^0+\bar{u}_T - w^0))|\det(DT_k)|,\delta v_0-\delta w)_{H_T}+\\
+\int_I ( \delta w_t , q |\det(DT_k)|)_{H_T}+ (A_{T_k}\nabla \delta w, \nabla q)_{H_T}+\\
+\int_I ( \delta v_{0t},p |\det(DT_k)|)_{H_T} + (A_{T_k} \nabla \delta v_0, \nabla p)_{H_T}
+\end{align*}
+
+which is a degree $1$ polynomial in $s$, hence, $L^1(0,1)$.
+
+\underline{Proof of 7}
+
+Rewriting the formula above and integrating in $s$, we come to:
+
+\begin{align*}
+\int_0^1d_\phi G(k, su^k + (1-s)u^0,\psi)[\delta \phi]ds = \\
+\int_I (((v_0^k+\bar{u}_T - w^k)+(v_0^0+\bar{u}_T - w^0))/2|\det(DT_k)|,\delta v_0-\delta w)_{H_T}+\\
+\int_I ( \delta w_t , q |\det(DT_k)|)_{H_T}+ (A_{T_k}\nabla \delta w, \nabla q)_{H_T}+\\
+\int_I ( \delta v_{0t},p |\det(DT_k)|)_{H_T} + (A_{T_k} \nabla \delta v_0, \nabla p)_{H_T}
+\end{align*}
+
+As in \cref{prop:change_boch}, $ \delta w_t  = (\delta w\circ T_k^{-1})_t\circ T_k$, where $\delta w\circ T_k^{-1} \in Q_0(I,V_{T_k \circ T})$ by \cref{prop:change_boch} (that can be applied thanks to the smallness of $T_k$).
+
+Applying a change of variables we are left with:
+
+\begin{align*}
+\int_0^1 d_\phi G(k, su^k + (1-s)u^0,\psi)[\delta \phi]ds = \\
+\int_I \left (\frac{v_0^k-w^k}{2}\circ T_k^{-1}+ \frac{v_0^0-w^0}{2}\circ T_k^{-1}+\bar{u}_T\circ T_k^{-1} ,\delta v_0\circ T_k^{-1}-\delta w\circ T_k^{-1}\right)_{H_{T_k \circ T}}+\\
+\int_I ((\delta w\circ T_k^{-1})_t , q\circ T_k^{-1} )_{H_{T_k \circ T}}+ (\nabla (\delta w\circ T_k^{-1}), \nabla( q\circ T_k^{-1}))_{H_{T_k \circ T}}+\\
+\int_I ( (\delta v_{0}\circ T_k^{-1})_t,p \circ T_k^{-1})_{H_{T_k \circ T}} + ( \nabla \delta (v_0\circ T_k^{-1}), \nabla (p\circ T_k^{-1}))_{H_{T_k \circ T}}
+\end{align*}
+
+Here, as we saw in \cref{prop:change_boch}, we have $\delta w\circ T_k^{-1}, w\circ T_k^{-1} \in Q_0(I, V_{T_k \circ T})$, $ \delta v_{0}\circ T_k^{-1}, v_{0}\circ T_k^{-1} \in Q_0(I,W_{T_k \circ T})$, $q\circ T_k^{-1}\in Q^0(I, V_{T_k \circ T})$ and $p\circ T_k^{-1}\in Q^0(I, W_{T_k \circ T})$.
+
+Because $\circ T_k^{-1}$ is a bijection of $Q_0(I,W_{T_k \circ T})$ and $Q_0(I,W_{T_k})$ as we saw in \ref{prop:change_boch} (and analogously of $V$), we have that  $\int_0^1 d_\phi G(k, su^k + (1-s)u^0,\psi)[\delta \phi]ds=0$ for all $\delta \phi \in E$ if and only if:
+
+\begin{align*}
+\int_I \left (\frac{v_0^k+w^k}{2}\circ T_k^{-1}- \frac{v_0^0+w^0}{2}\circ T_k^{-1}+\bar{u}_T\circ T_k^{-1} ,\delta V_0-\delta W\right)_{H_{T_k \circ T}}+\\
+\int_I ( \delta W_t , q\circ T_k^{-1})_{H_{T_k \circ T}}+ (\nabla\delta W, \nabla( q\circ T_k^{-1}))_{H_{T_k \circ T}}+\\
+\int_I ( \delta V_{0t},p \circ T_k^{-1})_{H_{T_k \circ T}} + ( \nabla \delta V_0, \nabla (p\circ T_k^{-1}))_{H_{T_k \circ T}} = 0
+\end{align*}
+
+for all $\delta W, \in Q_0(I, V_{T_k \circ T})$, $ \delta V_{0} \in Q_0(I,W_{T_k \circ T})$.
+
+We wish to find a (unique) solution $(q^k, p^k) \in Q^0(I, V_T)\times Q^0(I, W_T)$ of this problem. We can equivalently (by \cref{prop:change_boch}) find $(Q^k, P^k) \in Q^0(I, V_{T_k \circ T})\times Q^0(I, W_{T_k \circ T})$ satisfying:
+
+\begin{align*}
+\int_I \left (\frac{v_0^k-w^k}{2}\circ T_k^{-1}+ \frac{v_0^0-w^0}{2}\circ T_k^{-1}+\bar{u}_T\circ T_k^{-1} ,\delta V_0-\delta W\right)_{H_{T_k \circ T}}+\\
+\int_I (\delta W_t ,Q^k )_{H_{T_k \circ T}}+ (\nabla \delta W, \nabla Q^k)_{H_{T_k \circ T}}+\\
+\int_I( \delta V_{0t},P^k)_{H_{T_k \circ T}} + ( \nabla \delta V_0, \nabla P^k)_{H_{T_k \circ T}} = 0
+\end{align*}
+
+for all $\delta W, \in Q_0(I, V_{T_k \circ T})$, $ \delta V_{0} \in Q_0(I,W_{T_k \circ T})$.
+
+By testing first with $\delta W=0$ and then with $\delta V_0=0$ we can equivalently look for:
+
+\begin{align*}
+(Q^k, P^k) \in Q^0(I, V_{T_k \circ T})\times Q^0(I, W_{T_k \circ T}) \text{ with }\\
+\int_I (\delta W_t ,Q^k)_{H_{T_k \circ T}}+ (\nabla \delta W, \nabla Q^k)_{H_{T_k \circ T}} =\\ \int_I \left (\frac{v_0^k+w^k-v_0^0-w^0}{2}\circ T_k^{-1}+\bar{u}_T\circ T_k^{-1} ,\delta W\right)_{H_{T_k \circ T}}\\
+\int_I ( \delta V_{0t},P^k)_{H_{T_k \circ T}}+ ( \nabla \delta V_0, \nabla P^k)_{H_{T_k \circ T}} =\\- \int_I \left (\frac{v_0^k-w^k+v_0^0-w^0}{2}\circ T_k^{-1}+\bar{u}_T\circ T_k^{-1} ,\delta V_0\right)_{H_{T_k \circ T}}
+\end{align*}
+
+An application of integration by parts in time (see \cref{prop:Q}) yields the problem:
+
+\begin{align*}
+(Q^k, P^k) \in W^0(I, V_{T_k \circ T})\times W^0(I, W_{T_k \circ T}) \text{ with }\\
+-\int_I ( Q^k_t, \delta W )_{H_{T_k \circ T}}+ (\nabla \delta W, \nabla Q^k)_{H_{T_k \circ T}} =\\ \int_I \left (\frac{v_0^k-w^k+v_0^0-w^0}{2}\circ T_k^{-1}+\bar{u}_T\circ T_k^{-1} ,\delta W\right)_{H_{T_k \circ T}}\\
+-\int_I( P^k_t, \delta V_0)_{H_{T_k \circ T}} + ( \nabla \delta V_0, \nabla P^k)_{H_{T_k \circ T}} =\\- \int_I \left (\frac{v_0^k-w^k+v_0^0-w^0}{2}\circ T_k^{-1}+\bar{u}_T\circ T_k^{-1} ,\delta V_0\right)_{H_{T_k \circ T}}
+\end{align*}
+
+But this is the weak formulation (cfr. \cref{thm:eq_pde}, \cref{pb:diri_ext}, \cref{pb:neu}) of the problems:
+
+\begin{align*}
+-Q^k_t-\Delta Q^k =\frac{v_0^k-w^k+v_0^0-w^0}{2}\circ T_k^{-1}+\bar{u}_T\circ T_k^{-1} \\
+Q^k(T)=0\\
+\partial_\nu Q^k = 0 \text{ on } \Sigma_f\\
+Q^k = 0 \text{ on } \Sigma_m
+\end{align*}
+
+and
+
+\begin{align*}
+-P^k_t-\Delta P^k =-\frac{v_0^k-w^k+v_0^0-w^0}{2}\circ T_k^{-1}-\bar{u}_T\circ T_k^{-1} \\
+P^k(T)=0\\
+P^k = 0 \text{ on } \Sigma_m \sqcup \Sigma_f
+\end{align*}
+
+Applying the time reversal $t\mapsto T -t$ (where $I = [0,T]$), these are a couple of standard heat equations for which we have available existence, uniqueness and stability results (see \cref{chap:parab_eq}, and \cref{prop:eq_form}).
+
+By calling then $\pi^k = (Q^k \circ T^k,P^k \circ T^k)$ we conclude the proof.
+
+\end{mproof}
+
+We now turn to the verification of Gateaux differentiability of $J$, applying the techniques proposed in \cite{avg_adj}.
+
+\begin{prop}[Averaged adjoint method for Gateaux derivatives]
+\label{prop:adv_adj}
+
+If $J'(\tau) \in \Te^*$ satisfies:
+
+$$\lim_{k}\frac{G(k,u^0,\pi^k)-G(0,u^0,\pi^k)}{t_k}=J'(\tau)[\delta \te]$$
+
+where $\delta\te_k = t_k\delta \te$ for $t_k\rightarrow 0$, then $J'(\tau)$ is the Gateaux derivative of $J$ at $\tau$.
+
+\end{prop}
+
+\begin{mproof}
+
+We have $G(k,u^k,\pi^k)-G(k,u^0,\pi^k)  = \int_0^1 d_\phi G(k, su^k + (1-s)u^0,\pi^k)[u^k-u^0]ds = 0$ because $u^k-u^0 \in E$, and by absolute contintinuity and integrability of derivative as seen in \cref{prop:lagr}.
+
+Moreover, calling $g_k = G(k,u^k,0)-G(0,u^0,0)$, we have:
+
+\begin{itemize}
+	\item $g_0 = 0$
+	\item $g_k = J((\id+\delta\te_k \circ \tau^{-1})\circ \tau)-J(\tau)$, thanks again to a change of variables
+	\item $g_k = G(k,u^k,\pi^k)-G(0,u^0,\pi^k)$ thanks to $\pi^k \in F$ and the state equations (note, this is possible because $k,u^k$ appear, and $0,u^0$ appear, so that the indices don't mix)
+\end{itemize}
+
+And now, $J(\tau+\delta\te_k)-J(\tau) = J((\id+\delta\te_k \circ \tau^{-1})\circ \tau)-J(\tau) = g_k = G(k,u^k,\pi^k)-G(0,u^0,\pi^k) = G(k,u^k,\pi^k)-G(k,u^0,\pi^k)+G(k,u^0,\pi^k)-G(0,u^0,\pi^k) = G(k,u^0,\pi^k)-G(0,u^0,\pi^k)$.
+
+\end{mproof}
+
+\begin{prop}[Gateaux differentiability of $J$]
+Given $\tau \in \cT_a$, $J$ is Gateaux differentiable at $\tau$ with respect to the $W^{1,\infty}$ topology. The Gateaux differential is:
+
+
+\begin{align*}
+J'(\tau)[\delta \te] =\\ \int_I (w_t^\tau \dive(\delta \te\circ  \tau^{-1}), q^\tau )+ \int_I (A'(\delta\te \circ \tau^{-1})\nabla v^\tau, \nabla p^\tau)+\\
+\int_I (v_t^\tau \dive(\delta \te\circ  \tau^{-1}), p^\tau )+ \int_I (A'(\delta\te \circ \tau^{-1})\nabla w^\tau, \nabla q^\tau)+\\
+\frac{1}{2}\int_I\int_{T(U_r)}|v^\tau-w^\tau|^2\dive(\delta \te\circ  \tau^{-1})
+\end{align*}
+
+where $p^\tau$, $q^\tau$ solve:
+
+\begin{align*}
+-q^\tau_t-\Delta q^\tau =v^\tau-w^\tau\\
+q^\tau(T)=0\\
+\partial_\nu q^\tau = 0 \text{ on } \Sigma_f\\
+q^\tau = 0 \text{ on } \Sigma_m
+\end{align*}
+
+and
+
+\begin{align*}
+-p^\tau_t-\Delta p^\tau = - v^\tau+ w^\tau \\
+p^\tau(T)=0\\
+p^\tau = 0 \text{ on } \Sigma_m \sqcup \Sigma_f
+\end{align*}
+
+and where $A'(\delta\te )= - D\delta \te -(D\delta\te)^t + \dive(\delta\te)$.
+
+\end{prop}
+
+\begin{mproof}
+
+\underline{The shape derivative is linear and bounded}
+
+Linearity is immediate. For the boundedness:
+
+\begin{align*}
+|J'(\tau)[\delta \te]| \leq\\ \norm{\dive(\delta \te\circ  \tau^{-1})}_{L^\infty(T(U_r))}\left (\int_I( \norm{q_t^\tau}_{H^T}\norm{q^\tau}_{H_T}+ \norm{v_t^\tau}_{H_T}\norm{p^\tau}_{H_T})+\frac{1}{2}\norm{v^\tau-w^\tau}^2_{L^2(I,H_T)}\right )+\\
+\left(\sum_{ij} \norm{(A'(\delta\te \circ \tau^{-1})_{ij}}_{L^\infty(T(U_r))}\right )\left (
+\int_I \norm{\nabla v^\tau}_{H_T} \norm{\nabla p^\tau}_{H_T}+ \int_I \norm{\nabla w^\tau}_{H_T} \norm{\nabla q^\tau}_{H_T}\right )
+\end{align*}
+
+and then, for $C$ independent of $\delta \te$:
+
+\begin{align*}
+|J'(\tau)[\delta \te]| \leq\\ C \left ( \norm{\dive(\delta \te\circ  \tau^{-1})}_{L^\infty(T(U_r))}+\left(\sum_{ij} \norm{(A'(\delta\te \circ \tau^{-1})_{ij}}_{L^\infty(T(U_r))}\right )\right )\leq\\
+\norm{\delta \te \circ \tau^{-1}}_{W^{1,\infty}(\mR^n;\mR^n)}\leq \\
+C\norm{\delta \te }_{W^{1,\infty}(\mR^n;\mR^n)}
+\end{align*}
+
+where in the last step we applied point i) of lemme 2.2, \cite{murat}. This shows the boundedness.
+
+\underline{Conclusion}
+
+Assume $p^k \weakc p^0$ in $Q(I,W_T)$ and $q^k \weakc q^0$ in $Q(I,V_T)$.
+
+Now, using that $u^0=(w^\tau, v_0^\tau)$:
+
+\begin{align*}
+G(k,u^0,\pi^k)-G(0,u^0,\pi^k) =\\
+\frac{1}{2}\int_I \int_{T(U_r)}|v^\tau-w^\tau|^2|\det(DT_k)|+\\
+\int_I ( w_t^\tau |\det(DT_k)| , q^k)_{H_T}+ (A_{T_k}\nabla w^\tau, \nabla q^k)_{H_T} -\int_I(g,\tr_{U} q^k)_{L^2(\Gamma_f)} +\\ \int_I (v_t^\tau |\det(DT_k)|,p^k )_{H_T} + (A_{T_k} \nabla v^\tau, \nabla p^k)_{H_T} - \\
+\frac{1}{2}\int_I \int_{T(U_r)}|v^\tau-w^\tau|^2-\\
+\int_I ( w_t^\tau , q^k )_{H_T}+(\nabla w^\tau, \nabla q^k)_{H_T} +\int_I(g,\tr_{U} q^k)_{L^2(\Gamma_f)} -\\ \int_I (v_t^\tau,p^k )_{H_T} + ( \nabla v^\tau, \nabla p^k)_{H_T} \\
+\end{align*}
+
+Grouping some terms and cancelling the boundary integral:
+
+\begin{align*}
+G(k,u^0,\pi^k)-G(0,u^0,\pi^k) =\\
+\frac{1}{2}\int_I \int_{T(U_r)}|v^\tau-w^\tau|^2(|\det(DT_k)|-1)+\\
+\int_I ( w_t^\tau (|\det(DT_k)| -1), q^k)_{H_T}+ ((A_{T_k}-I)\nabla w^\tau, \nabla q^k)_{H_T}+\\
+\int_I (v_t^\tau (|\det(DT_k)|-1),p^k )_{H_T} + ((A_{T_k}-I) \nabla v^\tau, \nabla p^k)_{H_T} \\
+\end{align*}
+
+Now, the application $\delta \te \mapsto \id +\delta \te \circ \tau^{-1}$ is Frechet differentiable at $\delta \te =0$, as a map of $\Te$ into $\cV^1$, with Frechet derivative $\delta \circ \te \tau^{-1}$, which is linear and bounded by point i) of lemme 2.2, \cite{murat}. Note, we needed here $\tau \in \cT^1$.
+
+Also, the maps $\delta \eta \mapsto |\det(D\eta)|$ and $\eta\mapsto (D\eta)^{-1}(D\eta)^{-t}|\det D\eta|$ are Frechet differentiable at $\id$, from $\cV^1$ into $L^\infty(\mR^n;\mR)$ and $L^\infty(\mR^n;\mR^{n\times n})$, as stated in lemma 4.16, page 80 of \cite{lindemann}. Their Frechet derivatives are $\dive (\beta)$ and $I-D\beta-(D\beta)^t$, respectively.
+
+Therefore, composition with  $\delta \te  \mapsto \id+ \delta \te \circ \tau^{-1}$ yields two Frechet differentiable maps, whose derivatives at $0$, in direction $\delta \te \in \Te$ are exactly:
+
+\begin{itemize}
+	\item $\dive(\delta \te \circ \tau^{-1})$
+	\item $A'(\delta \te \circ \tau^{-1})$
+\end{itemize} 
+
+These maps are:
+
+\begin{itemize}
+	\item $\delta \te_k \mapsto |\det(DT_k)|$
+	\item $\delta \te_k \mapsto A_{T_k}$
+\end{itemize}
+
+Therefore:
+
+\begin{itemize}
+	\item $|\det(DT_k)|-1 = |\det(DT_k)|-1 - t_k\dive(\delta \te \circ \tau^{-1})+t_k\dive(\delta \te \circ \tau^{-1}) = o^1_k + t_k\dive(\delta \te \circ \tau^{-1})$
+	\item $A_{T_k}-I = A_{T_k}-I - t_k A'(\delta \te \circ \tau^{-1}) + t_k A'(\delta \te \circ \tau^{-1}) = o_k^2 + t_k A'(\delta \te \circ \tau^{-1}) $
+\end{itemize}
+
+where $o_1^k \in L^\infty(\mR^n;\mR)$ and $o^2_k \in L^\infty(\mR^n;\mR^{n\times n})$ being higher order terms, in $L^\infty$ and with respect to $t_k$.
+
+We can then write $(G(k,u^0,\pi^k)-G(0,u^0,\pi^k))/t_k = a_k + o_k$.
+
+Here:
+
+\begin{align*}
+a_k :=\\
+\frac{1}{2}\int_I \int_{T(U_r)}|v^\tau-w^\tau|^2\dive(\delta \te \circ \tau^{-1})+\\
+\int_I ( w_t^\tau \dive(\delta \te \circ \tau^{-1}), q^k)_{H_T}+ (A'(\delta \te \circ \tau^{-1}) \nabla w^\tau, \nabla q^k)_{H_T}+\\
+\int_I (v_t^\tau \dive(\delta \te \circ \tau^{-1}),p^k )_{H_T} + (A'(\delta \te \circ \tau^{-1})  \nabla v^\tau, \nabla p^k)_{H_T} \\
+\end{align*}
+
+Thanks to the assumed weak convergence, $a_k\rightarrow J'(\tau)[\delta \te]$.
+
+So, we still have to show that:
+
+\begin{align*}
+o_k:=\\
+\frac{1}{2}\int_I \int_{T(U_r)}|v^\tau-w^\tau|^2 o^1_k t_k^{-1}+\\
+\int_I ( w_t^\tau o^1_kt_k^{-1}, q^k)_{H_T}+ (t_k^{-1}o^2_k\nabla w^\tau, \nabla q^k)_{H_T}+\\
+\int_I (v_t^\tau o^1_k t_k^{-1},p^k )_{H_T} + (t_k^{-1}o^2_k \nabla v^\tau, \nabla p^k)_{H_T} 
+\end{align*}
+
+goes to zero. This is true because again we can write:
+
+\begin{align*}
+|o_k| \leq\\ \norm{ o^1_kt_k^{-1}}_{L^\infty(T(U_r))}\left (\int_I( \norm{v_t^\tau}_{H^T}\norm{p^k}_{H_T}+ \norm{v_t^\tau}_{H_T}\norm{p^k}_{H_T})+\frac{1}{2}\norm{v^\tau-w^\tau}^2_{L^2(I,H_T)}\right )+\\
+\left(\sum_{ij} \norm{((t_k^{-1}o^2_k)_{ij}}_{L^\infty(T(U_r))}\right )\left (
+\int_I \norm{\nabla v^\tau}_{H_T} \norm{\nabla p^k}_{H_T}+ \int_I \norm{\nabla w^\tau}_{H_T} \norm{\nabla q^k}_{H_T}\right )
+\end{align*}
+
+which goes to $0$, thanks to the boundedness of the averaged adjoint states, which stems from their weak convergence.
+
+We assumed $p^k \weakc p^0$ in $Q(I,W_T)$ and $q^k \weakc q^0$ in $Q(I,V_T)$. We now prove these claims.
+
+\underline{Weak convergence of states}
+
+We show at first  $v_0^k \weakc v^0_0$ in $Q(I,W_T)$ and $w^k \weakc w^0$ in $Q(I,V_T)$.
+
+We do this by showing a bound, uniform in $k$.
+
+To do this, recall that $V_0^k:=v_0^k\circ T_k^{-1}$ and $W^k:=w^k\circ T_k^{-1}$ satisfy, as seen in \ref{thm:eq_pde}:
+
+\begin{align*}
+W^k \in Q_0(I, V_{T_k\circ T}), V_0^k \in Q_0(I,W_{T_k\circ T}) \\
+\int_I  (W^k_t , Q)_{H_{T_k\circ T}}+ (\nabla W^k, \nabla Q)_{H_{T_k\circ T}} = \int_I(g,\tr_{{T_k\circ T}(U)} Q)_{L^2(\Gamma_f)}, \quad \forall Q \in Q^0(I, V_{T_k\circ T}) \\
+\int_I (V^k_{0t},P)_{H_{T_k\circ T}} + (\nabla V_0^k, \nabla P)_{H_{T_k\circ T}}= -\int_I(U_k',P)_{H_{T_k\circ T}}+(U^k, \nabla P)_{H_{T_k\circ T}}, \quad \forall P \in Q^0(I, W_{T_k\circ T})
+\end{align*}
+
+where $U^k:=\bar{u}\circ T_k^{-1}$, where we used that pullbacks and time derivatives commute, see \cref{prop:change_boch}.
+
+Thanks to \cref{prop:diri_wp} and \cref{prop:wp_neu} we obtain the stability estimates:
+
+\begin{align*}
+\norm{V^k}^2_{C([0;T],H_{T_k\circ T})}+\norm{V^k}_{L^2(I,H_{T_k\circ T})}^2+ \\\norm{\nabla V^k}_{L^2(I,H_{T_k\circ T})}^2 + \norm{(V^k)_t}^2_{L^2(I,H_{T_k\circ T})}\leq\\ C\norm{U^k}_{H^1(I,V_{T_k\circ T})}^2\\
+\norm{W^k}^2_{C([0;T],H_{T_k\circ T})}+\norm{W^k}_{L^2(I,H_{T_k\circ T})}^2+ \norm{\nabla W^k}_{L^2(I,H_{T_k\circ T})}^2 +\\ \norm{W^k_t}^2_{L^2(I,H_{T_k\circ T})}\leq \\C\norm{g}_{H^1(I,L^2(\Gamma_f))}^2
+\end{align*}
+
+
+where $C$ is independent of $k$.
+
+%But $\norm{U^k}_{H^1(I,V_{T_k\circ T})}^2 = \norm{\bar{u}\circ T_k^{-1}}_{H^1(I,V_{T_k\circ T})}^2\leq N_k\norm{\bar{u}}_{H^1(I,V_{ T})}^2$ by \cref{lemma:bochner_Hk_map}, where $N_k:=\norm{\circ T_k}_{L(V_{T_k\circ T},V_{T}))}$.
+
+Now, consider \ref{thm:change}. It says that for almost every time:
+
+\begin{align*}
+\norm{U^k}_{V_{T_k\circ T}}\leq\\ \left ( 1+\norm{\det DT_k}_{L^\infty(\mR^n)}\right)^{1/2} \norm{(DT_k)^{-1}}_{L^\infty(\mR^n;\mR^{n\times n})}\norm{\bar{u}}_{H^1(T(U_r));\mR^n)}
+\end{align*}
+
+and the same goes for the first derivative. 
+
+
+%The term $( \norm{\det DT_k}_{L^\infty(\mR^n)})^{1/2}$ is bounded with respect to $k$ as we already saw, and with analogous reasonings, so is $ \norm{(DT_k)^{-1}}$, thanks to the Frechet differentiability of $\delta \te_k \rightarrow  (DT_k)^{-1}$ established in lemme 4.3, page IV.8 \cite{murat}.
+
+This bound is uniform on $k$ because of the continuity of the bound, with respect to $k$, as seen in 4.12, page IV.6, \cite{murat}.
+
+We conclude that $\norm{U^k}_{H^1(I,V_{T_k\circ T})}^2$ is bounded and we thus have that $W^k \in Q_0(I, V_{T_k\circ T}), V_0^k \in Q_0(I,W_{T_k\circ T})$ are bounded.
+
+Now, for almost all times, using 4.11, page IV.6 of \cite{murat}, we obtain that, for instance:
+
+\begin{align*}
+\norm{v_0^k}_{V_{ T}}\leq \\\left ( 1+\norm{\det (DT_k)^{-1}}_{L^\infty(\mR^n)}\right)^{1/2} \norm{DT_k}_{L^\infty(\mR^n;\mR^{n\times n})}\norm{V_0^k}_{H^1(T_K(T(U_r)))}
+\end{align*}
+
+where we remember that $H^1_0$ was chosen to be normed with the full $H^1$ norm.
+
+The same goes for $w^k$ and the first derivatives in time, yielding that $w^k \in Q_0(I, V_{ T}), v_0^k \in Q_0(I,W_{T})$ are bounded.
+
+We thus have $w^k\weakc w^? \in Q_0(I, V_{ T})$, $v_0^k \weakc v_0^? \in Q_0(I,W_{T})$, in the weak topologies of, respectively, $Q(I, V_{ T}), Q(I,W_{T})$, and modulo subsequences. The initial values are preserved becase $Q_0$ is closed and convex in the Hilbert space $Q$ (see \ref{prop:Q}). The closedness follows from the fact that the embedding into continuous function is linear bounded, and evaluation at $0$ is linear bounded from continuous functions.
+
+We now prove that $w^?=w^0$, $v^?=v^0$, and this will yield the weak convergence of the whole sequence.
+
+To prove e.g. that $v^?=v^0$, let us look at the weak formulations of $v_0^k$:
+
+\begin{align*}
+\int_I (v_{0t}^k,p |\det(DT_k)|)_{H_T} + (A_{T_k} \nabla v_0^k, \nabla p)_{H_T}+(\bar{u}',p|\det(DT_k)|)_{H_T}+(A_{T_k} \nabla \bar{u} , \nabla p)_{H_T} = 0
+\end{align*}
+
+for all $p \in Q_0(I,W_{T})$.
+
+Let's analyize the first term, which is $\int_I (v_{0t}^k,p |\det(DT_k)|)_{H_T} ) =(v_{0t}^k,p |\det(DT_k)|)_{L^2(I,H_T)}$.
+
+We can write:
+
+\begin{align*}
+(v_{0t}^k,p |\det(DT_k)|)_{L^2(I,H_T)} =\\ (v_{0t}^k,p )_{L^2(I,H_T)}- (v_{0t}^k,p )_{L^2(I,H_T)} + (v_{0t}^k,p |\det(DT_k)|)_{L^2(I,H_T)} =\\ (v_{0t}^k,p )_{L^2(I,H_T)} + (v_{0t}^k,p (|\det(DT_k)|-1))_{L^2(I,H_T)}
+\end{align*}
+
+Because $p \in  Q(I,W_{T})$, the first term converges to $(v_{0t}^?,p )_{L^2(I,H_T)}$, see \cref{prop:Q} for details on why we can write the time derivative of the limit. The other term can be estimated as follows:
+
+\begin{align*}
+|(v_{0t}^k,p (|\det(DT_k)|-1))_{L^2(I,H_T)}|\leq\\\norm{v_{0t}^k}_{L^2(I,H_T)}\norm{p (|\det(DT_k)|-1))}_{L^2(I,H_T)}\leq\norm{v_{0t}^k}_{L^2(I,H_T)}\norm{p }_{L^2(I,H_T)} \norm{|\det(DT_k)|-1}_{L^\infty}
+\end{align*}
+
+Where the first term in the product is bounded by the weak convergence property, and the last one goes to $0$ by continuity, see again 4.12, page IV.6 of \cite{murat}.
+
+In a similar fashion for the other pieces, and by passing to the limit:
+\begin{align*}
+\int_I (v_{0t}^?,p)_{H_T} + (\nabla v_0^?, \nabla p)_{H_T}+(\bar{u}',p)_{H_T}+(\nabla \bar{u} , \nabla p)_{H_T} = 0
+\end{align*}
+
+By uniqueness, $v^?=v^0$.
+
+\underline{Weak convergence of averages adjoint states}
+
+So, $v_0^k \weakc v_0^0, w^k\weakc w^0$ in the sense of the $Q(I,W_T)$ and $Q(I,V_T)$ weak convergence.
+
+We now claim that $p^k \weakc p^0, q^k\weakc q^0$, in a similar style as before. To do so, remember that $P^k:=p^k\circ T_k^{-1}$ and $Q^k:=q^k\circ T_k^{-1}$ solve:
+
+\begin{align*}
+-Q^k_t-\Delta Q^k =\frac{v_0^k-w^k+v_0^0-w^0}{2}\circ T_k^{-1}+\bar{u}_T\circ T_k^{-1} \\
+Q^k(T)=0\\
+\partial_\nu Q^k = 0 \text{ on } \Sigma_f\\
+Q^k = 0 \text{ on } \Sigma_m
+\end{align*}
+
+and
+
+\begin{align*}
+-P^k_t-\Delta P^k =-\frac{v_0^k-w^k+v_0^0-w^0}{2}\circ T_k^{-1}-\bar{u}_T\circ T_k^{-1} \\
+P^k(T)=0\\
+P^k = 0 \text{ on } \Sigma_m \sqcup \Sigma_f
+\end{align*}
+
+By \cref{thm:const_track}, we will obtain a bound in $Q$ of the tranported averaged adjoints as soon as we have a bound on $\ds \frac{v_0^k-w^k+v_0^0-w^0}{2}\circ T_k^{-1}$ in the $L^2(I,H)$ norm, and of $U^k:=\bar{u}_T\circ T_k^{-1}$. The latter was proven above.
+
+So, by \cref{thm:change} and 4.12 of \cite{murat} at page IV.6, it suffices to have an $L^2(I,H)$ bound on $\ds \frac{v_0^k+w^k+v_0^0+w^0}{2}\circ T_k^{-1}\circ T_k = \frac{v_0^k+w^k+v_0^0+w^0}{2}$ which we have, since we just proved that $v_0^k, w^k$ are weakly convergent in e.g. $L^2(I,H)$.
+
+We conclude that $Q^k,P^k$ are bounded in the $Q(I,V_{T_k\circ T})$ and $Q(I,W_{T_k\circ T})$ sense.
+
+But what we want is a bound on $q^k, p^k$ in the $Q(I,V_{ T})$ and $Q(I,W_{ T})$ sense. This can be accomplished in exactly the same way as before.
+
+We conclude that there exist $q^?, p^?$ in $Q^0(I,V_{ T})$, $Q^0(I,W_{ T})$, that are, modulo subsequences, the weak limits of $q^k, p^k$.
+
+To show e.g. $q^?=q^0$ and conclude the convergence of the full sequence, we analyze the weak formulation of $q^k$, which reads, after going to the moving domain and applying integration by parts in time (see \ref{prop:Q}):
+
+\begin{align*}
+-\int_I \left (\frac{((v_0^k+\bar{u}_T - w^k)+(v_0^0+\bar{u}_T - w^0)}{2}\right )|\det(DT_k)|,\delta w)_{H_T}+\\
+-\int_I (  q^k_t ,   \delta w |\det(DT_k)|)_{H_T}+ (A_{T_k}\nabla \delta w, \nabla q^k)_{H_T}
+\end{align*}
+
+for all $\delta w \in Q_0(I,V_{ T})$.
+
+We show the convergence of e.g. the member: $\int_I( v_0^k|\det(DT_k)|,\delta w)_{H_T}$. By splitting the scalar product as we saw above, we are left with checking that $\int_I (v_0^k,\delta w)_{H_T}\rightarrow  \int_I (v_0^0,\delta w)_{H_T}$, which is true, since we proved that $v_0^k \weakc v_0^0$ in $Q(I,W_T)$.
+
+We conclude upon convergence that:
+
+\begin{align*}
+-\int_I \left (\frac{((v_0^0+\bar{u}_T - w^0)+(v_0^0+\bar{u}_T - w^0)}{2}\right ),\delta w)_{H_T}+\\
+-\int_I (  q^?_t ,   \delta w )_{H_T}+ (\nabla \delta w, \nabla q^?)_{H_T}
+\end{align*}
+
+which is satisfied also by $q^0$, therefore $q^? = q^0$ and we have weak convergence of the entire sequence.
+
+\end{mproof}
 
 \appendix
 
-\chapter{Sobolev spaces}
+\chapter{Functional spaces}
+\section{Sobolev spaces}
 
 \begin{thm}[Integration by parts]
 \label{thm:ibp}
@@ -166,7 +762,7 @@ $$\int_\Omega f \partial_i g = -\int_\Omega g \partial_i f+\int_{\partial \Omega
 \end{thm}
 \begin{mproof}
 
-This follows from \cite{leoni}, theore, 18.1 at page 592, where $g$ needs to be $C^1_c(\mR^n)$. But \cite{adams}, theorem 3.18 at page 54, says that (thanks to the smoothness of the boundary) the set of the restriction of such functions is dense in $W^{1,q}(\Omega)$, so that we can conclude by a density argument \textcolor{red}{\href{https://www.math.kit.edu/iana2/lehre/sobolevspaces2021s/media/lec15.pdf}{developed here}}.
+This follows from \cite{leoni}, theorem 18.1 at page 592, where $g$ needs to be $C^1_c(\mR^n)$. But \cite{adams}, theorem 3.18 at page 54, says that (thanks to the smoothness of the boundary) the set of the restriction of such functions is dense in $W^{1,q}(\Omega)$, so that we can conclude by a density argument \textcolor{red}{\href{https://www.math.kit.edu/iana2/lehre/sobolevspaces2021s/media/lec15.pdf}{developed here}}.
 
 \end{mproof}
 
@@ -234,7 +830,7 @@ Conversely, let $u$ be bounded Lipschitz. The above reasoning shows that $u$ has
 
 \begin{cor}[$W^{k,\infty}=C^{k,1}_B$]
 \label{prop:lipk}
-For a bounded Lipschitz domain $\Omega$, or for $\Omega = \mR^n$, then $W^{k,\infty}=C^{k,1}_B$ ($C^{k,1}$ bounded functions with bounded derivatives).
+For a bounded Lipschitz domain $\Omega$, or for $\Omega = \mR^n$, then $W^{k,\infty}=C^{k,1}_B$ ($C^{k,1}$ bounded functions with bounded classical derivatives up to order $k+1$).
 \end{cor}
 \begin{mproof}
 
@@ -271,7 +867,7 @@ Now, $\partial_i h =g_i$ a.e., so everywhere, so that:
 
 \end{mproof}
 
-\chapter{Bochner spaces}
+\section{Bochner spaces}
 
 Here are some useful results about Bochner spaces.
 
@@ -301,7 +897,7 @@ As before, let $X,Y$ be separable Banach, let $T \in L(X,T)$ be a linear bounded
 
 For $k\geq 0$, $f \in H^k(I,X)\implies Tf \in H^k(I,Y)$, with weak derivatives $\partial_{t^i}Tf = T\partial_{t^i}f$, $0\leq i \leq k$.
 
-The map $f \mapsto Tf$, $H^k(I,X)\rightarrow H^k(I,Y)$ is linear bounded.
+The map $f \mapsto Tf$, $H^k(I,X)\rightarrow H^k(I,Y)$ is linear, and bounded by $\norm{T}$.
 \end{prop}
 \begin{mproof}
 The case $k=0$ is proved above.
@@ -482,6 +1078,9 @@ We check the derivative. We have $\int_i i_W(u-v)\phi' =\ind{\mind{u-v \in W\sub
 \end{mproof}
 
 \chapter{Parabolic equations}
+\label{chap:parab_eq}
+
+\section{Abstract theory}
 
 \begin{ass}[Basic assumption for parabolic problems]
 \label{ass:basic_par}
@@ -569,11 +1168,14 @@ By the smoothness of $f_2$ we have that $t \mapsto \langle f_2(t),w_k^n \rangle_
 
 \begin{align*}
 	 = - \sum_{k\leq n}\int_0^tg_k^{n}\langle f_2',w_k^n \rangle_{V^*,V} + \sum_{k\leq n} g_k^{n}(t)\langle f_2(t),w_k^n \rangle_{V^*,V} - \sum_{k\leq n} g_k^{n}(0)\langle f_2(0),w_k^n \rangle_{V^*,V} = \\
-	 -\int_0^t \langle f_2',u_n \rangle_{V^*,V} + \langle f_2,u_n \rangle_{V^*,V}(t)-\langle f_2,u_n \rangle_{V^*,V}(0)=
+	 -\int_0^t \langle f_2',u_n \rangle_{V^*,V} + \langle f_2,u_n \rangle_{V^*,V}(t)-\langle f_2,u_n \rangle_{V^*,V}(0)
 \end{align*}
 
 Here we have used \cref{lemma:bochner_Hk_map} to take the derivative inside the bracket.
 
+Note that by the smoothness of $f_2$, we can write, for instance, $\langle f_2,u_n \rangle_{V^*,V}(0) = \langle f_2(0),u_n \rangle_{V^*,V}$.
+
+\tred{NB: here I need $f_2(0) \in V$ probably, so that we are using the compatibility condition!}.
 
 Going to the absolute values:
 
@@ -761,6 +1363,7 @@ C\int_0^T\HN{u'}^2\leq
 \section{Application to inhomogeneous parabolic problems}
 
 \subsection{Inhomogeneous Dirichlet problem}
+\label{subs:inh_diri}
 
 We make the following assumption.
 
@@ -800,6 +1403,7 @@ u(0)=0
 \end{pb}
 
 \begin{thm}[Well posedness and regularity for \cref{pb:diri}]
+\label{prop:diri_wp}
 Given \cref{ass:diri}, the solution $u$ to \cref{pb:diri} is unique with $u_t \in L^2(I,H)$. 
 
 %The uniqueness holds in more generally in $L^2(I,V)\cap H^1(I, H^{-1})$.
@@ -988,6 +1592,7 @@ By \cref{lemma:bochner_Hk_map}, $G \in H^1(I,V^*)$. In fact, define $T: L^2(\Sig
 Moreover, $\langle A v, v \rangle_{V^*,V}+ 1 \cdot \HN{v} = 1\cdot \norm{V}$, so that we can immediately conclude:
 
 \begin{thm}[Well posedness and regularity for \cref{pb:neu}]
+\label{prop:wp_neu}
 Given \cref{ass:neu}, the solution $u$ to \cref{pb:neu} is unique with $u_t \in L^2(I,H)$.
 
 Furthermore: 
@@ -1020,11 +1625,105 @@ We can view $L^2(I,V^*)\cong L^2(I,V)^*$.
 
 Hence $\langle E(u), v\rangle_{L^2(I,V)^*, L^2(I,V)}=\int_I \langle E(u)(t),v(t) \rangle_{V^*,V} dt$ (see \cite{hinze}, theorem 1.31 at page 39).
 
-Now, by \ref{prop:weak_class}, we get $C_c^\infty(I,V) \subseteq H^1(I,V) \subseteq W(I,V)$. Actually, $C_c^\infty(I,V) \subseteq  W^0(I,V)$, the functions of $W(I,V)$ having zero terminal values.
+\color{black}
 
-We have therefore $C_c^\infty(I,V) \subseteq  W^0(I,V) \subseteq L^2(I,V)$, which implies that $  W^0(I,V)\subseteq L^2(I,V)$ is dense in $L^2(I,V)$. We can then formulate:
+
+We are now ready to restric both state and adjoint space.
+
+\begin{defn}[$Q(I,V)$]
+We define $Q(I,V)=H^{1,1}=L^2(I,V)\cap H^1(I,H)$, with the norm $\norm{v}_Q^2=\norm{v}_{L^2(I,V)}^2 + \norm{v_t}_{L^2(I,H)}^2$.
+\end{defn}
+
+\begin{prop}[Properties of $Q$]
+\label{prop:Q}
+There holds:
+\begin{itemize}
+	\item $Q=Q(I,V)$ is Hilbert with $(v,w)_{L^2(I,V)} + (v_t,w_t)_{L^2(I,H)}$ 
+	\item $Q(I,V)$ is dense in $L^2(I,V)$
+	\item $Q(I,V)\emb C([0,T],H)$
+	\item $Q_0(I,V)$ is dense in $L^2(I,V)$, $Q_0(I,V)$ the space of $Q(I,V)$ function with zero initial value
+	\item $Q(I,V) = W(I,V)\cap H^1(I,H)$, $Q_0(I,V) =  W_0(I,V)\cap H^1(I,H)$ as sets. There holds that the $W(I,V)$ derivative is represented by the $H^1(I,H)$ derivative and $\langle u', v\rangle_{V^*,V} = (u',v)_H$, with the suitable interpretations of $u'$ (on the left, we have $i_V(u)'$, $i_V$ the Gelfand triple embedding; on the right we have $u$, seen in $H$, and then weakly differentiated in the $H^1(I,H)$ sense)
+	\item integration by parts in time holds: $\int_I(v_t,w)_H = -\int_I(w_t,v)_H +(v(T),w(T))_H-(v(0),w(0))_H$
+	\item if $q_n$ is bounded in $Q(I,V)$, then there exists a weakly convergent subsequence $q_k$ such that $q_k\weakc q$ in $L^2(I,H)$, $\partial_i q_k\weakc \partial_i q$ in $L^2(I,H)$ and $q_k'\weakc q'$ in $L^2(I,H)$
+\end{itemize}
+\end{prop}
+\begin{mproof}
+
+\underline{Completeness}
+
+We have the inclusions $L^2(I,H)\subseteq L^2(I,V)\cap H^1(I,H)\subseteq H^1(I,V)$.
+
+If $q_n$ is Cauchy in $Q$, then it is Cauchy in the individual norms of $ L^2(I,V), H^1(I,H)$, so that $q_n$ convergens to two limits, one in $L^2(I,V)$ and one in $H^1(I,H)$. The convergence is common in $L^2(I,H)$, which implies that the two limits coincide at $q \in Q(I,V)$. The convergence in $Q(I,V)$ of $q_n$ to $Q$ follows from the individual convergences of $q_n, \nabla q_n, q_{nt}$ in $ L^2(I,H), L^2(I,H),L^2(I,H)$.
+
+\underline{Density}
+
+We have $C_c^\infty(I,V) \subseteq Q(I,V) \subseteq L^2(I,V)$. The first inclusion holds because of \cref{prop:weak_class}, so that $C_c^\infty(I,V)\subseteq H^1(I,V)$. Moreover $H^1(I,V)\subseteq  Q(I,V) $ trivially, where the $H^1(I,H)$ derivative is the $H^1(I,V)$ derivative. $C_c^\infty(I,V)$ is dense in $ L^2(I,V)$ by \cite{hinze}, page 39, lemma 1.9.
+
+\underline{Continuity}
+
+Follows from the embedding $H^1(I,H)\emb C([0,T],H)$, as seen in \cite{evans}, theorem 2 of page 286.
+
+\underline{More density}
+
+We can therefore speak of initial values. In particular,  $C_c^\infty(I,V) \subseteq Q_0(I,V)\subseteq L^2(I,V)$, and as before, the density result follows.
+
+\underline{Relationship with $W(I,V)$}
+
+Consider the chain:
+
+\[\begin{tikzcd}
+	V & H & {H^*} & {V^*}
+	\arrow["a", hook, from=1-1, to=1-2]
+	\arrow["r", from=1-2, to=1-3]
+	\arrow["{a^*}", hook, from=1-3, to=1-4]
+\end{tikzcd}\]
+
+where $a$ is the trivial embedding and $r$ the Riesz isomorphism.
+
+We claim that for $v \in Q(I,V)$, then $(a^*ra v)' = a^*r (av)'$, where $av \in H^1(I,H)$. In fact, for $\phi \in C^\infty_c(I)$, we get $\int_I a^*ra v \phi' = \ind{\ref{prop:bochner_bound}} = a^*r\int_I av\phi' = -a^*r\int_I(av)'\phi =-\int_I a^*r(av)' \phi$.
+
+Now, let $u \in W(I,V)$, with $(a^*ra u)' = a^*r h$, $h \in L^2(I,H)$. Then $ a^*r \int_I h \phi = \ind{\ref{prop:bochner_bound}} = \int_I a^*r h \phi  = \int_I (a^*ra u)' \phi =  a^*r (-\int au \phi')$.
+
+We know that $a^*$ is injective and so is $r$, so that $ \int_I h \phi  = -\int_I au \phi'$ as we wanted.
+
+\underline{Integration by parts}
+
+We note that for $v,w \in Q(I,V)\subseteq W(I,V)$, we have $\int_I \langle (a^*ra v)', w\rangle_{V^*,V} = \int_I \langle a^*r(a v)', w\rangle_{V^*,V} = \int_I((a v)', aw)_H$. We can now apply theorem 3.11 at page 148 of \cite{trol} to conclude that  $\int_I(v_t,w)_H = -\int_I((aw)_t,av)_H +((av)(T),(aw)(T))_H-((av)(0),(aw)(0))_H$
+
+\underline{Weak convergence}
+
+At first we note that $\partial_i, \partial_t$ are linear bounded operators from $Q(I,V)$ to $L^2(I,H)$.
+
+Remember that in any case, $V$ is a closed subspace of $H^1$. Then, $\partial_i : V\rightarrow H$ is linear and bounded, because $V$ is bounded by the full $H^1$ norm, as we declared already.
+
+Therefore, by \cref{lemma:bochner_Hk_map}, $\partial_i$ extends to a linear bounded map from $L^2(I,V)$ to $L^2(I,H)$, therefore, to a linear bounded map on $Q(I,V)	$, in the sense of:
+
+\[\begin{tikzcd}
+	{Q(I,V)} & {L^2(I,V)} & {L^2(I,H)}
+	\arrow["i", hook, from=1-1, to=1-2]
+	\arrow["{\partial_i}", from=1-2, to=1-3]
+\end{tikzcd}\]
+
+Because $q_n$ is bounded in the Hilbert space $Q(I,V)$, it has a weakly convergent subsequence $q_k\weakc q \in Q(I,V)$. Therefore, $\partial_i (i(q_k))\weakc \partial_i (i(q))$ in $L^2(I,H)$. By the Hilbert space property of $L^2(I,H)$ we conclude that $(\partial_i q_k,p)_{L^2(I,H)}\rightarrow (\partial_i q,p)_{L^2(I,H)}$ for all $p \in L^2(I,H)$.
+
+For the time derivative we can draw a similar diagram:
+
+\[\begin{tikzcd}
+	{Q(I,V)} & {H^1(I,H)} & {L^2(I,H)}
+	\arrow["j", hook, from=1-1, to=1-2]
+	\arrow["{\partial_t}", from=1-2, to=1-3]
+\end{tikzcd}\]
+
+We therefore obtain $(\partial_t q_k,p)_{L^2(I,H)}\rightarrow (\partial_t q,p)_{L^2(I,H)}$ for all $p \in L^2(I,H)$.
+
+The convergence $(q_k,p)_{L^2(I,H)}\rightarrow (q,p)_{L^2(I,H)}$ for all $p \in L^2(I,H)$ follows analogously.
+
+\end{mproof}
+
+We can therefore restrict the testing space.
 
 \begin{prop}[Equivalent testing]
+\label{prop:eq_test}
 Let $E: W(I,V)\rightarrow L^2(I,V^*)$, and $u\in W_0(I,V)$.
 
 Then:
@@ -1034,22 +1733,120 @@ E(u)=0 \\
 \iff \\
 \langle E(u), v\rangle_{L^2(I,V)^*, L^2(I,V)}=0 \quad \forall v \in L^2(I,V)\\
 \iff \\
-\langle E(u), v\rangle_{L^2(I,V)^*, L^2(I,V)}=0 \quad \forall v \in W^0(I,V)
+\langle E(u), v\rangle_{L^2(I,V)^*, L^2(I,V)}=0 \quad \forall v \in W^0(I,V)\\
+\iff \\
+\langle E(u), v\rangle_{L^2(I,V)^*, L^2(I,V)}=0 \quad \forall v \in Q^0(I,V)
 \end{align*}
 
 \end{prop}
 
-\chapter{Facts about domains transformations}
+
+We have also seen that with smoothness assumption on data (\cref{ass:diri} and \cref{ass:neu}) we obtain that the solutions of \cref{pb:diri}, \cref{pb:neu} have $Q_0(I,V)$ smoothness. 
+
+We can therefore formulate the two partial differential equations directly on $Q_0(I,V)$ as follows.
+
+\begin{align*}
+w \in W_0(I, H^1_c),\bar{u}+v_0 \in W_0(I,H^1_c), v_0 \in W_0(I,H^1_0)\\
+w' + A w = (g,\cdot)_{L^2(\Gamma_f)} \text{ in }H^{1*}_c \text{ and for a.e. } t \in (0,T) \\
+v_0' + A v_0 = -((\bar{u}',\cdot)_H+A \bar{u}) \text{ in }H^{-1} \text{ and for a.e. } t \in (0,T) 
+\end{align*}
+
+with $\bar{u}$ any given $\bar{u}\in H^1(I,H^1_c)$ such that $\tr \bar{u} =f$ on $\Sigma_f$, and with $\bar{u}(0)=0$.
+
+We are working under \ref{ass:diri}, \ref{ass:neu}.
+
+Thanks to \cref{prop:eq_form}, this is equivalent to:
+
+\begin{align*}
+w \in W_0(I, H^1_c), \bar{u}+v_0 \in W_0(I,H^1_c), v_0 \in W_0(I,H^1_0) \\
+\int_I \langle w' , q\rangle_{H^{1*}_c,H^1_c}+ (\nabla w, \nabla q)_H = \int_I(g,\tr q)_{L^2(\Gamma_f)}, \quad \forall q \in Q^0(I, H^1_c) \\
+\int_I \langle v_0',p\rangle_{H^{-1},H^1_0} + (\nabla v_0, \nabla p)_H= -\int_I(\bar{u}',p)_H+(\nabla \bar{u}, \nabla p)_H, \quad \forall p \in Q^0(I, H^1_0) 
+\end{align*}
+
+By regularity, see \cref{prop:diri_wp}, \cref{prop:wp_neu}, and thanks to \cref{prop:Q} this implies:
+\begin{align*}
+w \in Q_0(I, H^1_c), \bar{u}+v_0 \in Q_0(I,H^1_c), v_0 \in Q_0(I,H^1_0) \\
+\int_I ( w' , q)_H+ (\nabla w, \nabla q)_H = \int_I(g,\tr q)_{L^2(\Gamma_f)}, \quad \forall q \in Q^0(I, H^1_c) \\
+\int_I (v_0',p)_H + (\nabla v_0, \nabla p)_H= -\int_I(\bar{u}',p)_H+(\nabla \bar{u}, \nabla p)_H, \quad \forall p \in Q^0(I, H^1_0) 
+\end{align*}
+
+where now the derivatives are in the $H^1(I,H)$ sense. Indeed we have proved in \cref{prop:Q} that $u \in W(I,V)$ with $L^2(I,H)$ derivative, is actually $Q(I,V)$, with weak derivative in the $H^1(I,H)$ sense equal to the $L^2(I,H)$ representative of $u'$ in the $W(I,V)$ sense. There, we also proved the representation of the duality bracket.
+
+Conversely, a solution $w \in Q_0(I, H^1_c), \bar{u}+v_0 \in Q_0(I,H^1_c), v_0 \in Q_0(I,H^1_0) $ to the above problem satisfies $w \in W_0(I, H^1_c), \bar{u}+v_0 \in W_0(I,H^1_c), v_0 \in W_0(I,H^1_0)$, see \cref{prop:Q}, and the proof of \cref{prop:diri_wp} . And by \cref{prop:Q} we can get to:
+
+\begin{align*}
+w \in W_0(I, H^1_c), \bar{u}+v_0 \in W_0(I,H^1_c), v_0 \in W_0(I,H^1_0) \\
+\int_I \langle w' , q\rangle_{H^{1*}_c,H^1_c}+ (\nabla w, \nabla q)_H = \int_I(g,\tr q)_{L^2(\Gamma_f)}, \quad \forall q \in Q^0(I, H^1_c) \\
+\int_I \langle v_0',p\rangle_{H^{-1},H^1_0} + (\nabla v_0, \nabla p)_H= -\int_I(\bar{u}',p)_H+(\nabla \bar{u}, \nabla p)_H, \quad \forall p \in Q^0(I, H^1_0) 
+\end{align*}
+
+By \cref{prop:eq_test} we obtain back:
+
+\begin{align*}
+w \in W_0(I, H^1_c),\bar{u}+v_0 \in W_0(I,H^1_c), v_0 \in W_0(I,H^1_0)\\
+w' + A w = (g,\cdot)_{L^2(\Gamma_f)} \text{ in }H^{1*}_c \text{ and for a.e. } t \in (0,T) \\
+v_0' + A v_0 = -((\bar{u}',\cdot)_H+A \bar{u}) \text{ in }H^{-1} \text{ and for a.e. } t \in (0,T) 
+\end{align*}
+
+Therefore:
+
+\begin{prop}[Equivalent formulation]
+\label{prop:eq_form}
+
+Under \cref{ass:diri}, \cref{ass:neu}, \cref{pb:diri}, \cref{pb:neu} can be equivalently formulated as:
+
+\begin{align*}
+w \in Q_0(I, H^1_c), \bar{u}+v_0 \in Q_0(I,H^1_c), v_0 \in Q_0(I,H^1_0) \\
+\int_I ( w' , q)_H+ (\nabla w, \nabla q)_H = \int_I(g,\tr q)_{L^2(\Gamma_f)}, \quad \forall q \in Q^0(I, H^1_c) \\
+\int_I (v_0',p)_H + (\nabla v_0, \nabla p)_H= -\int_I(\bar{u}',p)_H+(\nabla \bar{u}, \nabla p)_H, \quad \forall p \in Q^0(I, H^1_0) 
+\end{align*}
+
+Existence, uniqueness and stability proved already in  \cref{prop:diri_wp}, \cref{prop:wp_neu} carry over to this new formulation.
+
+\end{prop}
+
+\chapter{Domains transformations}
+
+\section{Transforming domains}
+
+\begin{prop}[Measurability of composition]
+\label{prop:circ_wd}
+
+Define $\pazocal{M}:=\{\tau: \mR^n \rightarrow \mR^n \text{ Lebesgue measurable } \}/\sim$, the quotient being the almost everywhere equal relation (according to the Lebesgue measure).
+
+Consider also $U$ from $\pazocal M_c :=\{\tau: \mR^n \rightarrow \mR^n \text{ continuous } \}/\sim$, the application "unique continuous representative", and $\pazocal{M}_{BL} :=\{\tau: \mR^n \rightarrow \mR^n \text{ Lipschitz homeomorphism} \}/\sim \subseteq \pazocal{M}_c$.
+
+We can then define $\circ:  \pazocal{M} \times \pazocal{M}_{BL}, \pazocal{M}_c \times \pazocal{M} \rightarrow \pazocal{M}$ by, respectively, $[f]\circ g := [f\circ U(g)], f \circ [g]:= [U(f)\circ g]$. These definitions are well posed.
+
+\end{prop}
+\begin{mproof}
+
+\underline{$\pazocal{M}_c$}
+
+$U(f)$ is Borel measurable, so the preimage of a Borel set is Borel measurable, and $g$ is Lebesgue measurable, so his preimage of such Borel set is Lebesgue measurable (\textcolor{red}{see \href{https://math.stackexchange.com/questions/283443/is-composition-of-measurable-functions-measurable}{here} for the different notions of measurability}).
+
+This shows that $U(f)\circ g$ is measurable.
+
+To complete the well posedness, if $h=g$ a.e., then clearly $U(f)\circ g= U(f)\circ  h$ a.e..
+
+\underline{$\pazocal{M}_{BL}$}
+
+Consider $f\circ U(g)$. We need to prove it is measurable and that is only depends on $[f]$.
+
+For the measurability: the preimage of a Borel set, by $f$, is Lebesgue measurable $L$. $U(g)$ has a Lipschitz inverse, which will map this set to a Lebesgue set. Indeed, $L = B \cup N$, with $B$ Borel and $N$ Lebesgue measurable and null (\textcolor{red}{see \href{https://math.stackexchange.com/questions/3420145/lebesgue-measurable-set-union-of-borel-set-and-null-set}{here}}). Image and unions commute, so, $U(g)^{-1}(L) = U(g)^{-1}(B) \cup U(g)^{-1}(N)$. The first set is Lebesgue measurable by measurability of $U(g)$, the second one is null, because Lipschitz maps map null sets into null sets, see 9.54 at page 271 of \cite{leoni}. 
+
+%Suppose $f,g \in [f]$. Then $f=g$ everywhere but on the null set $E$. Because $\psi \in \cT^1$ we know that $U(\psi)$ is a Lipschitz homeomorphism, so that $U(\psi)^{-1}(E)$ has zero measure by the lemma of Vitali. For the same reason, the composition is measurable, see \cite{murat}, remarque 2.2, page II-7.
+
+\end{mproof}
+
 
 Throughout, $D$ is a bounded Lipschitz domain. We define as in \cite{murat} the following spaces of transformations:
 
 \begin{defn}[Spaces of transformations]
 We define:
 \begin{itemize}	
-	\item $\pazocal M:=\{\tau: \mR^n \rightarrow \mR^n \text{ measurable } \}/\sim$, the quotient being the almost everywhere equal relation
 	\item $\cV^k=\{\tau \in \pazocal{M}, \tau-\id \in W^{k,\infty}(\mR^n,\mR^n)\}$, $k\geq 1$
-	\item $U: \cV^k\rightarrow \text C^{0,1}(\mR^n;\mR^n)$, and $U:W^{1,\infty}(\mR^n,\mR^n) \rightarrow \text C^{0,1}(\mR^n;\mR^n)$ the application "unique Lipschitz continuous representative" (see \cref{prop:lip})
-	\item $\circ: \cV^1 \times \cV^1 \rightarrow \cV^1$ and $\circ:W^{1,\infty}(\mR^n,\mR^n) \times \cV^1 \rightarrow W^{1,\infty}(\mR^n,\mR^n)$ by $\tau_1\circ\tau_2 = [U(\tau_1)\circ \tau]$, for any $[\tau]=\tau_2$, $[]$ being an equivalence class according to $\sim$.
+%	\item $\circ: \cV^1 \times \cV^1 \rightarrow \cV^1$ and $\circ:W^{1,\infty}(\mR^n,\mR^n) \times \cV^1 \rightarrow W^{1,\infty}(\mR^n,\mR^n)$ by $\tau_1\circ\tau_2 = [U(\tau_1)\circ \tau]$, for any $[\tau]=\tau_2$, $[]$ being an equivalence class according to $\sim$.
 	\item $\cT^k=\{\tau \in \cV^k \text{ with an } \eta \in \cV^k, \tau \circ \eta = \eta \circ \tau = \id\}$. Any such $\eta$ is unique, we denote it by $\tau^{-1}$ and we have that $U(\tau)$ is a Lipschitz homeomorphism with $U(\tau^{-1})=U(\tau)^{-1}$
 \end{itemize} 
 \end{defn}
@@ -1062,7 +1859,7 @@ Going to equivalence classes of $\tau$ makes the identification with continuous 
 
 \underline{One implication}
 
-Let $\tau: \mR^n\rightarrow\mR^n$ with $[\tau-\id] \in W^{k,\infty}$. Then $\tau$ is equal a.e. to a (Lebesgue) measurable function, hence also (Lebesgue) measurable, and thus $[\tau] \in \cV^k$ as we have defined it.
+Let $\tau: \mR^n\rightarrow\mR^n$ with $[\tau-\id] \in W^{k,\infty}$. Then $\tau$ is equal a.e. to a (Lebesgue) measurable function, hence also (Lebesgue) measurable, and thus $[\tau] \in \cV^k$ as we have defined it (\textcolor{red}{this is proved \href{https://heil.math.gatech.edu/6337/spring11/section3.4.pdf}{here}; note that $\{g\neq f\}$ is measurable as the Lebesgue measure is complete}).
 
 Now, suppose $\tau$ is a bijection, and $[\tau^{-1}-\id] \in W^{k,\infty}$ too. Then $\tau = \id + g = G, \tau^{-1} = \id + h = H$ almost everywhere. Here, $G,H$ are at least Lipschitz.
 But then $\tau \circ H = \id $ a.e., and since $H$ is Lipschitz, we can conclude also $G\circ H = \id$ a.e., so, everywhere. With a symmetric reasoning, we are lead to $G=H^{-1}$, so that $G$ is bi-Lipschitz.
@@ -1085,25 +1882,17 @@ This shows that:
 We need to check the well-posedness of $\circ$.
 
 \begin{prop}
+\label{prop:circ_wd_V}
 $\circ: \cV^1 \times \cV^1 \rightarrow \cV^1$ and $\circ:W^{1,\infty}(\mR^n,\mR^n) \times \cV^1 \rightarrow W^{1,\infty}(\mR^n,\mR^n)$ are well defined.
 \end{prop}
 \begin{mproof}
 
-We start by $\circ:W^{1,\infty}(\mR^n,\mR^n) \times \cV^1 \rightarrow \cV^1$. Aside from its measurability, which follows by the continuity of $U(\te)$, we have $\te\circ \tau =[ U(\te)\circ U(\tau)]$ for instance, the latter being is a bounded Lipschitz map, so it remains in $W^{1,\infty}$. For the second claim, just write $\eta \circ \tau -\id = (\eta - \id)\circ \tau + \tau -\id$ and use the first part. 
+We start by $\circ:W^{1,\infty}(\mR^n,\mR^n) \times \cV^1 \rightarrow \cV^1$. We have $\te\circ \tau =[ U(\te)\circ U(\tau)]$ for instance (see \cref{prop:circ_wd}); the latter is a bounded Lipschitz map, so it remains in $W^{1,\infty}$.
+
+For the second claim, just write $\eta \circ \tau -\id = (\eta - \id)\circ \tau + \tau -\id$ and use the first part. 
 
 \end{mproof}
 
-\begin{prop}
-\label{prop:circ_wd}
-$\circ: \pazocal{M} \times \cT^1 \rightarrow \pazocal{M}$ given by $[f]\circ[U(\psi)] = [f\circ U(\psi)]$ is well defined.
-
-It is also well defined from $\{ [f], f : \mR^n\rightarrow \mathbb{R}^k \text{ continuous }\}\times \pazocal{M}$ into measurable functions, by $f\circ[\phi]:=[U(f)\circ \phi]$.
-\end{prop}
-\begin{mproof}
-
-Suppose $f,g \in [f]$. Then $f=g$ everywhere but on the null set $E$. Because $\psi \in \cT^1$ we know that $U(\psi)$ is a Lipschitz homeomorphism, so that $U(\psi)^{-1}(E)$ has zero measure by the lemma of Vitali. For the same reason, the composition is measurable, see \cite{murat}, remarque 2.2, page II-7.
-
-\end{mproof}
 
 \begin{prop}[Chain rule for $k=1$]
 \label{prop:chain}
@@ -1113,7 +1902,7 @@ Let $f \in W^{1,\infty}(\mR^n,\mR^n)$ or $\cV^1$, together with $\psi \in \cT^1$
 
 \item $f \circ \psi$ has essentially bounded weak derivatives, and $D(f \circ \psi) = Df \circ \psi D\psi$. The equality holds a.e. also for the classical derivatives.
 
-\item  $(D(\psi^{-1}))^{-1} = D\psi \circ \psi^{-1}$, where $(D(\psi^{-1}))^{-1}:=[(DU(\psi^{-1}))^{-1}]$, the representative being a.e. invertible. The equality holds a.e. also for the classical derivatives.
+\item  $D(\psi^{-1}) = (D\psi)^{-1} \circ \psi^{-1}$, where $(D(\psi^{-1}))^{-1}:=[(DU(\psi^{-1}))^{-1}]$, the representative being a.e. invertible. The equality holds a.e. also for the classical derivatives.
 
 \item $|\det(D\psi)|$ is an essentially bounded measurable function with $|\det(D\psi)|\geq \delta>0$ a.e.. 
 \end{itemize} 
@@ -1123,13 +1912,16 @@ Let $f \in W^{1,\infty}(\mR^n,\mR^n)$ or $\cV^1$, together with $\psi \in \cT^1$
 
 \underline{Weak derivatives}
 
-We notice that $f \circ \phi$ has a unique Lipschitz representative, that is $U(f)\circ U(\phi)$. The desired formula follows as in \cite{murat}, lemme 2.1 at page II-6, for the classical derivatives (or from \cite{ziemer}, page 53, theorem 2.2.2 in the case of left composition by $ W^{1,\infty}(\mR^n,\mR^n)$ vector fields).
+We notice that $f \circ \phi$ has a unique Lipschitz representative, that is $U(f)\circ U(\phi)$. The desired formula follows as in \cite{murat}, lemme 2.1 at page II-6, for the classical derivatives, because Lipschitz function are almost everywhere differentiable by the Rademacher theorem (\tred{see \href{https://abel.math.harvard.edu/archive/212b_spring_05/handouts/Rademacher.pdf}{here}}). The chain rule holds for functions differentiable only at one point. 
 
-For the weak derivatives:
+% (or from \cite{ziemer}, page 53, theorem 2.2.2 in the case of left composition by $ W^{1,\infty}(\mR^n,\mR^n)$ vector fields) (	\tred{this needs the Rademacher theorem, see \href{https://abel.math.harvard.edu/archive/212b_spring_05/handouts/Rademacher.pdf}{here}. The set of differentiability is measurable, see \cite{leoni}, 9.17}).
+
+Now, to identify the weak derivatives:
 
 \begin{itemize}
 	\item $U(f)$ is Lipschitz, so that $DU(f)$, the classical derivative, is also the weak derivative $Df$ (note that $f$ need not to be essentially bounded to state this). The latter is a measurable function, as a.e. limit of difference quotients.
-	\item $DU(f)\circ U(\psi)$,  as pointed out in \cite{murat}, remarque 2.2, page II-7, is measurable. It is also essentially bounded.
+%	\item $DU(f)\circ U(\psi)$,  as pointed out in \cite{murat}, remarque 2.2, page II-7, is measurable. It is also essentially bounded.
+	\item $DU(f)\circ U(\psi)$, is measurable, see \cref{prop:circ_wd}. It is also essentially bounded.
 	\item By \cref{prop:circ_wd} we observe that $DU(f)\circ U(\psi)$ represents $Df \circ \psi$
 	\item $D\psi = [DU(\psi)]$ as seen above
 	\item the product of equivalence classes is always defined as the product of their representatives
@@ -1154,10 +1946,11 @@ We have defined $|\det(D\psi)|:=[|\det DU(\psi)|]$, see \cref{prop:circ_wd}. The
 We go on to define the space of admissible transformations.
 
 \begin{defn}[Admissible transformations]
-We define $\Theta:=\{\theta \in W^{1,\infty}(\mR^n,\mR^n) \text{ with } \theta|_D\in W^{2,\infty}(D;\mR^n) \text{ and } \theta=0 \text{ on } \mR^n \setminus D\}$, a vector space.
+\label{def:adm}
+We define $\Theta:=\{\theta \in W^{1,\infty}(\mR^n,\mR^n) \text{ with } \theta=0 \text{ on } \mR^n \setminus D\}$, a Banach subspace of $ W^{1,\infty}(\mR^n,\mR^n)$.
 
 
-We also define $\cT:=\{\tau \in \cT^1, \tau^{\pm 1}|_{\mR^n\setminus D}=\id, \tau^{\pm 1}|_D \in W^{2,\infty}(D; \mR^n)\}$. 
+We also define $\cT:=\{\tau \in \cT^1, \tau^{\pm 1}|_{\mR^n\setminus D}=\id\}$. 
 
 \end{defn}
 
@@ -1175,48 +1968,98 @@ Let $\eta, \tau \in \cT, \te \in \Te$. Then:
 \end{prop}
 \begin{mproof}
 
-\underline{Stability under composition (regularity)}
-
-We start by showing that $\tau \circ \eta |_D \in W^{k,2}$.
-
-By $\tau \in \cV^1$, we sure have that $\tau \circ \eta \in \cV^1$ by \cref{prop:circ_wd}. So, $U(\tau)\circ U(\eta) = \id + \te$, a bounded Lipschitz function, which is $W^{1,\infty}(D)$. Morevoer $ D(U(\tau)\circ U(\eta)) = D(U(\tau))\circ U(\eta) DU(\eta) $ almost everywhere in $D$. Actually, $\eta$ happens to be in $W^{2,\infty}(D)$, so that $U(\eta) \in C^{1,1}(D)$, see \cref{prop:lip}., and the equality holds everywhere.
-
-This is a product of a bounded Lipschitz function and a bounded Lipschitz function, so it is also bounded Lipschitz. Therefore, $D(U(\tau)\circ U(\eta))\in C^{0,1}(D)$ and thus $U(\tau)\circ U(\eta) \in C^{1,1}_B(D)$, so that by $\ref{prop:lipk}$, $[U(\tau)\circ U(\eta)|_D] = \tau \circ \eta|_D \in W^{2,\infty(D)}$.
-
-This same proof shows that for $\te \in \Te$, $\tau \in \cT$, $\te \circ \tau \in \Te$, because $\te \circ \tau$ was already a $W^{1,\infty}$ function by \cref{prop:circ_wd}, and because $\tau$ fixed $\mR^n \setminus D$.
+%\underline{Stability under composition (regularity)}
+%
+%We start by showing that $\tau \circ \eta |_D \in W^{2,\infty}$.
+%
+%%By $\tau \in \cV^1$, we sure have that $\tau \circ \eta \in \cV^1$ by \cref{prop:circ_wd_V}. So, 
+%
+%$U(\tau)\circ U(\eta)$, is a bounded Lipschitz function. Morevoer $ D(U(\tau)\circ U(\eta)) = D(U(\tau))\circ U(\eta) DU(\eta) $ everywhere in $D$, because $\eta, \tau$ happen to be in $W^{2,\infty}(D)$, so that $U(\eta), U(\tau) \in C^{1,1}(D)$, see \cref{prop:lip}.
+%
+%This is a product of a bounded Lipschitz function and a bounded Lipschitz function, so it is also bounded Lipschitz. Therefore, $D(U(\tau)\circ U(\eta))\in C^{0,1}(D)$ and thus $U(\tau)\circ U(\eta) \in C^{1,1}_B(D)$, so that by $\ref{prop:lipk}$, $[U(\tau)\circ U(\eta)|_D] = \tau \circ \eta|_D \in W^{2,\infty}(D)$.
+%
+%This same proof shows that for $\te \in \Te$, $\tau \in \cT$, $\te \circ \tau \in \Te$, because $\te \circ \tau$ was already a $W^{1,\infty}$ function by \cref{prop:circ_wd}, and because $\tau$ fixes $\mR^n \setminus D$.
 
 \underline{Stability under inversion}
 
 It is trivial, because the definition of $\cT$ is symmetric with respect to inversion.
 
-\underline{Stability unded composition ($\cT^1$)}
+\underline{Stability under composition ($\cT^1$)}
 
-$\eta \circ \tau$ is surely in $\cV^1$ by \cref{prop:circ_wd}. Now, by the above point, $\tau^{-1} \circ \tau^{-1}$ is in $\cV^1$ too, and the composition yields: $(\eta \circ \tau)\circ (\tau^{-1} \circ \tau^{-1}) = [U(\eta)\circ U(\tau)]\circ [(U\tau)^{-1} \circ (U\tau)^{-1}] = \id$.
+$\eta \circ \tau$ is surely in $\cV^1$ by \cref{prop:circ_wd}. Now, by the above point, $\tau^{-1} \circ \eta^{-1}$ is in $\cV^1$ too, and the composition yields: $(\eta \circ \tau)\circ (\tau^{-1} \circ \eta^{-1}) = [U(\eta)\circ U(\tau)]\circ [(U\tau)^{-1} \circ (U\eta)^{-1}] = \id$.
 
 \end{mproof}
 
-\begin{prop}[Gateaux differentiability]
-Consider $J:\cT \rightarrow E$ for $E$ some Banach space.
+\begin{prop}[Small perturbations of $\cT$]
+\label{prop:ptb_id}
+Let $\te \in \Te$ with small enough $\norm{\te}_{W^{1,\infty}(\mR^n;\mR^n)}$. Then, $\id+\te\in \cT$.
 
-Let $\tau \in \cT$. Then:
-
-$$ \forall \delta\te \in \Te \text{ exists } \lim_{t\rightarrow 0}\frac{J(\tau + t \delta\te)-J(\tau)}{t} \iff  \forall \delta\te \in \Te  \text{ exists }\lim_{t\rightarrow 0}\frac{J((\id +t \delta \te)\circ \tau)-J(\tau)}{t}$$
-
-In case of existence, we have:
-
-$$ \lim_{t\rightarrow 0}\frac{J((\id +t \delta \te)\circ \tau)-J(\tau)}{t} = \lim_{t\rightarrow 0}\frac{J(\tau + t \delta \te\circ \tau)-J(\tau)}{t}$$
+Let $\delta \te \in \Te$ with small enough $\norm{\delta\te}_{W^{1,\infty}(\mR^n;\mR^n)}$, and $\tau \in \cT$. Then, $\tau + \delta \te\in \cT$.
 
 \end{prop}
-
 \begin{mproof}
 
-It suffices to show that $\Te \circ \tau = \Te$.
+\underline{Perturbation of identity}
 
-In fact, $\delta \te \circ \tau \in \Te$ for $\te \in \Te$, as we verified in \cref{prop:group}. Using the same result, $\tau^{-1} \in \cT$, $(\delta \te \circ \tau ) \circ \tau^{-1}  \in \Te$ and $(\delta \te \circ \tau ) \circ \tau^{-1} = [U(\delta \te)\circ U(\tau)]\circ[U(\tau)^{-1}] = [(U(\delta \te)\circ U(\tau))\circ(U(\tau)^{-1})]=\delta \te$.
+We only need to check the properties of the inverse map.
+
+$U(\tau)^{-1}$ exists and is Lipschitz, see the proof of lemme 2.4 of \cite{murat}, page II-16. We can therefore define $\tau^{-1}$ and we obtain that it is $\cV^1$. So, $\tau \in \cT^1$. The fact that $\tau = \id$ outside of $D$ automatically implies $\tau^{-1}=\id$ outside of $D$, which can be seen more precisely by going to the smooth representatives of $\tau, \tau^{-1}$.
+
+%Moreover, $D\tau$ is a function in $W^{1,\infty}(D;\mR^{n\times n})$. Because of the Banach algebra properties listed in proposition 2.1 of \cite{murat}, page II-5 (which apply to $D$, just by extending $W^{1,\infty}(D)$ functions to $0$), the theorem of Neumann series holds (for $D\te$!), and by the assumptions on the norm of $\te$ we observe that $D\te$ has a small norm $W^{1,\infty}(D;\mR^{n\times n})$: by $D\tau   = I + D\te$ , we conclude that there is $ S \in W^{1,\infty}(D;\mR^{n\times n})$ with $SD\tau = D\tau S = I$, in the sense of matrix multiplication.
+%
+%This shows $(D\tau)^{-1} \in W^{1,\infty}(D;\mR^{n\times n})$.
+%
+%Because $\tau \in \cT^1$, we have from \cref{prop:chain}, that $D\tau^{-1} = (D\tau)^{-1}\circ \tau^{-1}$, so that $D\tau^{-1} $ is the composition of a $W^{1,\infty}(D;\mR^{n\times n})$ by a $\cT$ function. This implies that $\tau^{-1}$ is $W^{2,\infty}(D)$, because $\tau^{-1}$ maps $D$ into $D$.
+
+\underline{Perturbation, not of identity}
+
+We solve the equation $\tau + \delta \te =\eta \circ \tau$, i.e., we define $\eta:=\id + \delta \te \circ \tau^{-1}$. Because $\tau^{-1} \in \cT$ and $\delta \te \in \Te$ we observe that $\delta \te \circ \tau^{-1} \in \Te $, thanks to \cref{prop:group}.
+
+We only need to prove that $\delta \te \circ \tau^{-1}$ is small, and then use the first part. 
+
+But by \cref{prop:chain} this follows immediately. One can alternatively apply point i) of lemme 2.2, \cite{murat}.
 
 \end{mproof}
 
+\begin{thm}{Small perturbations of identity, Lipschitz property}
+\label{thm:ptb_id_lip}
+Let $U\cc D$ be Lipschitz bounded. There exists $0<C(U)<1$ such that, for $\tau \in W^{1,\infty}(\mR^n;\mR^n)$ and $\norm{\tau - \id}_{W^{1,\infty}(\mR^n;\mR^n)}\leq C(U)$, then $T(U)$ is also bounded Lipschitz, where $T$ is $U(\tau)$, the unique Lipschitz continuous representative of $\tau$ (see \cref{prop:lip}).
+
+This result can be applied to, e.g., $\tau \in \cT$ which is a small perturbation of identity in the $W^{1,\infty}$ topology.
+\end{thm}
+
+\begin{mproof}
+It is done in \cite{bello}, lemma 3, page 629.
+\end{mproof}
+
+%\begin{prop}[Gateaux differentiability]
+%Consider $J:\cT \rightarrow E$ for $E$ some Banach space.
+%
+%Let $\tau \in \cT$. Then:
+%
+%$$ \forall \delta\te \in \Te \text{ exists } \lim_{t\rightarrow 0}\frac{J(\tau + t \delta\te)-J(\tau)}{t} \iff  \forall \delta\te \in \Te  \text{ exists }\lim_{t\rightarrow 0}\frac{J((\id +t \delta \te)\circ \tau)-J(\tau)}{t}$$
+%
+%In case of existence, we have:
+%
+%$$ \lim_{t\rightarrow 0}\frac{J((\id +t \delta \te)\circ \tau)-J(\tau)}{t} = \lim_{t\rightarrow 0}\frac{J(\tau + t \delta \te\circ \tau)-J(\tau)}{t}$$
+%
+%Note that $\id + t \delta \te \in \cT$ for small $t$.
+%
+%\end{prop}
+%
+%\begin{mproof}
+%
+%It suffices to show that $\Te \circ \tau = \Te$.
+%
+%In fact, $\delta \te \circ \tau \in \Te$ for $\te \in \Te$, as we verified in \cref{prop:group}. Using the same result, $\tau^{-1} \in \cT$, $(\delta \te \circ \tau ) \circ \tau^{-1}  \in \Te$ and $(\delta \te \circ \tau ) \circ \tau^{-1} = [U(\delta \te)\circ U(\tau)]\circ[U(\tau)^{-1}] = [(U(\delta \te)\circ U(\tau))\circ(U(\tau)^{-1})]=\delta \te$.
+%
+%\end{mproof}
+%
+
+\section{Transforming Sobolev spaces}
+
 \begin{thm}[Change of variables]
+\label{thm:change}
 
 Let $U$ be open and $T = U(\tau)$ for $\tau \in \cT^1$, and let $p \in [ 1,\infty]$. Then:
 
@@ -1226,10 +2069,12 @@ Let $U$ be open and $T = U(\tau)$ for $\tau \in \cT^1$, and let $p \in [ 1,\inft
 	\item $f \in W^{1,p}(T(U)) \iff f\circ T \in W^{1,p}(U)$ and there holds, for $f\in W^{1,p}(T(U))$:
 	$$Df \circ T = (Df)^{-t}D(f\circ T)$$
 	$$ \norm{Df}_{L^p(T(Q);\mR^n)}\leq \left ( \norm{\det DT}_{L^\infty(\mR^n)}\right)^{1/p} \norm{(DT)^{-1}}_{L^\infty(\mR^n;\mR^{n\times n})}\norm{D(f\circ T)}_{L^p(Q;\mR^n)}$$
+	\item \tred{add the rest of this proposition}
 	\item if $p \in (1, \infty)$, $f \in W^{1,p}_0(T(U)) \iff f\circ T \in W^{1,p}_0(U)$
 	\item therefore, composition by $T$ is a linear isomorphism between $W^{k,p}(T(U))\rightarrow W^{k,p}(U)$ for $k=0,1$, and between $W^{1,p}_0(T(U))\rightarrow W^{1,p}_0(U)$ for $k=0,1$, $p \in (1, \infty)$
 	\item for $D$ a bounded Lipschitz domain and $\cT, \Te$ defined before, we get, for $f \in H^1(D)$, that $\tr f = \tr(f\circ T)$
-	\item if moreover, $\Omega, T(\Omega) \cc D$ are also bounded Lipschitz domains, letting $U:=D\setminus \Omega$, for $f \in H^1(T(U))$ and $\tr_{T(U)} f =0 $ on $ \partial T(\Omega) $, then $\tr_{U} f\circ T=0$ on $\partial \Omega$ and $\tr_{T(U)} f = \tr_{U} f\circ T$ on $\partial D$
+	\item if moreover, $\Omega, T(\Omega) \cc D$ are also bounded Lipschitz domains, letting $U:=D\setminus \Omega$, another bounded Lipschitz domain, for $f \in H^1(T(U))$ and $\tr_{T(U)} f =0 $ on $ \partial T(\Omega) $, then $\tr_{U} f\circ T=0$ on $\partial \Omega$ and $\tr_{T(U)} f = \tr_{U} f\circ T$ on $\partial D$
+	\item so, $\circ T$ is a linear isomorphism of $H^1_c(U)$ and $H^1_c(T(U))$ ($H^1_c$ is defined in \cref{subs:inh_diri})
 \end{enumerate}
 
 \end{thm}
@@ -1250,13 +2095,13 @@ First of all, as $T$ is a homeomorphism of $\mR^{n}$, $TU=D\setminus T(\Omega)$,
 
 Now, an application of \cref{thm:ibp} yields that the extension to $0$ in $T\Omega$ of $f$, call it $\bar{f}$, is $H^1(D)$, with $\partial_i \bar{f}=\partial_i f$ in $TU$, $0$ in $T(\Omega)$.
 
-We claim that $\tr_D \bar{f} = \tr_{T(U)} f|_{\partial D}$. In fact, approximate $\bar{f}$ by restrictions to $D$ of $C^\infty_c(\mR^n)$ functions $f_n$, which also approximate $f$ on ${T(U)}$, by the observation that $\norm{f_n|_{T(U)}}_{H^1({T(U)})}\leq \norm{f_n|_D}_{H^1(D)}$. Then:
+We claim that $\tr_D \bar{f} = \tr_{T(U)} f|_{\partial D}$. In fact, approximate $\bar{f}$ by restrictions to $D$ of $C^\infty_c(\mR^n)$ functions $f_n$ (see theorem 3.18 of \cite{adams}, page 54), which also approximate $f$ on ${T(U)}$, by the observation that $\norm{f_n|_{T(U)}}_{H^1({T(U)})}\leq \norm{f_n|_D}_{H^1(D)}$. Then:
 
 $$\tr_{T(U)}( f_n|_{T(U)})|_{\partial D} = (f_n|_{T(U)})|_{\partial {T(U)}}|_{\partial D} = f_n|_{\partial D} = \tr_D ( f_n|_D ) $$
 
 Now, by what we observed before, $\tr_{T(U)}( f_n|_{T(U)})\rightarrow \tr_{T(U)}(f) $ in $L^2(\partial {T(U)})$, so that $\tr_{T(U)}( f_n|_{T(U)})|_{\partial D} \rightarrow \tr_{T(U)}( f)|_{\partial D}$. On the other hand $\tr_D ( f_n|_D ) \rightarrow \tr_D \bar{f}$, which yields the claim.
 
-Using this: $ \tr_{T(U)}( f)|_{\partial D} = \tr_D \bar{f} = \ind{point 5} = \tr_D(\bar{f}\circ T) = \tr_D(\overline{f \circ T}) = \tr_U (f\circ T)|_{\partial D}$, where we used that $\bar{f}\circ T$ is zero in $T^{-1}T\Omega = \Omega$ (because again $T$ maps null sets into null sets), so it is the zero extension $\overline{f \circ T}$ of $f\circ T$. Both $\bar{f}\circ T$ and $f\circ T$ are $H^1$ functions by point 2.
+Using this: $ \tr_{T(U)}( f)|_{\partial D} = \tr_D \bar{f} = \ind{point 5} = \tr_D(\bar{f}\circ T) = \tr_D(\overline{f \circ T}) = \tr_U (f\circ T)|_{\partial D}$, where we used that $\bar{f}\circ T$ is zero in $T^{-1}T\Omega = \Omega$ (because again $T$ maps null sets into null sets), so it is the zero extension $\overline{f \circ T}$ of $f\circ T$, and applied the same reasoning as above to conclude $\tr_D(\overline{f \circ T}) = \tr_U (f\circ T)|_{\partial D}$. Both $\bar{f}\circ T$ and $f\circ T$ are $H^1$ functions by point 2.
 
 We can now also say that $\tr_U f\circ T=0 $ on $\partial \Omega$.
 
@@ -1292,7 +2137,7 @@ $f\beta$ has zero trace, as it can be verified by approximating $f$ by smooth fu
 
 $$\tr_{T(U)} f\beta \leftarrow_{L^2(\partial T(U))} \tr_{T(U)} f_n \beta $$
 
-where the latter quantity is $\tr_{T(U)} f_n $ on $\partial D$ and $0$ on $\partial T(U)$. By restricting the convergence  to first $\partial D$ and then to $\partial T(U)$, and using almost everywhere convergent subsequences, we conclude that $\tr_{T(U)} f \beta = \tr_{T(U)} f $ on $\partial T(U)$ and  $\tr_{T(U)} f \beta = 0 $ on $\partial D$, i.e.  $f\beta$ has zero trace.
+where the latter quantity is $\tr_{T(U)} f_n $ on $\partial T(U)$ and $0$ on $\partial D$. By restricting the convergence  to first $\partial D$ and then to $\partial T(U)$, and using almost everywhere convergent subsequences, we conclude that $\tr_{T(U)} f \beta = \tr_{T(U)} f $ on $\partial T(U)$ and  $\tr_{T(U)} f \beta = 0 $ on $\partial D$, i.e.  $f\beta$ has zero trace.
 
 %The same argument yields that $\tr_{T(U)} f \eta = \tr_{T(U)} f $ on $\partial D$ and  $\tr_{T(U)} f \eta = 0 $ on $\partial T(U)$.
 %
@@ -1308,13 +2153,303 @@ Because $T$ is bi-Lipschitz, we can write $(f\beta)\circ T = f \circ T \beta \ci
 
 We have that $\beta \circ T +  \eta \circ T$ is $W^{1,\infty}$ and $1$ near $\partial U$. 
 
-So, $\tr_U f\circ T = tr_U f\circ T(\beta \circ T +  \eta \circ T) = \tr_U (f\circ T\beta \circ T) + \tr_U (f\circ T  \eta \circ T)$.
+So, $\tr_U f\circ T = \tr_U f\circ T(\beta \circ T +  \eta \circ T) = \tr_U (f\circ T\beta \circ T) + \tr_U (f\circ T  \eta \circ T)$.
 
-Approximate $f\circ T$ by $g_n$ smooth as seen above.  Then, $\tr_U (g_n \eta \circ T)$ is $0$ on $\partial U$ and $\tr_U g_n$ on $\partial D$. By selecting an almost everywhere convergent subsequence, we conclude $\tr_U (f\circ T \eta \circ T) = 0$ on $\partial \Omega$. 
+Approximate $f\circ T$ by $g_n$ smooth as seen above.  Then, $\tr_U (g_n \eta \circ T)$ is $0$ on $\partial \Omega$ and $\tr_U g_n$ on $\partial D$. By selecting an almost everywhere convergent subsequence, we conclude $\tr_U (f\circ T \eta \circ T) = 0$ on $\partial \Omega$. 
 
 Hence  $\tr_U f\circ T|_{\partial \Omega} = tr_U f\circ T(\beta \circ T)|_{\partial \Omega} = 0$.
 
 \end{mproof}
+
+%We need to define the pullback of functionals. 
+%
+%\begin{ass}[Defining pullbacks]
+%\label{ass:pull}
+%
+%Throughout, $\Omega\cc D$ is another bounded Lipschitz domain, and we assume $\tau \in \cT$ preserves this property, i.e., that $T (\Omega) $ is also bounded Lipschitz, $T=U(\tau)$.
+%
+%We denote by $V$ either $H^1_0(U)$ or $H^1_c(U)$ (see \cref{subs:inh_diri} for the definition of this space, and by $V_T$ either  $H^1_0(T(U))$ or $H^1_c(T(U))$.
+%\end{ass}
+%
+%\begin{prop}[Pullback]
+%\label{prop:pull}
+%
+%Under \cref{ass:pull}, let $F \in V_T^*$. We define $F\circ T \in V^*$ by:
+%
+%$$\langle F, v\rangle_{V^*_T,V_T} = \langle F\circ T , |\det(DT)| v\circ T\rangle_{V^*,V}$$
+%
+%The definition is well posed.
+%
+%Moreover:
+%\begin{itemize}
+%\item the maps $V\rightarrow V$, $w\mapsto w|\det(DT)|$, and $S_T: V_T\rightarrow V$, $v \mapsto |\det(DT)| v\circ T$ are linear isomorphisms
+%\item taking pullbacks, seen as a map $P_T: V_T^*\rightarrow V^*$, is linear and bounded
+%\item we have $P_T = S_T^{-*}$, so that taking pullbacks is also a linear isomorphism
+%
+%\end{itemize}
+%
+%
+%\end{prop}
+%\begin{mproof}
+%
+%\underline{Existence by density}
+%
+%Let $H_T \ni f_n \rightarrow F$ in $V_T^*$, possible by density of $H_T=L^2(T(U))$ in $V_T^*$.
+%
+%By \cref{thm:change} we observe that $g_n:=f_n\circ T \in H$ is Cauchy in $V^*$. In fact:
+%
+%\begin{align*}
+%\langle g_n-g_m ,  w \rangle_{V^*,V}  = \int_U (g_n-g_m)w =\ind{change of variables} = \\
+%\int_{T(U)} (f_n-f_m)w\circ T^{-1} |\det(D(T^{-1}))| = \\
+%\langle f_n-f_m ,  w\circ T^{-1} |\det(D(T^{-1}))| \rangle_{V^*_T,V_T} 
+%\end{align*}
+%
+%We have to prove that $w\circ T^{-1} |\det(D(T^{-1}))| \in V_T$. We start by showing that $|\det(D(T^{-1}))| \in W^{1,\infty}(D)$. Because $\tau \in \cT$, then $\det(D(T^{-1}))\in W^{1,\infty}(D)$, as a product of $W^{1,\infty}(D)$ functions, because we have $\tau^{-1}|_D \in W^{2,\infty}(D)$ (i.e. a product of bounded Lipschitz functions, hence, still bounded Lipschitz, see \cref{prop:lip}). And now, the absolute value of a $W^{1,\infty}(D)$ function, is still $W^{1,\infty}(D)$, because the absolute value preserve the Lipschitz continuity, and the boundedness.
+%
+%Also, $W^{1,\infty}\subseteq H^1$, so that $w\circ T^{-1} |\det(D(T^{-1}))| \in H^1(T(U))$. For the traces, we know by \cref{thm:change} that $w\circ T^{-1} \in V_T$. Suppose e.g. that $\tr(w\circ T^{-1})=0$ on $\partial T(U)$. Approximate $w\circ T^{-1}$ by $v_n$ smooth to conclude that  $\tr (w\circ T^{-1} |\det(D(T^{-1}))|) = \tr(w\circ T^{-1})\cdot  |\det(D(T^{-1}))|$. Here we have used that a $C^{0,1}_B$ function can be extended by continuity to the boundary, in view of its uniform continuity. This shows that $w\circ T^{-1} |\det(D(T^{-1}))| \in V_T$.
+%
+%Thus:
+%
+%\begin{align*}
+%\langle g_n-g_m ,  w \rangle_{V^*,V} \leq \\
+%\norm{f_n-f_m }_{V^*_T}\norm{  w\circ T^{-1} |\det(D(T^{-1}))| }_{V_T} 
+%\end{align*}
+%
+%Call $d:=|\det(D(T^{-1}))| \in W^{1,\infty}(D)$. By the product rule we get $\norm{D( w\circ T^{-1} d)}_{L^2(T(U))}^2\leq \sum_i \left( \norm{d}_{L^\infty(D)}^2 +\norm{\partial_i d}_{L^\infty(D)}^2\right )^2 \norm{D(w\circ T^{-1})}_{V_T}^2$, which means that:
+%
+%\begin{align*}
+%\langle g_n-g_m ,  w \rangle_{V^*,V} \leq \\
+%C(T)\norm{f_n-f_m }_{V^*_T}\norm{w\circ T^{-1} }_{V_T} \leq\\
+%C(T)\norm{f_n-f_m }_{V^*_T}\norm{w}_{V}
+%\end{align*}
+%
+%where we used \cref{thm:change} in the last passage. Hence also $g_n$ is Cauchy in the Banach space $V^*$ and we can thus conclude the existence of $G \in V^*$ such that $g_n\rightarrow G$ in $V^*$.
+%
+%And now:
+%
+%\begin{align*}
+%\langle f,  v \rangle_{V^*_T,V_T} = \lim \langle f_n,  v \rangle_{V^*_T,V_T} = \\
+%\lim( f_n,v)_{H_T} =\ind{change of variables} =\\
+%\lim( g_n,v\circ T |\det(DT)|)_{H} = \\
+%\lim\langle g_n, v\circ T |\det(DT)| \rangle_{V^*,V} = \\
+%\langle G, v\circ T |\det(DT)| \rangle_{V^*,V}
+%\end{align*}
+%
+%where we used the fact that $v\circ T |\det(DT)| \in V_T$, in complete analogy with the above reasonings.
+%
+%\underline{Well posedness}
+%
+%So, $\langle F,  v \rangle_{V^*_T,V_T} = \langle G, v\circ T |\det(DT)| \rangle_{V^*,V}$.
+%
+%$|\det(DT)|$ is represented by $d \in C^{0,1}_B(D)$. In \cref{prop:chain} we saw $C\geq d\geq \delta >0$ almost everywhere in $\mR^n$. The inequality holds everywhere on $D$, by continuity of $d$. Then $1/d$ is bounded and Lipschitz, as we can verify by:
+%
+%$$\left | \frac{1}{d(x)}-\frac{1}{d(y)}\right |=\left| \frac{d(x)-d(y)}{d(x)d(y)}\right |\leq \delta^{-2}C|x-y|$$
+%
+%Therefore, multiplication by $d$ is a bijection of $V$ (a linear isomorphism actually, we already proved the boundedness, and the boundedness of the inverse follows from the bounded inverse theorem).
+%
+%Assume there exists another $G_2$ satisfying $\langle F,  v \rangle_{V^*_T,V_T} = \langle G_2, v\circ T |\det(DT)| \rangle_{V^*,V}$.
+%
+%Then  $\langle G_2-G, v\circ T |\det(DT)| \rangle_{V^*,V} = 0$ for all $v \in V_T$. Because $\circ T$ is another bijection, we can conclude  $\langle G_2-G, w \rangle_{V^*,V} = 0$ for all $w \in V$, which yields the uniqueness.
+%
+%\underline{Boundedness}
+%
+%Also, $S_T: V_T \rightarrow V$ defined by $S_Tv = |\det(DT)|v\circ T$ is a linear isomorphism, as a composition of linear isomorphism (see also \cref{prop:chain}). 
+%
+%Therefore:
+%
+%$$\langle F, v\rangle_{V^*_T,V_T} = \langle F\circ T , S_Tv\rangle_{V^*,V} =  \langle S_T^*(F\circ T), v\rangle_{V^*,V}$$
+%
+%This shows that $S_T^{-*}F=F\circ T = P_T F$, and this concludes the proof.
+%		
+%%Now, $w\circ T^{-1} \in V_T$ by \cref{thm:change}. We can also say that $|w \circ T^{-1} |\in V_T$, with $\norm{|w \circ T^{-1}|}_{V_T}\leq \norm{w \circ T^{-1}}_{V_T}$ (\tred{see \href{https://math.stackexchange.com/questions/2578760/if-u-in-h1-omega-then-u-in-h1-omega}{here} for the bound on the gradient, or \href{https://www.math.ucdavis.edu/~hunter/pdes/ch3.pdf}{here, prop. 3.22}}).
+%%
+%%In fact, absolute value preserves zero traces. To see this, suppose that $\tr f = 0$ on $\partial \Omega$. Then, as in the proof of \cref{thm:change}, $\tr |f| |_{\partial \Omega} = \tr(|f|\beta)|_{\partial \Omega}$, $\beta$ smooth, $1$ close to $\partial \Omega$ and $0$ close to $\partial D$. Approximating $|f_n|$ by smooth functions we see that: $\tr(|f|\beta)$
+%
+%\end{mproof}
+
+\section{Transforming Bochner spaces}
+
+\begin{prop}[Isomorphism between $Q$ spaces]
+\label{prop:change_boch}
+
+$$\circ T : Q(I,V_T)\rightarrow Q(I,V)$$
+
+is a linear isomorphism, and so is:
+
+$$\circ T : Q_0(I,V_T)\rightarrow Q_0(I,V)$$
+
+In particular, $(u\circ T)' = u'\circ T$ (under suitable identifications, see the proof).
+
+\end{prop}
+
+\begin{mproof}
+
+\underline{Existence of derivative}
+
+Consider the following commutative diagram:
+
+\[\begin{tikzcd}
+	{V_T} & {H_T} & {H_T^*} & {V^*_T} \\
+	V & H & {H^*} & {V^*}
+	\arrow["{a_T}", hook, from=1-1, to=1-2]
+	\arrow["{r_T}", from=1-2, to=1-3]
+	\arrow["{a_T^*}", hook, from=1-3, to=1-4]
+	\arrow["r", from=2-2, to=2-3]
+	\arrow["a^*", hook, from=2-3, to=2-4]
+	\arrow["a", hook, from=2-1, to=2-2]
+	\arrow["{\circ T_H=:t_V}"', from=1-1, to=2-1]
+	\arrow["{\circ T_H=:t_H}", from=1-2, to=2-2]
+\end{tikzcd}\]
+
+We know that $f\in Q(I,V_T)$ satisfies $a_Tf \in H^1(I,H_T)$. Therefore, by \cref{lemma:bochner_Hk_map}, $t_H a_T f =a t_V f \in H^1(I,H)$, and $t_v  \in L^2(I,V)$, so that $t_V : Q(I,V_T)\rightarrow Q(I,V)$ is well defined.
+
+\underline{Boundedness}
+
+We have that $t_V: V_T \rightarrow V$ is linear bounded, so that $t_V: L^2(I,V_T)\rightarrow L^2(I,V)$ is also linear and bounded. Still by \cref{lemma:bochner_Hk_map}, we have $(a t_V f )' = (t_H a_T f)' = t_H(a_T f)'$.
+
+Thus $\norm{t_V f}_{L^2(I, V)}\leq C(T) \norm{f}_{L^2(I, V_T)}$, together with $\norm{(a t_V f )'}_{L^2(I, H)}\leq C(T) \norm{(a_T f)'}_{L^2(I, H_T)}$.
+
+By noting that $(t_V)^{-1} = (\circ T)^{-1} $ is bijective, and by the bounded inverse theorem:
+
+$$\circ T : Q(I,V_T)\rightarrow Q(I,V)$$
+
+is a linear isomorphism.
+
+\underline{Zero initial value}
+
+Consider $at_V f$. It has a unique $C([0,T],H)$ representative, $U(at_V f)$. Also, $a_T f$ has a unique continuous representative $U(a_T f)$. Now, $at_V f = t_H a_T f$, so that $[U(at_V f)] = [t_H U(a_T f)]$. By continuity, $U(at_V f) = t_H U(a_T f)$ on $[0,T]$ and thus, whenever $U(a_T f)(0)=0$, so is $U(at_V f)$, informally, also $t_Vf (0) =0$. 
+
+So, $t_V(Q_0(I,V_T))\subseteq Q_0(I,V)$.
+
+$(t_V)^{-1} = (\circ T)^{-1}$ and we can conclude that  $t_V^{-1}(Q_0(I,V))\subseteq Q_0(I,V_T)$.
+
+\end{mproof}
+
+
+\section{Transforming partial differential equations}
+
+We consider again the two parabolic equations of interest, namely, \cref{pb:diri} and \cref{pb:neu}.
+
+We continue from \cref{prop:eq_form}.
+
+\begin{align*}
+w \in Q_0(I, H^1_c), v_0 \in Q_0(I,H^1_0) \\
+\int_I ( w' , q)_H+ (\nabla w, \nabla q)_H = \int_I(g,\tr q)_{L^2(\Gamma_f)}, \quad \forall q \in Q^0(I, H^1_c) \\
+\int_I (v_0',p)_H + (\nabla v_0, \nabla p)_H= -\int_I(\bar{u}',p)_H+(\nabla \bar{u}, \nabla p)_H, \quad \forall p \in Q^0(I, H^1_0) 
+\end{align*}
+
+We are working under the assumption:
+
+\begin{ass}
+\label{ass:pull}
+
+We have $T=U(\tau), \tau \in \cT$, $U\cc D$ bounded Lipschitz domains and we also assume that $T(U)$ is bounded Lipschitz.
+\end{ass}
+
+Suppose the problem is formulated on $T(U)$. To ease the notation, call $H^1_c(T(U))=V_T, H^1_c(U)=V, H^1_0(U)=W$ and analogously for the other spaces.
+
+We write the problem as:
+
+\begin{align*}
+w^T \in Q_0(I, V_T), v_0^T \in Q_0(I,W_T) \\
+\int_I  (w^T_t , q)_{H_T}+ (\nabla w^T, \nabla q^T)_{H_T} = \int_I(g,\tr_{T(U)} q^T)_{L^2(\Gamma_f)}, \quad \forall q^T \in Q^0(I, V) \\
+\int_I (v^T_{0t},p)_{H_T} + (\nabla v_0^T, \nabla p^T)_{H_T}= -\int_I(\bar{u}',p^T)_{H_T}+(\nabla \bar{u}, \nabla p^T)_{H_T}, \quad \forall p^T \in Q^0(I, W_T)
+\end{align*}
+
+Applying a change of variables, we get equivalently:
+
+\begin{align*}
+w^T \in Q_0(I, V_T), v_0^T \in Q_0(I,W_T) \\
+\int_I (w^T_t\circ T, q^T\circ T |\det(DT)|)_H+ (A_T\nabla (w^T\circ T), \nabla( q^T\circ T))_{H} =\\ \int_I(g,\tr_{T(U)} q^T)_{L^2(\Gamma_f)}, \quad \forall q^T \in Q^0(I, V_T) \\
+\int_I(v_{0t}^T\circ T,p^T\circ T |\det(DT)|)_H + (A_T \nabla (v_0^T\circ T), \nabla( p^T\circ T))_{H}=\\ -\int_I((\bar{u}')\circ T,p^T\circ T |\det(DT)|)_{H}+(A_T \nabla (\bar{u} \circ T), \nabla (p^T\circ T))_{H}, \quad \forall p^T \in Q^0(I, W_T)
+\end{align*}
+
+Here $A_T = |\det(DT)|DT^{-1}(DT)^{-t}$.
+
+Now, we note that:
+
+\begin{itemize}
+	\item $\tr_{T(U)} q = \tr_U(q\circ T)$ on $\Sigma_f$ by \cref{thm:change}
+	\item $w_t^T\circ T = (w^T\circ T)_t$ by the proof of \cref{prop:change_boch} and analogously for $v_0$
+	\item by \cref{prop:change_boch},$\circ T$ is a bijection between $Q^0(I,V_T)$ and $Q^0(I,V)$ and analogously for $W$
+	\item $\bar{u} \in H^1(I,V_T)$ and that $\bar{u}'$ denoted the weak derivative in the $H^1(I,V_T)$ sense, so that \ref{prop:bochner_bound} yields $\bar{u}\circ T \in H^1(I,V)$ and $(\bar{u}\circ T )' = \bar{u}'\circ T $
+\end{itemize}
+
+We therefore get, equivalently:
+
+\begin{align*}
+w^T \in Q_0(I, V_T), v_0^T \in W_0(I,W_T) \\
+\int_I ( (w^T\circ T)_t , q |\det(DT)|)_H+ (A_T\nabla (w^T\circ T), \nabla q)_{H} =\\ \int_I(g,\tr_{U} q)_{L^2(\Gamma_f)}, \quad \forall q \in Q^0(I, V) \\
+\int_I ( (v_0^T\circ T)_t,p |\det(DT)|)_H + (A_T \nabla (v_0^T\circ T), \nabla p)_{H}=\\ -\int_I((\bar{u}\circ T)',p|\det(DT)|)_{H}+(A_T \nabla (\bar{u} \circ T), \nabla p)_{H}, \quad \forall p \in W^0(I, W)
+\end{align*}
+
+and by \cref{prop:change_boch}, we also get $w^T\circ T \in Q_0(I,V), v_0^T\circ T \in Q_0(I,W)$.
+
+\tred{Note, here one could absorb $\det$ into the test functions, complicate the PDE but get rid of the time coefficients. From here one could prove a continuity result for the states and then get Frechet differentiability from Gateaux differentiability}.
+
+On the other hand, consider:
+
+\begin{align*}
+w \in Q_0(I, V), v_0 \in Q_0(I,W) \\
+\int_I ( w_t , q |\det(DT)|)_H+ (A_T\nabla w, \nabla q)_{H} =\int_I(g,\tr_{U} q)_{L^2(\Gamma_f)}, \quad \forall q \in Q^0(I, V) \\
+\int_I ( v_{0t},p |\det(DT)|)_H + (A_T \nabla v_0, \nabla p)_{H}=\\ -\int_I((\bar{u}\circ T)',p|\det(DT)|)_{H}+(A_T \nabla (\bar{u} \circ T), \nabla p)_{H}, \quad \forall p \in Q^0(I, W)
+\end{align*}
+
+Then, we note the following:
+
+\begin{itemize}
+	\item by \cref{prop:change_boch}, $w\circ T^{-1} \in Q_0(I, V_T), v_0\circ T^{-1} \in Q_0(I,W_T) $, and as seen above, $((w\circ T^{-1})\circ T)_t = (w\circ T^{-1})_t\circ T$ and the same goes for $v_0\circ T^{-1}$
+\end{itemize}
+
+Therefore we obtain, equivalently:
+
+\begin{align*}
+w\circ T^{-1} \in Q_0(I, V_T), v_0\circ T^{-1} \in Q_0(I,W_T) \\
+\int_I ((w\circ T^{-1})_t , q^T)_{H_T}+ (\nabla (w\circ T^{-1}), \nabla q^T)_{H_T} = \\\int_I(g,\tr_{T(U)} q^T)_{L^2(\Gamma_f)}, \quad \forall q^T \in Q^0(I, V_T) \\
+\int_I ((v_0\circ T^{-1})_t,p^T)_{H_T} + (\nabla (v_0\circ T^{-1}), \nabla p^T)_{H_T}= \\-\int_I(\bar{u}',p^T)_{H_T}+(\nabla \bar{u}, \nabla p^T)_{H_T}, \quad \forall p^T \in Q^0(I, W_T)
+\end{align*}
+
+and $w\circ T^{-1} \in Q_0(I, V_T), v_0\circ T^{-1} \in Q_0(I,W_T)$.
+
+These findings can be summarized as follows.
+
+\begin{thm}[Equivalent formulations with transported domain]
+\label{thm:eq_pde}
+
+Let \cref{ass:diri}, \cref{ass:neu}, \cref{ass:pull} hold.
+
+Consider the following problems.
+
+\begin{pb}[Joint parabolic problem, moving domain]
+\label{pb:joint_mov}
+\begin{align*}
+w^T \in Q_0(I, V_T), v_0^T \in Q_0(I,W_T) \\
+\int_I  (w^T_t , q^T)_{H_T}+ (\nabla w^T, \nabla q^T)_{H_T} = \int_I(g,\tr_{T(U)} q^T)_{L^2(\Gamma_f)}, \quad \forall q^T \in Q^0(I, V_T) \\
+\int_I (v^T_{0t},p^T)_{H_T} + (\nabla v_0^T, \nabla p^T)_{H_T}= -\int_I(\bar{u}',p^T)_{H_T}+(\nabla \bar{u}, \nabla p^T)_{H_T}, \quad \forall p^T \in Q^0(I, W_T)
+\end{align*}
+\end{pb}
+
+\begin{pb}[Joint parabolic problem, reference domain]
+\label{pb:joint_ref}
+\begin{align*}
+w \in Q_0(I, V), v_0 \in Q_0(I,W) \\
+\int_I ( w_t , q |\det(DT)|)_H+ (A_T\nabla w, \nabla q)_{H} =\int_I(g,\tr_{U} q)_{L^2(\Gamma_f)}, \quad \forall q \in Q^0(I, V) \\
+\int_I ( v_{0t},p |\det(DT)|)_H + (A_T \nabla v_0, \nabla p)_{H}=\\ -\int_I((\bar{u}\circ T)',p|\det(DT)|)_{H}+(A_T \nabla (\bar{u} \circ T), \nabla p)_{H}, \quad \forall p \in Q^0(I, W)
+\end{align*}
+\end{pb}
+
+We have the following:
+
+\begin{itemize}
+	\item consider $w^T \in Q_0(I, V_T), v_0^T \in Q_0(I,W_T)$. They solve \cref{pb:joint_mov} $\iff$ $w^T\circ T , v_0^T\circ T $ solve \cref{pb:joint_ref}
+	\item consider $w \in Q_0(I, V), v_0^T \in Q_0(I,W)$. They solve \cref{pb:joint_ref} $\iff$ $w\circ T^{-1}, v_0\circ T^{-1}$ solve \cref{pb:joint_mov} 
+
+\end{itemize}
+
+Here, $A_T:=  (DT)^{-1}(DT)^{-t}|\det(DT)|$.
+
+\end{thm}
+
 
 \printbibliography[title={Bibliography}]
 
