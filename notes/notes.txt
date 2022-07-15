@@ -1,0 +1,18 @@
+If a package won't install, try https://stackoverflow.com/questions/59723500/cant-install-matplotlib-in-conda-env-w-python-3-8
+
+I.e.:
+conda (or mamba) install -c conda-forge name_of_package
+
+
+Pipeline to set up a virtual environment
+- download conda (https://www.anaconda.com/products/distribution)
+- install using bash ***.sh
+- run conda init
+- run conda config --set auto_activate_base false
+- create a conda virtual environment
+- install mamba, as a substitute of conda install -c conda-forge ...: conda install -c conda-forge mamba
+- install fenics: mamba install -c conda-forge fenics
+- install matplotlib: mamba install -c conda-forge matplotlib
+- install dolfin-adjoint: pip install git+https://github.com/dolfin-adjoint/pyadjoint.git@2019.1.0
+- install the meshing tools: mamba install -c conda-forge gmsh meshio mshr, and pip install pygmsh==4.0.6
+- install tensorflow: later
