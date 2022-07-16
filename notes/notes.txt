@@ -9,10 +9,12 @@ Pipeline to set up a virtual environment
 - install using bash ***.sh
 - run conda init
 - run conda config --set auto_activate_base false
-- create a conda virtual environment
+- create a conda virtual environment with python 3.8
 - install mamba, as a substitute of conda install -c conda-forge ...: conda install -c conda-forge mamba
 - install fenics: mamba install -c conda-forge fenics
 - install matplotlib: mamba install -c conda-forge matplotlib
-- install dolfin-adjoint: pip install git+https://github.com/dolfin-adjoint/pyadjoint.git@2019.1.0
-- install the meshing tools: mamba install -c conda-forge gmsh meshio mshr, and pip install pygmsh==4.0.6
+- install dolfin-adjoint: pip install git+https://github.com/dolfin-adjoint/pyadjoint.git (@2019.1.0 can be added)
+- install the meshing tools: mamba install -c conda-forge gmsh meshio, and pip install pygmsh (==4.0.6 for python 3.10, or nothing for older versions of python, e.g. 3.9 or 3.8)
+- install mshr: mamba install -c conda-forge fenics mshr=2019.1.0=py38hf9f41d3_3 (not working and there is no need)
+- fix 3D plotting: https://bitbucket.org/fenics-project/dolfin/commits/5e86e7e3409a8d9ec4b1f40aa2b361d5de84d2a0
 - install tensorflow: later
