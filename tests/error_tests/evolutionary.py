@@ -252,11 +252,11 @@ class PDE:
                     L = L + dt * self.f_N * v * ds
 
                 if self.f is not None:
-                    self.f.t = t
+                    self.f.t = t_last
                     L = L + dt * self.f * v * dx
 
                 if self.dirichlet_marker is not None:
-                    self.f_D.t = t_last
+                    self.f_D.t = t_last # this could be changed, depending the kind of consistency want
 
                 return a, L
 
@@ -319,17 +319,18 @@ class PDE:
 
         solution_list = []
         error_list = []
+        last_solution = Function(self.S1h)   # container for the last solution
 
         first_solution, first_error = self.solve_single_step(0, err_mode=err_mode)
         solution_list.append(first_solution)
         error_list.append(first_error)
-        last_solution = first_solution.copy()
+        last_solution.assign(first_solution)    # no need to create a copy of first solution
 
         for time_step in tqdm(range(1, len(self.times))):
             current_solution, current_error = self.solve_single_step(time_step, last_solution, err_mode=err_mode)
             solution_list.append(current_solution)
             error_list.append(current_error)
-            last_solution.assign(current_solution.copy())
+            last_solution.assign(current_solution)  # no need for current_solution.copy()
 
         if err_mode == "none":
             return solution_list, None
@@ -856,9 +857,9 @@ class TestProblems:
 
                 # Now, let's simulate the exact solution on a fine mesh and on a fine time scale
                 heq = PDE()
-                heq.read_mesh(resolutions[6], mesh_path)
+                heq.read_mesh(resolutions[5], mesh_path)
 
-                N_steps = 4 * int(np.ceil(self.T / (heq.mesh.hmax() ** 1)))  # many many time steps!
+                N_steps = int(np.ceil(self.T / (heq.mesh.hmax() ** 2)))  # many many time steps!
                 heq.set_time_discretization(self.T, N_steps=N_steps)  # dt = h^2 and N = T/dt
 
                 pickle_name = "no_source_dirichlet_neumann_zero_compatibility"
@@ -1025,9 +1026,89 @@ class TestProblems:
 
                 u_ex = self.create_solution(0, heq.times, solution_list)
 
+            case "no_source_dirichlet_neumann_zero_compatibility_neumann":   # RC 0, not 1, because of Neumann BC
+
+                class dirichlet_data(UserExpression):
+                    def __init__(self, t, **kwargs):
+                        super().__init__(self, **kwargs)
+                        self.t = t
+
+                    def eval(self, values, x):
+                        values[0] = np.sin(x[1]) * (self.t**3)
+
+                    def value_shape(self):
+                        return ()
+
+                class initial_solution(UserExpression):
+                    def __init__(self, **kwargs):
+                        super().__init__(self, **kwargs)
+
+                    def eval(self, values, x):
+                        values[0] = 0
+
+                    def value_shape(self):
+                        return ()
+
+                class neumann_trace(UserExpression):
+                    def __init__(self, t, **kwargs):
+                        super().__init__(self, **kwargs)
+                        self.t = t
+
+                    def eval(self, values, x):
+                        values[0] = x[1] * (1 - self.t) # note, incompatible at order 1
+
+                    def value_shape(self):
+                        return ()
+
+                u0 = initial_solution()
+                u_D = dirichlet_data(t=0)
+                u_N = neumann_trace(t=0)
+                f = None
+                u_ex = None
+                self.marker_dirichlet = [3]
+                self.marker_neumann = [2]
+
+                # Now, let's simulate the exact solution on a fine mesh and on a fine time scale
+                heq = PDE()
+                heq.read_mesh(resolutions[5], mesh_path)
+
+                N_steps = int(np.ceil(2 / (heq.mesh.hmax() ** 2)))  # many many time steps!
+                heq.set_time_discretization(self.T, N_steps=N_steps)  # dt = h^2 and N = T/dt
+
+                pickle_name = "no_source_dirichlet_neumann_no_compatibility_difficult"
+                try:
+                    if self.override_pickle:  # I lazily generate an error to go into the except
+                        1 / 0
+                    solution_list = self.from_pickle(heq.S1h, pickle_name)
+                except:
+                    heq.set_PDE_data(u0, source=f, marker_neumann=self.marker_neumann,
+                                     marker_dirichlet=self.marker_dirichlet,
+                                     neumann_BC=u_N,
+                                     dirichlet_BC=u_D,
+                                     exact_solution=u_ex)  # note, no copy is done, the attributes of heq are EXACTLY these guys
+                    heq.set_ODE_scheme("crank_nicolson")
+                    heq.verbose = True
+
+                    logging.info(f"Simulating exact solution for test problem")
+                    solution_list, _ = heq.solve()
+
+                    # To pickle
+                    self.to_pickle(solution_list, pickle_name)
+
+                u_ex = self.create_solution(0, heq.times, solution_list)
+
             case _:
                 raise Exception("No problem found with this name")
 
+        # If u_ex is simulated, the data timesteps will be modified
+        if u_ex is not None:
+            u_ex.t = 0
+        if f is not None:
+            f.t = 0
+        if u_D is not None:
+            u_D.t = 0
+        if u_N is not None:
+            u_N.t = 0
         return (u_ex, f, u_D, u_N, u0, self.marker_neumann, self.marker_dirichlet, self.T)
 
     def to_pickle(self, solution_list, pickle_name):
@@ -1106,11 +1187,11 @@ class TestProblems:
 
 # %% Error check
 
-problem_name = "no_source_dirichlet_neumann_first_compatibility_difficult"  # what problem from TestProblems are we going to solve?
+problem_name = "no_source_dirichlet_neumann_zero_compatibility"  # what problem from TestProblems are we going to solve?
 
 # Test problem
 problems = TestProblems()
-problems.override_pickle = False
+problems.override_pickle = True
 u_ex, f, u_D, u_N, u0, marker_neumann, marker_dirichlet, T = problems.get_data(problem_name)
 
 # Setting up the PDE class
@@ -1118,7 +1199,7 @@ heq = PDE()
 heq.set_PDE_data(u0, source=f, marker_neumann=marker_neumann, marker_dirichlet=marker_dirichlet, neumann_BC=u_N,
                  dirichlet_BC=u_D,
                  exact_solution=u_ex)  # note, no copy is done, the attributes of heq are EXACTLY these guys
-heq.set_ODE_scheme("implicit_explicit_euler")
+heq.set_ODE_scheme("implicit_euler")
 heq.verbose = True
 
 # We check that the last error decreases as expected
@@ -1305,7 +1386,9 @@ logging.info(f"OOC wrt time: {ooc_time}")
 # Implicit Euler
 # 11:15 INFO     OOC wrt space: [1.7650171  1.61782814 1.68422548]
 # 11:15 INFO     OOC wrt time: [0.86015772 0.83267144 0.84046752]
-# Crank-Nicolson
+# Crank-Nicolson (conclusion: Crank-Nicolson doesn't have order 2 with missing CC)
+# 10:51 INFO     OOC wrt space: [0.7775563  1.8630501  1.32423689]
+# 10:51 INFO     OOC wrt time: [0.75786354 1.63052349 1.46628268]
 
 # Test case first_compatibility (but not second order):
 # Crank-Nicolson
@@ -1317,6 +1400,17 @@ logging.info(f"OOC wrt time: {ooc_time}")
 # Implicit-explicit
 # 12:46 INFO     OOC wrt space: [1.65395919 1.83481033 1.95941007]
 # 12:46 INFO     OOC wrt time: [0.80603511 0.94434886 0.97779101]
+
+# Test case zero_compatibility_neumann
+# Implicit Euler
+# 11:17 INFO     OOC wrt space: [1.398448   1.79279154 1.96634886]
+# 11:17 INFO     OOC wrt time: [0.68151512 0.92272244 0.98125363]
+# Implicit-explicit Euler
+# 11:25 INFO     OOC wrt space: [1.4580682  1.71368181 1.92754846]
+# 11:25 INFO     OOC wrt time: [0.71057023 0.88200586 0.96189133]
+# Crank-Nicolson
+# 11:32 INFO     OOC wrt space: [2.12013675 1.9369714  1.46462242]
+# 11:32 INFO     OOC wrt time: [2.06644115 1.6952187  1.62172681]
 
 
 # todo: relationship with space-time FEM... what I the rhs is a time integral? Not easily implementable but...
