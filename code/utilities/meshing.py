@@ -95,7 +95,7 @@ class AnnulusMesh(AbstractMesh):
 
         # A circle centered at the origin and radius 1
         circle = model.add_circle([0.0, 0.0, 0.0], 2.0,
-                                  mesh_size=5 * resolution)  # meshes are always 3D, I will suppress the third component in case
+                                  mesh_size=2.5 * resolution)  # meshes are always 3D, I will suppress the third component in case
 
         # A hole
         hole = model.add_circle([0.0, 0.0, 0.0], 1.0, mesh_size=1 * resolution)
