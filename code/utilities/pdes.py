@@ -36,6 +36,7 @@ class HeatEquation:
     def set_mesh(self, mesh, mf):
 
         self.mesh = mesh
+        self.mesh.rename("PDEMesh", "")
         self.facet_indicator = mf
 
         self.set_function_space()
@@ -111,12 +112,20 @@ class HeatEquation:
             for v in marker_dirichlet:
                 if not isinstance(v, int):
                     raise Exception("The Dirichlet marker should be an integer")
+            if not isinstance(dirichlet_BC, list):
+                raise Exception("Boundary conditions must be supplied in lists")
+            if len(dirichlet_BC) != len(marker_dirichlet):
+                raise Exception("The number of boundary conditions must match the number of markers")
         if marker_neumann is not None:
             if not isinstance(marker_neumann, list):
                 raise Exception("The Neumann marker should be a list")
             for v in marker_neumann:
                 if not isinstance(v, int):
                     raise Exception("The Neumann marker should be an integer")
+            if not isinstance(neumann_BC, list):
+                raise Exception("Boundary conditions must be supplied in lists")
+            if len(neumann_BC) != len(marker_neumann):
+                raise Exception("The number of boundary conditions must match the number of markers")
 
         self.initial_value = initial_value
 
@@ -179,29 +188,35 @@ class HeatEquation:
         v = TestFunction(self.S1h)
         dx = Measure("dx", self.mesh)
 
+        dt = Constant(self.dts[time_index - 1])
+        dt.rename("dt", "")
+
         # Choose the correct time scheme
         if ode_scheme_index == 0:  # implicit euler
-            dt = Constant(self.dts[time_index - 1])
             t = self.times[time_index]
 
             a = u * v * dx + dt * inner(grad(u), grad(v)) * dx
             L = last_solution * v * dx
 
             if self.neumann_marker is not None:
-                self.f_N.t = t
-                L = L + dt * self.f_N * v * ds
+                for f_N in self.f_N:
+                    if hasattr(f_N, 't'):
+                        f_N.t = t
+                    L = L + dt * f_N * v * ds
 
             if self.f is not None:
-                self.f.t = t
+                if hasattr(self.f, 't'):
+                    self.f.t = t
                 L = L + dt * self.f * v * dx
 
             if self.dirichlet_marker is not None:
-                self.f_D.t = t
+                for f_D in self.f_D:
+                    if hasattr(f_D, 't'):
+                        f_D.t = t
 
             return a, L
 
         elif ode_scheme_index == 1:  # CN (standard)
-            dt = Constant(self.dts[time_index - 1])
             t = self.times[time_index]
             t_prev = self.times[time_index - 1]
 
@@ -209,20 +224,24 @@ class HeatEquation:
             L = last_solution * v * dx - dt / 2 * inner(grad(last_solution), grad(v)) * dx
 
             if self.neumann_marker is not None:
-                self.f_N.t = (t + t_prev) / 2
-                L = L + dt * self.f_N * v * ds
+                for f_N in self.f_N:
+                    if hasattr(f_N, 't'):
+                        f_N.t = (t + t_prev) / 2
+                    L = L + dt * f_N * v * ds
 
             if self.f is not None:
-                self.f.t = (t + t_prev) / 2
+                if hasattr(self.f, 't'):
+                    self.f.t = (t + t_prev) / 2
                 L = L + dt * self.f * v * dx
 
             if self.dirichlet_marker is not None:
-                self.f_D.t = t
+                for f_D in self.f_D:
+                    if hasattr(f_D, 't'):
+                        f_D.t = t
 
             return a, L
 
         elif ode_scheme_index == 3:  # implicit-explicit euler
-            dt = Constant(self.dts[time_index - 1])
             t = self.times[time_index]
             t_last = self.times[time_index - 1]
 
@@ -230,15 +249,20 @@ class HeatEquation:
             L = last_solution * v * dx
 
             if self.neumann_marker is not None:
-                self.f_N.t = t_last
-                L = L + dt * self.f_N * v * ds
+                for f_N in self.f_N:
+                    if hasattr(f_N, 't'):
+                        f_N.t = t_last
+                    L = L + dt * f_N * v * ds
 
             if self.f is not None:
-                self.f.t = t_last
+                if hasattr(self.f, 't'):
+                    self.f.t = t_last
                 L = L + dt * self.f * v * dx
 
             if self.dirichlet_marker is not None:
-                self.f_D.t = t_last  # this could be changed, depending the kind of consistency want
+                for f_D in self.f_D:
+                    if hasattr(f_D, 't'):
+                        f_D.t = t_last  # this could be changed, depending the kind of consistency want
 
             return a, L
 
@@ -249,7 +273,8 @@ class HeatEquation:
             raise Exception("Time index out of range")
 
         if time_index == 0:
-            current_solution = interpolate(self.initial_value, self.S1h)
+            # current_solution = project(self.initial_value, self.S1h)
+            current_solution = self.initial_value  # let us assume it doesn't need projection
             if err_mode != "none":
                 current_error = self.compute_instant_error(err_mode, current_solution, time_index)
                 return current_solution, current_error
@@ -265,8 +290,8 @@ class HeatEquation:
         dirichlet_BC = []
         if self.dirichlet_marker is not None:
             # self.f_D.t = self.times[time_index] # this is already taken care of in get_instant_variational_formulation
-            for v in self.dirichlet_marker:
-                dirichlet_BC.append(DirichletBC(self.S1h, self.f_D, self.facet_indicator, v))
+            for marker, f_D in zip(self.dirichlet_marker, self.f_D):
+                dirichlet_BC.append(DirichletBC(self.S1h, f_D, self.facet_indicator, marker))
 
         solve(a == L, current_solution,
               dirichlet_BC)  # dirichlet BC might be empty. Also, they're imposed at possibily a different time than the Neumann conditions, in the case of CN
@@ -284,12 +309,13 @@ class HeatEquation:
         if self.exact_solution is None:
             raise Exception("No exact solution is available for error computation")
         else:
-            self.exact_solution.t = self.times[time_index]
+            if hasattr(self.exact_solution, 't'):
+                self.exact_solution.t = self.times[time_index]
         if err_mode == "l2":
             error = errornorm(self.exact_solution, current_solution) / self.domain_measure
             return error
         elif err_mode == "linf":
-            u_ex_interp = interpolate(self.exact_solution, self.S1h)
+            u_ex_interp = project(self.exact_solution, self.S1h)
             error = np.max(np.abs(u_ex_interp.vector()[:] - current_solution.vector()[:]))
             return error
         else:
@@ -305,6 +331,7 @@ class HeatEquation:
         error_list.append(first_error)
         last_solution.assign(first_solution)  # no need to create a copy of first solution
 
+        logging.info("Solving the heat equation")
         for time_step in tqdm(range(1, len(self.times))):
             current_solution, current_error = self.solve_single_step(time_step, last_solution, err_mode=err_mode)
             solution_list.append(current_solution)
@@ -326,6 +353,7 @@ class PDETestProblems:
         self.override_pickle = True
 
         self.pickles_path = "/home/leonardo_mutti/PycharmProjects/masters_thesis/pde_data/pickles/test_problems/"
+        self.return_exact_sol = True
 
     def get_data(self, problem_name):
 
@@ -1096,6 +1124,7 @@ class PDETestProblems:
             u_D.t = 0
         if u_N is not None:
             u_N.t = 0
+
         return (u_ex, f, u_D, u_N, u0, self.marker_neumann, self.marker_dirichlet, self.T)
 
     def to_pickle(self, solution_list, pickle_name):
@@ -1115,62 +1144,67 @@ class PDETestProblems:
 
     def from_pickle(self, V, pickle_name):
 
-        pickles_path = self.pickles_path
+        if self.return_exact_sol:
 
-        with open(pickles_path + pickle_name + '.pickle', 'rb') as handle:
-            pk = pickle.load(handle)
+            pickles_path = self.pickles_path
 
-        solution_list = []
+            with open(pickles_path + pickle_name + '.pickle', 'rb') as handle:
+                pk = pickle.load(handle)
 
-        for nodal_values in pk:
-            u = Function(V)
-            u.vector()[:] = nodal_values
-            solution_list.append(u)
+            solution_list = []
 
-        logging.info("Successfully loaded exact solution from pickle")
+            for nodal_values in pk:
+                u = Function(V)
+                u.vector()[:] = nodal_values
+                solution_list.append(u)
 
-        return solution_list
+            logging.info("Successfully loaded exact solution from pickle")
+
+            return solution_list
+
+        else:
+            return None
 
     def create_solution(self, t, times, solution_list):
+        return TimeExpressionFromList(t, times, solution_list)
 
-        # Now, create an expression from solution list, hopefully it works
-        class solution(UserExpression):
-            def __init__(self, t, discrete_times, solution_list, **kwargs):
-                super().__init__(self, **kwargs)
-                self.t = t
 
-                if not isinstance(discrete_times, np.ndarray):
-                    raise Exception("Times must be a numpy array")
-                self.discrete_times = np.sort(discrete_times)
-                self.t_min = np.min(self.discrete_times)
-                self.t_max = np.max(self.discrete_times)
+# Now, create an expression from solution list, hopefully it works
+class TimeExpressionFromList(UserExpression):
+    def __init__(self, t, discrete_times, solution_list, **kwargs):
+        super().__init__(self, **kwargs)
+        self.t = t
 
-                self.solution_list = solution_list
+        if not isinstance(discrete_times, np.ndarray):
+            raise Exception("Times must be a numpy array")
+        self.discrete_times = np.sort(discrete_times)
+        self.t_min = np.min(self.discrete_times)
+        self.t_max = np.max(self.discrete_times)
 
-            def eval(self, values, x):
+        self.solution_list = solution_list
 
-                if self.t <= self.t_min:
-                    values[0] = solution_list[0](*x)
-                elif self.t >= self.t_max:
-                    values[0] = solution_list[-1](*x)
-                else:
+    def eval(self, values, x):
 
-                    i_right = np.searchsorted(self.discrete_times, self.t, side='right')
-                    i_left = i_right - 1
+        if self.t <= self.t_min:
+            values[0] = self.solution_list[0](*x)
+        elif self.t >= self.t_max:
+            values[0] = self.solution_list[-1](*x)
+        else:
 
-                    t_left = self.discrete_times[i_left]
-                    t_right = self.discrete_times[i_right]
+            i_right = np.searchsorted(self.discrete_times, self.t, side='right')
+            i_left = i_right - 1
 
-                    v_left = solution_list[i_left](*x)
-                    v_right = solution_list[i_right](*x)
+            t_left = self.discrete_times[i_left]
+            t_right = self.discrete_times[i_right]
 
-                    dt = t_right - t_left
+            v_left = self.solution_list[i_left](*x)
+            v_right = self.solution_list[i_right](*x)
 
-                    # Linear interpolation
-                    w = (self.t - t_left) / dt
-                    values[0] = v_left + w * (v_right - v_left)
+            dt = t_right - t_left
 
-            def value_shape(self):
-                return ()
+            # Linear interpolation
+            w = (self.t - t_left) / dt
+            values[0] = v_left + w * (v_right - v_left)
 
-        return solution(t, times, solution_list)
+    def value_shape(self):
+        return ()
