@@ -53,11 +53,10 @@ for i in range(4):
     heq.set_mesh(annulus.mesh, annulus.facet_function)
     hs.append(heq.mesh.hmax())
 
-    match heq.implemented_time_schemes.index(heq.ode_scheme):
-        case 0 | 3:  # implicit and implicit-explicit euler
-            N_steps = int(np.ceil(2 / (heq.mesh.hmax() ** 2)))
-        case 1:  # crank-nicolson
-            N_steps = int(np.ceil(2 / (heq.mesh.hmax() ** 1)))
+    if heq.implemented_time_schemes.index(heq.ode_scheme) in [0, 3]:  # implicit and implicit-explicit euler
+        N_steps = int(np.ceil(2 / (heq.mesh.hmax() ** 2)))
+    elif heq.implemented_time_schemes.index(heq.ode_scheme) == 1:  # crank-nicolson
+        N_steps = int(np.ceil(2 / (heq.mesh.hmax() ** 1)))
 
     logging.info(f"Error level {i} with {N_steps} timesteps")
 
