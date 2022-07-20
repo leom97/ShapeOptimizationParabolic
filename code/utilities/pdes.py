@@ -29,6 +29,7 @@ class HeatEquation:
         self.facet_indicator = None
         self.mesh = None
         self.domain = None
+        self.solution_list = None
         self.implemented_time_schemes = ["implicit_euler", "crank_nicolson", "crank_nicolson_midpoint",
                                          "implicit_explicit_euler"]
         self.verbose = False
@@ -62,6 +63,20 @@ class HeatEquation:
 
         if N_steps is None and custom_times_array is None:
             logging.warning("No time discretization provided, the default will be created")
+            if self.ode_scheme is None:
+                raise Exception("No ODE scheme was specified, no default time stepping is available")
+            if self.mesh is None:
+                raise Exception("No mesh was specified, no default time stepping is available")
+            ode_scheme_index = self.implemented_time_schemes.index(self.ode_scheme)
+            if ode_scheme_index == 0 or ode_scheme_index == 3:
+                N_steps = int(np.ceil(self.T / (self.mesh.hmax() ** 2)))
+            elif ode_scheme_index == 1:
+                N_steps = int(np.ceil(self.T / (self.mesh.hmax())))
+            self.times = np.linspace(0, self.T, N_steps + 1)
+            dt = self.T / N_steps
+            if dt < DOLFIN_EPS:
+                raise Exception("Negative or too small time step")
+            self.dts = dt * np.ones(N_steps)  # we have N_steps + 1 points, so, N_steps intervals
         elif N_steps is not None and custom_times_array is not None:
             raise Exception("Over specification of the time discretization mode")
         elif N_steps is not None:
@@ -337,6 +352,8 @@ class HeatEquation:
             solution_list.append(current_solution)
             error_list.append(current_error)
             last_solution.assign(current_solution)  # no need for current_solution.copy()
+
+        self.solution_list = solution_list
 
         if err_mode == "none":
             return solution_list, None
