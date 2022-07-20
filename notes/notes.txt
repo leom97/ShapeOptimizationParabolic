@@ -27,6 +27,63 @@ Pipeline to set up a virtual environment
         return opt[0], res
     else:
         return opt, res
+- to have scipy.minimize output the history, /home/leonardo_mutti/anaconda3/envs/masters_thesis/venv_with_mshr/lib/python3.8/site-packages/scipy/optimize/_lbfgsb_py.py:351:
+    energy_values = []
+    gradient_infty_norms = []
+
+    while 1:
+        # x, f, g, wa, iwa, task, csave, lsave, isave, dsave = \
+        _lbfgsb.setulb(m, x, low_bnd, upper_bnd, nbd, f, g, factr,
+                       pgtol, wa, iwa, task, iprint, csave, lsave,
+                       isave, dsave, maxls)
+        task_str = task.tobytes()
+        if task_str.startswith(b'FG'):
+            # The minimization routine wants f and g at the current x.
+            # Note that interruptions due to maxfun are postponed
+            # until the completion of the current minimization iteration.
+            # Overwrite f and g:
+            f, g = func_and_grad(x)
+            energy_values.append(f)
+            gradient_infty_norms.append(np.max(np.abs(g)))
+        elif task_str.startswith(b'NEW_X'):
+            # new iteration
+            n_iterations += 1
+            if callback is not None:
+                callback(np.copy(x))
+
+            if n_iterations >= maxiter:
+                task[:] = 'STOP: TOTAL NO. of ITERATIONS REACHED LIMIT'
+            elif sf.nfev > maxfun:
+                task[:] = ('STOP: TOTAL NO. of f AND g EVALUATIONS '
+                           'EXCEEDS LIMIT')
+        else:
+            break
+
+    task_str = task.tobytes().strip(b'\x00').strip()
+    if task_str.startswith(b'CONV'):
+        warnflag = 0
+    elif sf.nfev > maxfun or n_iterations >= maxiter:
+        warnflag = 1
+    else:
+        warnflag = 2
+
+    # These two portions of the workspace are described in the mainlb
+    # subroutine in lbfgsb.f. See line 363.
+    s = wa[0: m*n].reshape(m, n)
+    y = wa[m*n: 2*m*n].reshape(m, n)
+
+    # See lbfgsb.f line 160 for this portion of the workspace.
+    # isave(31) = the total number of BFGS updates prior the current iteration;
+    n_bfgs_updates = isave[30]
+
+    n_corrs = min(n_bfgs_updates, maxcor)
+    hess_inv = LbfgsInvHessProduct(s[:n_corrs], y[:n_corrs])
+
+    task_str = task_str.decode()
+    return OptimizeResult(fun=f, jac=g, nfev=sf.nfev,
+                          njev=sf.ngev,
+                          nit=n_iterations, status=warnflag, message=task_str,
+                          x=x, success=(warnflag == 0), hess_inv=hess_inv, energy_hist = energy_values, gradient_infty_hist = gradient_infty_norms)
 - fix some tensorflow things:
     - "/home/leonardo_mutti/anaconda3/envs/masters_thesis/lib/python3.10/site-packages/pyadjoint/tape.py", line 342, in visualise
     tf.reset_default_graph() -> must be changed into tf.compat.v1.*
