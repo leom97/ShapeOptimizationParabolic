@@ -19,6 +19,14 @@ Pipeline to set up a virtual environment
 - fix 3D plotting: https://bitbucket.org/fenics-project/dolfin/commits/5e86e7e3409a8d9ec4b1f40aa2b361d5de84d2a0
 - install scipy the usual way
 - install tensorflow: mamba install -c conda-forge tensorflow
+- /home/leonardo_mutti/anaconda3/envs/masters_thesis/venv_with_mshr/lib/python3.8/site-packages/pyadjoint/optimization/optimization.py:137 -> change to return m, res to return also the optimization result
+- /home/leonardo_mutti/anaconda3/envs/masters_thesis/venv_with_mshr/lib/python3.8/site-packages/pyadjoint/optimization/optimization.py:252 -> change as well to
+    opt, res = algorithm(rf_np, **kwargs)
+
+    if len(opt) == 1:
+        return opt[0], res
+    else:
+        return opt, res
 - fix some tensorflow things:
     - "/home/leonardo_mutti/anaconda3/envs/masters_thesis/lib/python3.10/site-packages/pyadjoint/tape.py", line 342, in visualise
     tf.reset_default_graph() -> must be changed into tf.compat.v1.*
