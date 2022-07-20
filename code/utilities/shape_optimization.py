@@ -3,6 +3,7 @@ from dolfin_adjoint import *
 import numpy as np
 import pickle
 import logging
+import matplotlib.pyplot as plt
 
 from utilities.meshing import AnnulusMesh, CircleMesh
 from utilities.pdes import HeatEquation, TimeExpressionFromList
@@ -21,6 +22,7 @@ logging.basicConfig(level=logging.INFO,
                     datefmt='%H:%M')
 
 set_log_level(LogLevel.ERROR)
+
 
 # %% Class definitions
 
@@ -56,6 +58,9 @@ class ShapeOptimizationProblem:
         self.j = None
         self.q_opt = None
         self.opt_results = None
+        self.duration = None
+        self.v_equation = None
+        self.w_equation = None
 
     def get_domain(self, domain_dict):
         if domain_dict["type"] == "annulus":
@@ -74,6 +79,9 @@ class ShapeOptimizationProblem:
         return sphere
 
     def create_optimal_geometry(self, exact_geometry_dict):
+
+        logging.info("Creating optimal geometry")
+
         with stop_annotating():
             self.exact_domain = self.get_domain(exact_geometry_dict["domain"])
             self.exact_sphere = self.get_sphere(exact_geometry_dict["sphere"])
@@ -103,10 +111,9 @@ class ShapeOptimizationProblem:
         if self.exact_domain is None:
             raise Exception("Call first create_optimal_geometry")
 
+        logging.info("Simulating heat equation on exact deformed domain")
+
         with stop_annotating():
-
-            logging.info("Simulating heat equation on exact deformed domain")
-
             self.exact_pde_dict = exact_pde_dict
             self.marker_neumann = self.exact_pde_dict["marker_neumann"]
             self.marker_dirichlet = self.exact_pde_dict["marker_dirichlet"]
@@ -262,34 +269,35 @@ class ShapeOptimizationProblem:
         u_D_inner = Constant(0.0)  # zero inner BC
 
         # Dirichlet state
-        v_equation = HeatEquation()
-        v_equation.set_mesh(self.optimization_domain.mesh, self.optimization_domain.facet_function, self.V_vol)
-        v_equation.set_PDE_data(u0, marker_dirichlet=[2, 3],
-                                dirichlet_BC=[self.u_ex,
-                                              u_D_inner])
-        v_equation.set_ODE_scheme(self.optimization_pde_dict["ode_scheme"])
-        v_equation.verbose = True
-        v_equation.set_time_discretization(self.T, N_steps=self.optimization_pde_dict["N_steps"])
+        self.v_equation = HeatEquation()
+        self.v_equation.set_mesh(self.optimization_domain.mesh, self.optimization_domain.facet_function, self.V_vol)
+        self.v_equation.set_PDE_data(u0, marker_dirichlet=[2, 3],
+                                     dirichlet_BC=[self.u_ex,
+                                                   u_D_inner])
+        self.v_equation.set_ODE_scheme(self.optimization_pde_dict["ode_scheme"])
+        self.v_equation.verbose = True
+        self.v_equation.set_time_discretization(self.T, N_steps=self.optimization_pde_dict["N_steps"])
 
         # Dirichlet-Neumann state
-        w_equation = HeatEquation()
-        w_equation.set_mesh(self.optimization_domain.mesh, self.optimization_domain.facet_function, self.V_vol)
-        w_equation.set_PDE_data(u0, marker_dirichlet=[3], marker_neumann=[2],
-                                dirichlet_BC=[u_D_inner],
-                                neumann_BC=[self.u_N])
-        w_equation.set_ODE_scheme(self.optimization_pde_dict["ode_scheme"])
-        w_equation.verbose = True
-        w_equation.set_time_discretization(self.T, N_steps=self.optimization_pde_dict["N_steps"])
+        self.w_equation = HeatEquation()
+        self.w_equation.set_mesh(self.optimization_domain.mesh, self.optimization_domain.facet_function, self.V_vol)
+        self.w_equation.set_PDE_data(u0, marker_dirichlet=[3], marker_neumann=[2],
+                                     dirichlet_BC=[u_D_inner],
+                                     neumann_BC=[self.u_N])
+        self.w_equation.set_ODE_scheme(self.optimization_pde_dict["ode_scheme"])
+        self.w_equation.verbose = True
+        self.w_equation.set_time_discretization(self.T, N_steps=self.optimization_pde_dict["N_steps"])
 
         # The cost functional
 
-        v_equation.solve()
-        w_equation.solve()
+        self.v_equation.solve()
+        self.w_equation.solve()
 
         J = 0
         logging.warning("Integral discretization only valid for implicit euler")
-        for v, w, dt, t in zip(v_equation.solution_list[1:], w_equation.solution_list[1:], v_equation.dts,
-                               v_equation.times[1:]):
+        for v, w, dt, t in zip(self.v_equation.solution_list[1:], self.w_equation.solution_list[1:],
+                               self.v_equation.dts,
+                               self.v_equation.times[1:]):
             J += assemble(dt * (v - w) ** 2 * dx(self.optimization_domain.mesh))  # *exp(-0.05/(T-t)**2)
 
         self.j = ReducedFunctional(J, Control(self.q_opt))
@@ -302,20 +310,93 @@ class ShapeOptimizationProblem:
         taylor_test(self.j, self.q_opt, h)
 
     def solve(self):
+        logging.info("Shape optimization starts now")
+        import time
+        duration = -time.time()
         self.q_opt, self.opt_results = minimize(self.j, tol=1e-6, options=self.optimization_dict)
+        duration += time.time()
+        self.duration = duration
+
+    def visualize_result(self):
+        logging.info("Visualizing the geometries")
+
+        plot(self.exact_domain.mesh, title="Exact solution")
+        plt.show()
+
+        plot(self.optimization_domain.mesh, title="Computed solution")
+        plt.show()
+
+        plt.plot(np.log(np.array(self.opt_results.gradient_infty_hist)))
+        plt.title("Logarithm of infinity norm of gradient")
+        plt.show()
+
+        plt.plot(np.log(np.array(self.opt_results.energy_hist)))
+        plt.title("Logarithm of cost function value")
+        plt.show()
+
+    def save_results_to_file(self, path):
+
+        plot(self.exact_domain.mesh)
+        plt.savefig(path + "exact_domain.svg", bbox_inches="tight", pad_inches=0)
+        plt.clf()
+        plot(self.optimization_domain.mesh)
+        plt.savefig(path + "estimated_domain.svg", bbox_inches="tight", pad_inches=0)
+        plt.clf()
+        plt.plot(np.log(np.array(self.opt_results.gradient_infty_hist)))
+        plt.savefig(path + "gradient_infty_norm.svg", bbox_inches="tight", pad_inches=0)
+        plt.clf()
+        plt.plot(np.log(np.array(self.opt_results.energy_hist)))
+        plt.savefig(path + "cost_function.svg", bbox_inches="tight", pad_inches=0)
+        plt.clf()
+
+        zero_function = Function(self.V_vol)    # for mesh visualization
+        mesh_file = File(path + "final_mesh.pvd")
+        mesh_file << zero_function
+
+        coefficients_list_ex = []
+        coefficients_list_v = []
+        coefficients_list_w = []
+
+        for u, v, w in zip(self.exact_pde.solution_list, self.v_equation.solution_list, self.w_equation.solution_list):
+            coefficients_list_ex.append(u.vector()[:])
+            coefficients_list_v.append(v.vector()[:])
+            coefficients_list_w.append(w.vector()[:])
+
+        optimization_results_dict = {
+            "final_cost_function_value": self.opt_results.fun,
+            "final_gradient_infty_norm": np.max(np.abs(self.opt_results.jac)),
+            "duration": self.duration,
+            "iterations": self.opt_results.nit,
+            "message": self.opt_results.message,
+            "success": self.opt_results.success,
+            "function_evaluations": self.opt_results.nfev,
+            "jacobian_evaluations": self.opt_results.njev,
+            "cost_function_value_history": np.array(self.opt_results.energy_hist),
+            "gradient_infty_norm_history": np.array(self.opt_results.gradient_infty_hist),
+            "u_ex": coefficients_list_ex,
+            "v": coefficients_list_v,
+            "w": coefficients_list_w,
+        }
+
+        with open(path + "optimization_results" + '.pickle', 'wb') as handle:
+            pickle.dump(optimization_results_dict, handle)
+
+        logging.info("Results and plots were saved")
 
 
 # %%  Exemplary usage
 
 if __name__ == "__main__":
-    results_path = "/home/leonardo_mutti/PycharmProjects/masters_thesis/code/results/test0/"
+    problem_path = "/home/leonardo_mutti/PycharmProjects/masters_thesis/code/results/test0/"
 
     # u_N = Expression('exp(-a/pow(t,2))*sin(3*t)*pow(x[0],2)', t=0, a=.05, degree=4)
     # u_N = Expression('exp(-a/pow(t,2))*sin(3*t)*(pow(x[0],2)-cos(4*x[1]))', t=0, a=.05, degree=5)
     # q_ex_lambda = lambda circle_coords: -.5 * circle_coords[:, 0] ** 2 + .7 * circle_coords[:, 1] ** 2
 
     shpb = ShapeOptimizationProblem()
-    shpb.initialize_from_data("/home/leonardo_mutti/PycharmProjects/masters_thesis/code/results/test0/",
-                              method="python")
+    shpb.initialize_from_data(problem_path, method="python")
     shpb.create_cost_functional()
     shpb.do_taylor_test()
+    shpb.solve()
+    shpb.visualize_result()
+    shpb.save_results_to_file(problem_path)
