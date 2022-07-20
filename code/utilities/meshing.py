@@ -2,18 +2,26 @@ import pygmsh
 import gmsh
 import meshio
 import abc
+import numpy as np
 
 from dolfin import *
 from dolfin_adjoint import *
 
 
 class AbstractMesh:
+    """
+    Class for objects which are either spheres or have a spherical hole inside, and whose boundary is star shaped
+    """
+
     # Adapted from http://jsdokken.com/src/pygmsh_tutorial.html#first
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, resolution, path):
+    def __init__(self, resolution, path, dimension, center, inner_radius):
         self.resolution = resolution
         self.path = path
+        self.dimension = dimension
+        self.center = center
+        self.inner_radius = inner_radius
 
         # An empty geometry
         self.geometry = pygmsh.geo.Geometry()
@@ -68,6 +76,13 @@ class AbstractMesh:
         :return:
         """
 
+    @abc.abstractmethod
+    def boundary_radial_function(self, x):
+        """
+        :param x: a spherical point
+        :return: the value of the radial function describing the boundary: f(x/|x|) = |x| => x \in boundary
+        """
+
 
 class AnnulusMesh(AbstractMesh):
     """
@@ -84,8 +99,19 @@ class AnnulusMesh(AbstractMesh):
 
     """
 
-    def __init__(self, resolution=.0125, path="/home/leonardo_mutti/PycharmProjects/masters_thesis/meshes/annulus/"):
-        super().__init__(resolution, path)
+    def __init__(self, resolution=.0125, path="/home/leonardo_mutti/PycharmProjects/masters_thesis/meshes/annulus/",
+                 center=np.array([0, 0]), inner_radius=1, outer_radius=2):
+
+        self.outer_radius = outer_radius
+
+        super().__init__(resolution, path, 2, center, inner_radius)
+
+        if not isinstance(center, np.ndarray):
+            raise ValueError("The center must be a numpy array")
+        if len(center) != 2:
+            raise Exception("The center is not a 2-dimensional point")
+        if 0 >= inner_radius or inner_radius >= outer_radius:
+            raise Exception("The radii values are not valid")
 
     def create_mesh(self):
         resolution = self.resolution
@@ -94,11 +120,11 @@ class AnnulusMesh(AbstractMesh):
         model = self.geometry.__enter__()
 
         # A circle centered at the origin and radius 1
-        circle = model.add_circle([0.0, 0.0, 0.0], 2.0,
+        circle = model.add_circle([self.center[0], self.center[1], 0.0], self.outer_radius,
                                   mesh_size=2.5 * resolution)  # meshes are always 3D, I will suppress the third component in case
 
         # A hole
-        hole = model.add_circle([0.0, 0.0, 0.0], 1.0, mesh_size=1 * resolution)
+        hole = model.add_circle([self.center[0], self.center[1], 0.0], self.inner_radius, mesh_size=1 * resolution)
 
         # My surface
         plane_surface = model.add_plane_surface(circle.curve_loop, [hole.curve_loop])
@@ -151,6 +177,11 @@ class AnnulusMesh(AbstractMesh):
 
         return mesh, mf
 
+    def boundary_radial_function(self, x):
+        if not isinstance(x, np.ndarray):
+            raise Exception("The query point must be a numpy array")
+        return self.outer_radius * np.ones(x.shape[0])
+
 
 class CircleMesh(AbstractMesh):
     """
@@ -168,7 +199,7 @@ class CircleMesh(AbstractMesh):
     """
 
     def __init__(self, resolution=.2, path="/home/leonardo_mutti/PycharmProjects/masters_thesis/meshes/circle/"):
-        super().__init__(resolution, path)
+        super().__init__(resolution, path, 2, np.array([0, 0]), 1)
 
     def create_mesh(self):
         resolution = self.resolution
@@ -217,3 +248,8 @@ class CircleMesh(AbstractMesh):
         self.mesh = mesh
 
         return mesh
+
+    def boundary_radial_function(self, x):
+        if not isinstance(x, np.ndarray):
+            raise Exception("The query point must be a numpy array")
+        return np.ones(x.shape[0])
