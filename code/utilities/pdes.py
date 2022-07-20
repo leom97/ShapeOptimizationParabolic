@@ -13,7 +13,6 @@ class HeatEquation:
 
     def __init__(self):
         self.domain_measure = None
-        self.FEM = None
         self.S1h = None
         self.exact_solution = None
         self.neumann_marker = None
@@ -34,13 +33,13 @@ class HeatEquation:
                                          "implicit_explicit_euler"]
         self.verbose = False
 
-    def set_mesh(self, mesh, mf):
+    def set_mesh(self, mesh, mf, V=None):
 
         self.mesh = mesh
         self.mesh.rename("PDEMesh", "")
         self.facet_indicator = mf
 
-        self.set_function_space()
+        self.set_function_space(V=V)
         self.compute_domain_volume()
 
     def set_ODE_scheme(self, ode_scheme):
@@ -152,13 +151,15 @@ class HeatEquation:
         self.neumann_marker = marker_neumann
         self.exact_solution = exact_solution
 
-    def set_function_space(self):
+    def set_function_space(self, V=None):
         if not hasattr(self, "mesh"):
             raise Exception("A mesh needs to be defined at first")
-
-        L1 = FiniteElement("Lagrange", self.mesh.ufl_cell(), 1)  # only linear FEM for now
-        self.S1h = FunctionSpace(self.mesh, L1)
-        self.FEM = L1
+        if V is None:
+            logging.warning("No finite element space was provided, using default one")
+            L1 = FiniteElement("Lagrange", self.mesh.ufl_cell(), 1)  # only linear FEM for now
+            self.S1h = FunctionSpace(self.mesh, L1)
+        else:
+            self.S1h = V
 
     def compute_domain_volume(self):
 
