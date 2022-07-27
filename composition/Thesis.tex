@@ -143,7 +143,7 @@ original, hand-written signature
 
 \chapter{Continuous problem}
 
-\section{Gateux differentiability}
+\section{Gateaux differentiability}
 
 \begin{ass}[Geometry assumptions for the shape optimization problem]
 \label{ass:geo_sh}
@@ -217,12 +217,12 @@ L_T(k,w,v_0,q,p) = \\
 
 for $w \in Q_0(I, V_T), v_0 \in Q_0(I,W_T), q \in Q^0(I, V_T), p \in Q^0(I, W_T)$. Remember,  $A_T:=  (DT)^{-1}(DT)^{-t}|\det(DT)|$.
 
-Note that to be precise, $\bar{u}$ is an extension of the Dirichlet datum $f$, on the moving domain $T_k(T(U_r))$. Because of this, let's fix $\bar{u}_T$ with this property on $T(U_r)$. We show that $\bar{u}_T\circ T_k^{-1}$ satisfies the conditions stated in \cref{pb:diri_ext}. 
+Note that to be precise, $\bar{u}$ is an extension (any extension in fact, satisfying the conditions of \cref{pb:diri_ext}) of the Dirichlet datum $f$, on the moving domain $T_k(T(U_r))$. Because of this, let's fix $\bar{u}_T$ with this property on $T(U_r)$. We show that $\bar{u}_T\circ T_k^{-1}$ satisfies the conditions stated in \cref{pb:diri_ext}. 
 
 In particular:
 
 \begin{itemize}
-	\item composition with $T$ preserves the smoothness of the extension, as seen in \cref{prop:bochner_bound}, given that $\circ T_k^{-1}$ is a linear bounded operator between $V_T$ and $V_{T_k \circ T}$
+	\item composition with $T$ preserves the smoothness of the extension, as seen in \cref{lemma:bochner_Hk_map}, given that $\circ T_k^{-1}$ is a linear bounded operator between $V_T$ and $V_{T_k \circ T}$ (see \ref{thm:change})
 	\item the initial value is preserved, as seen in the proof of \cref{prop:change_boch}
 	\item the trace on $\Sigma_f$ is preserved, because the trace on $\Gamma_f=\partial D$ is preserved, see \cref{thm:change}
 \end{itemize}
@@ -235,15 +235,15 @@ For a fixed $T \in \cT_a$ and  $k\geq K(T)$, for $T_k:=\id+\delta\te_k \circ \ta
 
 \begin{align*}
 L_T(k,w,v_0,q,p) = \\
-\frac{1}{2}\int_I \int_{T(U_r)}|v_0+\bar{u} - w|^2|\det(DT_k)|+\\
-\int_I ( w_t , q |\det(DT_k)|)_{H_T}+ (A_{T_k}\nabla w, \nabla q)_{H_T} -\int_I(g,\tr_{U} q)_{L^2(\Gamma_f)} +\\ \int_I (v_{0t},p |\det(DT_k)|)_{H_T} + (A_{T_k} \nabla v_0, \nabla p)_{H_T}+\\\int_I(\bar{u}',p|\det(DT_k)|)_{H_T}+(A_{T_k} \nabla \bar{u} , \nabla p)_{H_T}
+\frac{1}{2}\int_I \int_{T(U_r)}|v_0+\bar{u}_T - w|^2|\det(DT_k)|+\\
+\int_I ( w_t , q |\det(DT_k)|)_{H_T}+ (A_{T_k}\nabla w, \nabla q)_{H_T} -\int_I(g,\tr_{U} q)_{L^2(\Gamma_f)} +\\ \int_I (v_{0t},p |\det(DT_k)|)_{H_T} + (A_{T_k} \nabla v_0, \nabla p)_{H_T}+\\\int_I(\bar{u}_T',p|\det(DT_k)|)_{H_T}+(A_{T_k} \nabla \bar{u}_T , \nabla p)_{H_T}
 \end{align*}
 
 $L_T$ is defined as a map $\{k\geq K(T)\}\times Q_0(I, V_T)\times Q_0(I,W_T)\times Q^0(I, V_T)\times Q^0(I, W_T)\rightarrow \mR$.
 
 We call $u = (w,v_0)$, $\pi = (q,p)$, $G(k,u,\pi) = L_T(k,w,v_0,q,p)$ to ease the notation.
 
-We also call $b(k, u) = \frac{1}{2}\int_I \int_{T(U_r)}|v_0+\bar{u}_T - w|^2|\det(DT_k)|$ and $a(k, u,\pi) = G(k,u,\pi)-b(k, u)$, $E = W_0(I, V_T)\times W_0(I,W_T)$, $F=W^0(I, V_T)\times W^0(I, W_T)$.
+We also call $b(k, u) = \frac{1}{2}\int_I \int_{T(U_r)}|v_0+\bar{u}_T - w|^2|\det(DT_k)|$ and $a(k, u,\pi) = G(k,u,\pi)-b(k, u)$, $E = Q_0(I, V_T)\times Q_0(I,W_T)$, $F=Q^0(I, V_T)\times Q^0(I, W_T)$.
 
 \end{defn}
 
@@ -262,7 +262,7 @@ $L_T$ satisfies the following properties:
 	\item there exists a unique solution $\psi = \pi^k$ to $\ds \int_0^1 d_\phi G(k, su^k + (1-s)u^0,\psi)[\delta \phi]ds =0$ for all $\delta \psi$ 
 \end{enumerate}
 
-In particular $\pi^k = (Q^k \circ \tau^k,P^k \circ \tau^k)$, where we introduced the average adjoint problems:
+In particular $\pi^k = (Q^k \circ \tau^k,P^k \circ \tau^k)$, where we introduced the averaged adjoint problems on the moving domain:
 
 \begin{pb}[Averaged adjoint equations]
 \label{pb:avg_adj_pb}
@@ -270,7 +270,7 @@ In particular $\pi^k = (Q^k \circ \tau^k,P^k \circ \tau^k)$, where we introduced
 -Q^k_t-\Delta Q^k =\frac{v_0^k-w^k+v_0^0-w^0}{2}\circ T_k^{-1}+\bar{u}_T\circ T_k^{-1} \\
 Q^k(T)=0\\
 \partial_\nu Q^k = 0 \text{ on } \Sigma_f\\
-Q^k = 0 \text{ on } \Sigma_m
+Q^k = 0 \text{ on } \Sigma_m^{T_k\circ T}
 \end{align*}
 
 and
@@ -278,7 +278,7 @@ and
 \begin{align*}
 -P^k_t-\Delta P^k =-\frac{v_0^k-w^k+v_0^0-w^0}{2}\circ T_k^{-1}-\bar{u}_T\circ T_k^{-1} \\
 P^k(T)=0\\
-P^k = 0 \text{ on } \Sigma_m \sqcup \Sigma_f
+P^k = 0 \text{ on } \Sigma_m^{T_k\circ T} \sqcup \Sigma_f
 \end{align*}
 \end{pb}
 
@@ -487,7 +487,7 @@ where $p^\tau$, $q^\tau$ solve:
 -q^\tau_t-\Delta q^\tau =v^\tau-w^\tau\\
 q^\tau(T)=0\\
 \partial_\nu q^\tau = 0 \text{ on } \Sigma_f\\
-q^\tau = 0 \text{ on } \Sigma_m
+q^\tau = 0 \text{ on } \Sigma_m^{T_k\circ T}
 \end{align*}
 
 and
@@ -495,7 +495,7 @@ and
 \begin{align*}
 -p^\tau_t-\Delta p^\tau = - v^\tau+ w^\tau \\
 p^\tau(T)=0\\
-p^\tau = 0 \text{ on } \Sigma_m \sqcup \Sigma_f
+p^\tau = 0 \text{ on } \Sigma_m^{T_k\circ T} \sqcup \Sigma_f
 \end{align*}
 
 and where $A'(\delta\te )= - D\delta \te -(D\delta\te)^t + \dive(\delta\te)$.
@@ -547,7 +547,7 @@ G(k,u^0,\pi^k)-G(0,u^0,\pi^k) =\\
 \int_I (v_t^\tau (|\det(DT_k)|-1),p^k )_{H_T} + ((A_{T_k}-I) \nabla v^\tau, \nabla p^k)_{H_T} \\
 \end{align*}
 
-Now, the application $\delta \te \mapsto \id +\delta \te \circ \tau^{-1}$ is Frechet differentiable at $\delta \te =0$, as a map of $\Te$ into $\cV^1$, with Frechet derivative $\delta \circ \te \tau^{-1}$, which is linear and bounded by point i) of lemme 2.2, \cite{murat}. Note, we needed here $\tau \in \cT^1$.
+Now, the application $\delta \te \mapsto \id +\delta \te \circ \tau^{-1}$ is Frechet differentiable at $\delta \te =0$, as a map of $\Te$ into $\cV^1$, with Frechet derivative $\delta \te \circ \tau^{-1}$, which is linear and bounded by point i) of lemme 2.2, \cite{murat}. Note, we needed here $\tau \in \cT^1$.
 
 Also, the maps $\delta \eta \mapsto |\det(D\eta)|$ and $\eta\mapsto (D\eta)^{-1}(D\eta)^{-t}|\det D\eta|$ are Frechet differentiable at $\id$, from $\cV^1$ into $L^\infty(\mR^n;\mR)$ and $L^\infty(\mR^n;\mR^{n\times n})$, as stated in lemma 4.16, page 80 of \cite{lindemann}. Their Frechet derivatives are $\dive (\beta)$ and $I-D\beta-(D\beta)^t$, respectively.
 
@@ -1175,7 +1175,7 @@ Here we have used \cref{lemma:bochner_Hk_map} to take the derivative inside the 
 
 Note that by the smoothness of $f_2$, we can write, for instance, $\langle f_2,u_n \rangle_{V^*,V}(0) = \langle f_2(0),u_n \rangle_{V^*,V}$.
 
-\tred{NB: here I need $f_2(0) \in V$ probably, so that we are using the compatibility condition!}.
+\tred{NB: here I need $f_2(0) \in V$ probably, but I'm not yet using the compatibility condition!}.
 
 Going to the absolute values:
 
@@ -1298,12 +1298,13 @@ Putting all together:
 
 which brings us to:
 
-\begin{align*}
+\begin{align}
+\label{eqn:weak_der_bound}
 \frac{1}{2}\int_0^t\HN{u_n'}^2+\frac{\alpha}{4}\VN{u_n(t)}^2-\frac{\lambda}{2}\HN{u_n(t)}^2\leq \\
 \frac{1}{2}\norm{f_2'}_{L^2(I,V^*)}^2 + \frac{1}{2}\norm{u_n}_{L^2(I,V)}^2 +\\
 + \frac{8+\alpha}{2\alpha}\norm{f_2}_{L^\infty(I,V^*)}^2+\frac{1+\norm{A}}{2}\VN{u_{n0}}^2+\\
 +\frac{1}{2}\norm{f_1}_{L^2(I,H)}^2
-\end{align*}
+\end{align}
 
 and thus, because norms are lower semicontinuous and because we have weak convergence of the time derivative, and $V$-strong convergence of the initial data:
 
@@ -1326,13 +1327,14 @@ C\text{limsup}_n \left ( \frac{\lambda}{2}\norm{u_n}_{C([0,T],H)}^2 + \frac{1}{2
 
 For the last term, employing the exact argument as in the first part of the proof:
 
-\begin{align*}
+\begin{align}
+\label{eqn:limsup}
 \text{limsup}_n \left ( \frac{\lambda}{2}\norm{u_n}_{C([0,T],H)}^2 + \frac{1}{2}\norm{u_n}_{L^2(I,V)}^2 \right )\leq\\
 2^{-1}\max(1,\lambda)\max(1,\alpha^{-1}) \text{limsup}_n \left ( \norm{u_n}_{C([0,T],H)}^2 + {\alpha}\norm{u_n}_{L^2(I,V)}^2 \right )\leq\\
 2^{-1}\max(1,\lambda)\max(1,\alpha^{-1})\exp(2\lambda T)(\HN{u_0}^2+\alpha^{-1}\norm{f_1+f_2}^2_{L^2(I,V^*)}) \leq \\
 2^{-1}\max(1,\lambda)\max(1,\alpha^{-1})\exp(2\lambda T)(\HN{u_0}^2+2\alpha^{-1}\norm{f_1}^2_{L^2(I,V^*)}+2\alpha^{-1}\norm{f_2}^2_{L^2(I,V^*)}) \leq \\
 C C_0(\HN{u_0}^2+\alpha^{-1}\norm{f_1}^2_{L^2(I,V^*)}+\alpha^{-1}\norm{f_2}^2_{L^2(I,V^*)})
-\end{align*}
+\end{align}
 
 
 where $C_0 = \ds 2^{-1}\max(1,\lambda)\max(1,\alpha^{-1})\exp(2\lambda T)$ and $C$ is a purely numeric constant without dependences on the problem.
@@ -1359,6 +1361,162 @@ C\int_0^T\HN{u'}^2\leq
 
 
 \end{mproof}
+
+\begin{ass}[Even more assumptions for even more regularity]
+\label{ass:zero_comp}
+We make the hypothesis $u_0=0$, which is the only case that is of interest for us, together with $A$ symmetric. Moreover, we require that the source term is a generic $f\in H^1(I,V^*)$ (in particular, the split $f=f_1 +f_2 \in L^2(I,H)+H^1(I,V^*)$ is not sufficient anymore), so that it is continuous  (\cite{evans}, page 286, theorem 2), and we can therefore ask the additional condition $f(0) \in H$.
+\end{ass}
+
+\begin{prop}[More smoothness from zero-order compatibility]
+Let \cref{ass:basic_par} and \cref{ass:zero_comp} hold. Then $u \in H^1(I,V)$ (in particular, $u \in C([0,T];V)$), and  $u' \in L^\infty(I,H)$ with the estimates:
+
+\begin{align*}
+\norm{u'}^2_{L^\infty(I,H)} \leq \exp(2\lambda T) \left (  \HN{f(0)}^2 +\frac{1}{\alpha} \int_0^T \VSN{ f'}^2\right )
+\end{align*}
+
+and:
+
+\begin{align*}
+\int_0^T \VN{u'}^2 \leq  \frac{1}{\alpha } \HN{f(0)}^2 + C_1\norm{f}_{H^1(I,V^*)}^2  + 2\lambda\frac{8+\alpha}{\alpha^2}\norm{f}_{L^\infty(I,V^*)}^2
+\end{align*}
+
+with $C_0 = \ds 2^{-1}\max(1,\lambda)\max(1,\alpha^{-1})\exp(2\lambda T)$, $C$ is a purely numeric constant without dependences on the problem, $C_1:=\alpha^{-2} + 4 \lambda C C_0 \alpha^{-2} + 2\lambda\alpha ^{-1} $.
+
+
+\end{prop}
+
+\begin{mproof}
+
+We consider again the functions $u_n$ as defined in \cite{gilardi}, page 22, equation (54).
+
+Thanks to the smoothness of $u_n$ and $f$, which are both $H^1$ in time, we can conclude that $u_n \in H^2(I,V_n)$, due to a bootstrapping argument from equation (56) of \cite{gilardi}.
+
+So, upon differentiation, we get that $\langle u_n'', v_n\rangle_{V^*,V} + \langle A u_n', v_n\rangle_{V^*,V} = \langle f', v_n \rangle_{V^*,V}$ for almost every $t$ (actually, for all $t$). Anyhow, thanks to the smoothness of $u_n'$, we can substitute it as $v_n \in V_n$ and integrate from $0$ to $t$ to obtain:
+
+\begin{align*}
+\int_0^t \langle u_n'', u_n'\rangle_{V^*,V} + \int_0^t\langle A u_n',u_n'\rangle_{V^*,V} = \int_0^t \langle f', u_n' \rangle_{V^*,V}
+\end{align*}
+
+Equivalently, being $u_n'(t) \in H$, we can write:
+
+\begin{align*}
+\int_0^t (u_n'', u_n')_H + \int_0^t\langle A u_n',u_n'\rangle_{V^*,V} = \int_0^t \langle f', u_n' \rangle_{V^*,V}
+\end{align*}
+
+Using the assumptions on $A$:
+
+\begin{align*}
+\int_0^t (u_n'', u_n')_H + \alpha \int_0^t \VN{u_n'}^2 - \lambda \int_0^t \HN{u_n'}^2 \leq \int_0^t \langle f', u_n' \rangle_{V^*,V}
+\end{align*}
+
+Therefore:
+
+\begin{align*}
+\frac{1}{2} \HN{u_n'(t)}^2 + \alpha \int_0^t \VN{u_n'}^2 \leq \frac{1}{2} \HN{u_n'(0)}^2+ \lambda \int_0^t \HN{u_n'}^2 +\frac{1}{2\alpha} \int_0^t \VSN{ f'}^2+ \frac{\alpha}{2}\int_0^t \VN{u_n'}^2
+\end{align*}
+
+We need to estimate the $H$ norm of $u_n'(0)$, for which the compatibility condition on $f(0)$ is essential.
+
+In fact, because the ODE for $u_n$ held a.e., and now that $u_n' \in H^1(I,V)$, the ODE holds for all times and we can conclude that $(u_n'(0),u_n'(0))_H + \langle A u_n(0), u_n'(0)\rangle_{V^*,V} = ( f(0), u_n'(0))_H$. Here comes in handy the fact that $u_0=0$, so that $u_n(0)=0$ too and therefore $\HN{u_n'(0)}^2  \leq 2^{-1}\HN{f(0)}^2 + 2^{-1} \HN{u_n'(0)}^2$ and therefore, $\HN{u_n'(0)}^2\leq \HN{f(0)}$.
+
+With this bound:
+
+\begin{align*}
+\HN{u_n'(t)}^2 + \alpha \int_0^t \VN{u_n'}^2 \leq \HN{f(0)}^2+ 2\lambda \int_0^t \HN{u_n'}^2 +\frac{1}{\alpha} \int_0^T \VSN{ f'}^2
+\end{align*}
+
+\underline{The $L^\infty$ estimate}
+
+Gronwall's lemma (in the form of \cite{gilardi} at page 19) yields:
+
+\begin{align*}
+\HN{u_n'(t)}^2 \leq \exp(2\lambda T) \left (  \HN{f(0)}^2 +\frac{1}{\alpha} \int_0^T \VSN{ f'}^2\right )
+\end{align*}
+
+This alone doesn't show that $u'\in L^\infty(I,H)$, but if this was true, and is $u_n'(t)\rightarrow_H u'(t)$ for a.e. $t$ modulo subsequences, then this would yield the required estimate on the norm.
+
+Now, $u_n, u_n' \rightharpoonup_H u, u'$ (where $u'$ is the $L^2(I,H)$ representative of the derivative of $u$ in the distributional sense, see the proof of \cref{thm:reg_time}). This is true modulo a common subsequence
+
+%, but since we also know the boundedness of $u_n, u_n' $ in $L^2(I,H)$ (cfr the proof of \cref{thm:reg_time} and page 23 of \cite{gilardi}), we conclude the convergence of the full sequences.
+
+Because $u_n', u'$ are the $L^2(I,H)$ sense derivatives of $u_n, u$ (thanks to the injectivity of $H^* \emb V^*$), then, by the compactness theorem 2.1 at page 271 of \cite{navier_stokes} with $X_0=X=X_1=H$ we conclude that $u_n \rightarrow u$ strongly in $L^2(I,H)$. Thanks to proposition 2.13 at page 10 of \cite{kreuter}, $u_n\rightarrow_H u$ for a.e. $t$, modulo a further subsequence.
+
+The bound shown above implies that $u' \in L^\infty(I,H)$ as we wished. 
+
+\underline{$u' \in L^2(I,V)$}
+
+
+We know:
+
+
+\begin{align*}
+\HN{u_n'(t)}^2 + \alpha \int_0^t \VN{u_n'}^2 \leq \frac{1}{2} \HN{f(0)}^2+ 2\lambda \int_0^t \HN{u_n'}^2 +\frac{1}{\alpha} \int_0^T \VSN{ f'}^2
+\end{align*}
+
+so that:
+
+
+\begin{align*}
+\alpha \int_0^T \VN{u_n'}^2 \leq \frac{1}{2} \HN{f(0)}^2+ 2\lambda \int_0^T \HN{u_n'}^2 +\frac{1}{\alpha} \int_0^T \VSN{ f'}^2
+\end{align*}
+
+But the proof of \cref{thm:const_track} says (cfr. \cref{eqn:weak_der_bound}):
+
+\begin{align*}
+\frac{1}{2}\int_0^t\HN{u_n'}^2+\frac{\alpha}{4}\VN{u_n(t)}^2\leq \\
+\frac{\lambda}{2}\HN{u_n(t)}^2 + \frac{1}{2}\norm{f'}_{L^2(I,V^*)}^2 + \frac{1}{2}\norm{u_n}_{L^2(I,V)}^2 + \frac{8+\alpha}{2\alpha}\norm{f}_{L^\infty(I,V^*)}^2\\
+\end{align*}
+
+In particular:
+
+\begin{align*}
+2\lambda\int_0^T\HN{u_n'}^2\leq \\
+4 \lambda \left (\frac{\lambda}{2} \norm{u_n}^2_{C([0,T];H)} + \frac{1}{2}\norm{u_n}_{L^2(I,V)}^2 \right )+ 2\lambda \norm{f'}_{L^2(I,V^*)}^2  + 2\lambda\frac{8+\alpha}{\alpha}\norm{f}_{L^\infty(I,V^*)}^2\\
+\end{align*}
+
+so that:
+
+\begin{align*}
+\alpha \int_0^T \VN{u_n'}^2 \leq \frac{1}{2} \HN{f(0)}^2 +\frac{1}{\alpha} \int_0^T \VSN{ f'}^2+\\
+4 \lambda \left (\frac{\lambda}{2} \norm{u_n}^2_{C([0,T];H)} + \frac{1}{2}\norm{u_n}_{L^2(I,V)}^2 \right )+ 2\lambda \norm{f'}_{L^2(I,V^*)}^2  + 2\lambda\frac{8+\alpha}{\alpha}\norm{f}_{L^\infty(I,V^*)}^2
+\end{align*}
+
+As we have already seen (or as it is explained at page 23 of \cite{gilardi}), the term in the brackets is bounded above.
+
+%Now, remember that $u_n$ was bounded in $L^2(I,V)$, and that any weakly convergent subsequence would solve the parabolic problem. Thus, $u_n \rightharpoonup u$ in $L^2(I,V)$ (cfr. page 23 in \cite{gilardi}).
+
+Morevoer, we showed in the proof of \cref{thm:reg_time} that $u_n'$ is bounded in $L^2(I,H)$, and that any weakly convergent subsequence would reach $u'$, thus yielding the weak convergence of the full sequence.
+
+
+Also we now have that $u_n'$ is bounded in $L^2(I,V)$, thus admitting a weakly convergent subsequence to $w$, in $L^2(I,V)$. Because it is implied the weak convergence in $L^2(I,H)$, to $w$, we obtain that $w=u' $. Reiterating the argument and thanks to the boundedness of the full sequence, the full sequence must converge weakly in $L^2(I,V)$ to $u'$.
+
+By lower semicontinuity of the norm:
+
+\begin{align*}
+\alpha \int_0^T \VN{u'}^2 \leq \HN{f(0)}^2 +\frac{1}{\alpha} \int_0^T \VSN{ f'}^2+\\
+4 \lambda \limsup_n\left (\frac{\lambda}{2} \norm{u_n}^2_{C([0,T];H)} + \frac{1}{2}\norm{u_n}_{L^2(I,V)}^2 \right )+ 2\lambda \norm{f'}_{L^2(I,V^*)}^2  + 2\lambda\frac{8+\alpha}{\alpha}\norm{f}_{L^\infty(I,V^*)}^2
+\end{align*}
+
+Remembering \cref{eqn:limsup}:
+
+\begin{align*}
+\text{limsup}_n \left ( \frac{\lambda}{2}\norm{u_n}_{C([0,T],H)}^2 + \frac{1}{2}\norm{u_n}_{L^2(I,V)}^2 \right )\leq\\
+C C_0 \alpha^{-1}\norm{f}^2_{L^2(I,V^*)}
+\end{align*}
+
+
+where $C_0 = \ds 2^{-1}\max(1,\lambda)\max(1,\alpha^{-1})\exp(2\lambda T)$ and $C$ is a purely numeric constant without dependences on the problem, so that:
+
+\begin{align*}
+\int_0^T \VN{u'}^2 \leq \\ \frac{1}{\alpha } \HN{f(0)}^2 + C_1\norm{f}_{H^1(I,V^*)}^2  + 2\lambda\frac{8+\alpha}{\alpha^2}\norm{f}_{L^\infty(I,V^*)}^2
+\end{align*}
+
+for $C_1:=\alpha^{-2} + 4 \lambda C C_0 \alpha^{-2} + 2\lambda\alpha ^{-1} $.
+
+Because the embedding $H\emb V$ is injective, $u'$ is also the weak derivative, $L^2(I,V)$ sense, of $u \in L^2(I,V)$, so that $u \in H^1(I,V)$. And thus, thanks to theorem 2 at page 286 of \cite{evans}, we obtain $u \in C([0,T]; V)$.
+
+\end{mproof}
+
 
 \section{Application to inhomogeneous parabolic problems}
 
@@ -2378,14 +2536,14 @@ Now, we note that:
 We therefore get, equivalently:
 
 \begin{align*}
-w^T \in Q_0(I, V_T), v_0^T \in W_0(I,W_T) \\
+w^T \in Q_0(I, V_T), v_0^T \in Q_0(I,W_T) \\
 \int_I ( (w^T\circ T)_t , q |\det(DT)|)_H+ (A_T\nabla (w^T\circ T), \nabla q)_{H} =\\ \int_I(g,\tr_{U} q)_{L^2(\Gamma_f)}, \quad \forall q \in Q^0(I, V) \\
-\int_I ( (v_0^T\circ T)_t,p |\det(DT)|)_H + (A_T \nabla (v_0^T\circ T), \nabla p)_{H}=\\ -\int_I((\bar{u}\circ T)',p|\det(DT)|)_{H}+(A_T \nabla (\bar{u} \circ T), \nabla p)_{H}, \quad \forall p \in W^0(I, W)
+\int_I ( (v_0^T\circ T)_t,p |\det(DT)|)_H + (A_T \nabla (v_0^T\circ T), \nabla p)_{H}=\\ -\int_I((\bar{u}\circ T)',p|\det(DT)|)_{H}+(A_T \nabla (\bar{u} \circ T), \nabla p)_{H}, \quad \forall p \in Q^0(I, W)
 \end{align*}
 
 and by \cref{prop:change_boch}, we also get $w^T\circ T \in Q_0(I,V), v_0^T\circ T \in Q_0(I,W)$.
 
-\tred{Note, here one could absorb $\det$ into the test functions, complicate the PDE but get rid of the time coefficients. From here one could prove a continuity result for the states and then get Frechet differentiability from Gateaux differentiability}.
+%\tred{Note, here one could absorb $\det$ into the test functions, complicate the PDE but get rid of the time coefficients. From here one could prove a continuity result for the states and then get Frechet differentiability from Gateaux differentiability}.
 
 On the other hand, consider:
 
