@@ -4,11 +4,13 @@ import numpy as np
 import pickle
 import logging
 import matplotlib.pyplot as plt
+from tqdm import tqdm
 
-from utilities.meshing import AnnulusMesh, CircleMesh
+from utilities.meshing import AnnulusMesh, CircleMesh, SquareAnnulusMesh
 from utilities.pdes import HeatEquation, TimeExpressionFromList
 from utilities.overloads import compute_spherical_transfer_matrix, \
     compute_radial_displacement_matrix, radial_displacement, radial_function_to_square
+import fenics_adjoint.shapead_transformations as adjf
 
 # %% Setting log and global parameters
 
@@ -35,18 +37,22 @@ class ShapeOptimizationProblem:
         self.exact_sphere = None
         self.optimization_sphere = None
         self.q_ex = None  # radial function describing the analytical solution to the shape optimization problem
+        self.W_ex = None  # associated radial displacement
         self.exact_geometry_dict = None
         self.optimization_geometry_dict = None
+        self.simulated_geometry_dict = None
 
         # PDE data: dictionaries that contain info to simulate pdes
         self.exact_pde_dict = None
         self.optimization_pde_dict = None
         self.marker_neumann = None
         self.marker_dirichlet = None
-        self.u_N = None
+        self.u_N = None  # expression for exterior neumann data
+        self.u_D = None  # expression for exterior dirichlet data
         self.T = None
         self.u_ex = None
         self.exact_pde = None  # it will be of HeatEquation class
+        self.exact_exterior_BC = None  # can be "N" or "D" (it corresponds to which one is the exact data we prescribe)
 
         # Function spaces
         self.V_vol = None
@@ -55,6 +61,7 @@ class ShapeOptimizationProblem:
 
         # Optimization
         self.optimization_dict = None
+        self.cost_functional_dict = None
         self.j = None
         self.q_opt = None
         self.opt_results = None
@@ -67,6 +74,11 @@ class ShapeOptimizationProblem:
             domain = AnnulusMesh(resolution=domain_dict["resolution"],
                                  inner_radius=domain_dict["inner_radius"],
                                  outer_radius=domain_dict["outer_radius"], center=domain_dict["center"])
+        elif domain_dict["type"] == "square_annulus":
+            domain = SquareAnnulusMesh(resolution=domain_dict["resolution"],
+                                       inner_radius=domain_dict["inner_radius"],
+                                       side_length=domain_dict["side_length"]
+                                       )
         else:
             raise ValueError("Domain unsupported")
         return domain
@@ -78,7 +90,7 @@ class ShapeOptimizationProblem:
             raise ValueError("Only 2D is supported for now")
         return sphere
 
-    def create_optimal_geometry(self, exact_geometry_dict):
+    def create_optimal_geometry(self, exact_geometry_dict, reusables_dict=None):
 
         logging.info("Creating optimal geometry")
 
@@ -97,17 +109,25 @@ class ShapeOptimizationProblem:
             VD = VectorFunctionSpace(self.exact_domain.mesh, "Lagrange", 1)
 
             self.q_ex = Function(V_sph)
-            circle_coords = self.exact_sphere.mesh.coordinates()[dof_to_vertex_map(V_sph), :]
-            q_ex_lambda = eval(exact_geometry_dict["q_ex_lambda"])
-            self.q_ex.vector()[:] = q_ex_lambda(circle_coords)
 
-            M = compute_spherical_transfer_matrix(V_vol, V_sph, p=p)
-            M2 = compute_radial_displacement_matrix(M, VD, p=p, f_D=f_D)
-            W = radial_displacement(self.q_ex, M2, VD)
+            if reusables_dict is None:
 
-            ALE.move(self.exact_domain.mesh, W)  # note, id(domain) = id(self.domain), so, both are moved
+                circle_coords = self.exact_sphere.mesh.coordinates()[dof_to_vertex_map(V_sph), :]
+                q_ex_lambda = eval(exact_geometry_dict["q_ex_lambda"])
+                self.q_ex.vector()[:] = q_ex_lambda(circle_coords)
 
-    def simulate_exact_pde(self, exact_pde_dict):
+                M = compute_spherical_transfer_matrix(V_vol, V_sph, p=p)
+                M2 = compute_radial_displacement_matrix(M, VD, p=p, f_D=f_D)
+                self.W_ex = radial_displacement(self.q_ex, M2, VD)
+            else:
+                logging.info("Loading exact geometry from pickle")
+                self.q_ex.vector()[:] = reusables_dict["q_ex"]
+                self.W_ex = Function(VD)
+                self.W_ex.vector()[:] = reusables_dict["W_ex"]
+
+            ALE.move(self.exact_domain.mesh, self.W_ex)  # note, id(domain) = id(self.domain), so, both are moved
+
+    def simulate_exact_pde(self, exact_pde_dict, reusables_dict=None):
         if self.exact_domain is None:
             raise Exception("Call first create_optimal_geometry")
 
@@ -117,7 +137,16 @@ class ShapeOptimizationProblem:
             self.exact_pde_dict = exact_pde_dict
             self.marker_neumann = self.exact_pde_dict["marker_neumann"]
             self.marker_dirichlet = self.exact_pde_dict["marker_dirichlet"]
-            exec("self.u_N = " + self.exact_pde_dict["u_N"])
+            if "u_N" in self.exact_pde_dict.keys():
+                exec("self.u_N = " + self.exact_pde_dict["u_N"])
+                self.exact_exterior_BC = "N"
+            elif "u_D" in self.exact_pde_dict.keys():
+                exec("self.u_D = " + self.exact_pde_dict["u_D"])
+                self.exact_exterior_BC = "D"
+                raise NotImplementedError("We only support specification of the Neumann derivative, at the moment")
+
+            else:
+                raise Exception("No boundary data was provided")
             self.T = self.exact_pde_dict["T"]
 
             heq = HeatEquation()
@@ -129,14 +158,33 @@ class ShapeOptimizationProblem:
             u0 = Function(heq.S1h)  # zero initial condition
             u_D_inner = Constant(0.0)  # zero inner BC
 
-            heq.set_PDE_data(u0, marker_neumann=self.marker_neumann, marker_dirichlet=self.marker_dirichlet,
-                             neumann_BC=[self.u_N],
-                             dirichlet_BC=[
-                                 u_D_inner])  # note, no copy is done, the attributes of heq are EXACTLY these guys
+            if self.exact_exterior_BC == "N":
+                heq.set_PDE_data(u0, marker_neumann=self.marker_neumann, marker_dirichlet=self.marker_dirichlet,
+                                 neumann_BC=[self.u_N],
+                                 dirichlet_BC=[
+                                     u_D_inner])  # note, no copy is done, the attributes of heq are EXACTLY these guys
+            elif self.exact_exterior_BC == "D":
+                logging.warning("Be sure that the order of the markers in the configuration file is correct")
+                heq.set_PDE_data(u0, marker_neumann=self.marker_neumann, marker_dirichlet=self.marker_dirichlet,
+                                 dirichlet_BC=[self.u_D, u_D_inner])
+
             heq.verbose = True
 
-            heq.solve()
+            if reusables_dict is None:
+                heq.solve()
+            else:
+                logging.info("Reloading exact PDE solution from pickle")
+                for v in reusables_dict["u_ex"]:
+                    u = Function(heq.S1h)
+                    u.vector()[:] = v
+                    heq.solution_list.append(u)
+
+            logging.warning("A perturbation on the boundary data will yield a pertubation on the exact solution")
             self.u_ex = TimeExpressionFromList(0.0, heq.times, heq.solution_list)
+            if self.exact_exterior_BC == "N":
+                self.u_D = self.u_ex
+            elif self.exact_exterior_BC == "D":
+                self.u_N = self.u_ex
 
             self.exact_pde = heq
 
@@ -166,85 +214,96 @@ class ShapeOptimizationProblem:
         if simulated_pde_dict["N_steps"] is not None:
             self.optimization_pde_dict["N_steps"] = simulated_pde_dict["N_steps"]
 
-    def set_optimization_dict(self, optimization_dict):
-        self.optimization_dict = optimization_dict
+        if self.exact_exterior_BC == "N":
+            self.u_D.perturb(simulated_pde_dict["noise_level_on_exact_BC"])
+        elif self.exact_exterior_BC == "D":
+            self.u_N.perturb(simulated_pde_dict["noise_level_on_exact_BC"])
 
-    def save_problem_data(self, path):
+    # def save_problem_data(self, path):
+    #
+    #     if self.optimization_dict is None:
+    #         raise Exception("No optimization options were found")
+    #
+    #     pickles_path = path
+    #     import os
+    #     os.makedirs(path, exist_ok=False)
+    #     with open(pickles_path + "exact_geometry_dict" + '.pickle', 'wb') as handle:
+    #         pickle.dump(self.exact_geometry_dict, handle)
+    #     with open(pickles_path + "exact_pde_dict" + '.pickle', 'wb') as handle:
+    #         pickle.dump(self.exact_pde_dict, handle)
+    #
+    #     simulated_geometry_dict = {
+    #         "domain_resolution": self.optimization_geometry_dict["domain"]["resolution"],
+    #         "sphere_resolution": self.optimization_geometry_dict["sphere"]["resolution"],
+    #     }
+    #
+    #     simulated_pde_dict = {
+    #         "ode_scheme": self.optimization_pde_dict["ode_scheme"],
+    #         "N_steps": self.optimization_pde_dict["N_steps"]
+    #     }
+    #
+    #     with open(pickles_path + "simulated_geometry_dict" + '.pickle', 'wb') as handle:
+    #         pickle.dump(simulated_geometry_dict, handle)
+    #     with open(pickles_path + "simulated_pde_dict" + '.pickle', 'wb') as handle:
+    #         pickle.dump(simulated_pde_dict, handle)
+    #
+    #     with open(pickles_path + "optimization_dict" + '.pickle', 'wb') as handle:
+    #         pickle.dump(self.optimization_dict, handle)
 
-        if self.optimization_dict is None:
-            raise Exception("No optimization options were found")
+    def initialize_from_data(self, path, regenerate_exact_data=True):
+        try:
+            import importlib.util
+            import sys
+            spec = importlib.util.spec_from_file_location("problem_data", path + "problem_data.py")
+            pd = importlib.util.module_from_spec(spec)
+            sys.modules["problem_data"] = pd
+            spec.loader.exec_module(pd)
 
-        pickles_path = path
-        import os
-        os.makedirs(path, exist_ok=False)
-        with open(pickles_path + "exact_geometry_dict" + '.pickle', 'wb') as handle:
-            pickle.dump(self.exact_geometry_dict, handle)
-        with open(pickles_path + "exact_pde_dict" + '.pickle', 'wb') as handle:
-            pickle.dump(self.exact_pde_dict, handle)
+            exact_geometry_dict = pd.exact_geometry_dict
+            exact_pde_dict = pd.exact_pde_dict
+            simulated_geometry_dict = pd.simulated_geometry_dict
+            simulated_pde_dict = pd.simulated_pde_dict
+            optimization_dict = pd.optimization_dict
+            cost_functional_dict = pd.cost_functional_dict
+        except:
+            raise Exception("Couldn't load variables from path")
 
-        simulated_geometry_dict = {
-            "domain_resolution": self.optimization_geometry_dict["domain"]["resolution"],
-            "sphere_resolution": self.optimization_geometry_dict["sphere"]["resolution"],
-        }
-
-        simulated_pde_dict = {
-            "ode_scheme": self.optimization_pde_dict["ode_scheme"],
-            "N_steps": self.optimization_pde_dict["N_steps"]
-        }
-
-        with open(pickles_path + "simulated_geometry_dict" + '.pickle', 'wb') as handle:
-            pickle.dump(simulated_geometry_dict, handle)
-        with open(pickles_path + "simulated_pde_dict" + '.pickle', 'wb') as handle:
-            pickle.dump(simulated_pde_dict, handle)
-
-        with open(pickles_path + "optimization_dict" + '.pickle', 'wb') as handle:
-            pickle.dump(self.optimization_dict, handle)
-
-    def initialize_from_data(self, path, method="pickle"):
-
-        if method == "pickle":
+        if regenerate_exact_data:
+            self.create_optimal_geometry(exact_geometry_dict)
+            self.simulate_exact_pde(exact_pde_dict)
+        else:
             try:
-                with open(path + "exact_geometry_dict" + '.pickle', 'rb') as handle:
-                    exact_geometry_dict = pickle.load(handle)
-                with open(path + "exact_pde_dict" + '.pickle', 'rb') as handle:
-                    exact_pde_dict = pickle.load(handle)
-                with open(path + "simulated_geometry_dict" + '.pickle', 'rb') as handle:
-                    simulated_geometry_dict = pickle.load(handle)
-                with open(path + "simulated_pde_dict" + '.pickle', 'rb') as handle:
-                    simulated_pde_dict = pickle.load(handle)
-                with open(path + "optimization_dict" + '.pickle', 'rb') as handle:
-                    optimization_dict = pickle.load(handle)
+                with open(path + "reusables" + '.pickle', 'rb') as handle:
+                    reusables_dict = pickle.load(handle)
+
+                # create_optimal_geometry
+                self.create_optimal_geometry(exact_geometry_dict, reusables_dict)
+                # simulate_exact_pde
+                self.simulate_exact_pde(exact_pde_dict, reusables_dict)
             except:
-                raise FileNotFoundError("Some pickles to load from don't exist")
+                logging.warning("Could not load exact data from files, regenerating")
+                self.create_optimal_geometry(exact_geometry_dict)
+                self.simulate_exact_pde(exact_pde_dict)
 
-        elif method == "python":
-            try:
-                import importlib.util
-                import sys
-                spec = importlib.util.spec_from_file_location("problem_data", path + "problem_data.py")
-                pd = importlib.util.module_from_spec(spec)
-                sys.modules["problem_data"] = pd
-                spec.loader.exec_module(pd)
-
-                exact_geometry_dict = pd.exact_geometry_dict
-                exact_pde_dict = pd.exact_pde_dict
-                simulated_geometry_dict = pd.simulated_geometry_dict
-                simulated_pde_dict = pd.simulated_pde_dict
-                optimization_dict = pd.optimization_dict
-            except:
-                raise Exception("Couldn't load variables from path")
-
-        self.create_optimal_geometry(exact_geometry_dict)
-        self.simulate_exact_pde(exact_pde_dict)
         self.initialize_optimization_domain(simulated_geometry_dict)
         self.initialize_pde_simulation(simulated_pde_dict)
-        self.set_optimization_dict(optimization_dict)
+        self.optimization_dict = optimization_dict
+        self.cost_functional_dict = cost_functional_dict
+        self.simulated_geometry_dict = simulated_geometry_dict
 
-        logging.info("Shape optimization data succesfully loaded")
+        logging.info("Shape optimization data successfully loaded")
 
-    def create_cost_functional(self):
+    def create_cost_functional(self, disable_radial_parametrization=False, start_at_optimum=False, time_steps_factor=1):
 
-        logging.info("Setting uo the cost functional")
+        """
+
+        :param time_steps_factor: we can increase or decrease the timesteps, this is a debugging option
+        :param disable_radial_parametrization: debugging option, the displacement field will be the optimization variable itself
+        :param start_at_optimum: if True, the initial deformation is the interpolated optimum
+        :return:
+        """
+
+        logging.info("Setting up the cost functional")
 
         L1_vol = FiniteElement("Lagrange", self.optimization_domain.mesh.ufl_cell(), 1)
         L1_sph = FiniteElement("Lagrange", self.optimization_sphere.mesh.ufl_cell(), 1)
@@ -259,24 +318,38 @@ class ShapeOptimizationProblem:
                                                     f_D=self.optimization_domain.boundary_radial_function)
 
         # Mesh movement
-        self.q_opt = Function(self.V_sph)  # null displacement
-        W = radial_displacement(self.q_opt, M2, self.V_def)
-        ALE.move(self.optimization_domain.mesh, W)
+        if disable_radial_parametrization:
+            if start_at_optimum:
+                self.q_opt = radial_displacement(interpolate(self.q_ex, self.V_sph), M2, self.V_def)
+            else:
+                self.q_opt = Function(self.V_def)
+            ALE.move(self.optimization_domain.mesh, self.q_opt)
+        else:  # parametrizing shapes by radial functions
+            if start_at_optimum:
+                self.q_opt = interpolate(self.q_ex, self.V_sph)
+            else:
+                self.q_opt = Function(self.V_sph)  # null displacement (but doesn't need to be so)
+            W = radial_displacement(self.q_opt, M2, self.V_def)
+            ALE.move(self.optimization_domain.mesh, W)
 
         # PDEs definition
-
         u0 = Function(self.V_vol)  # zero initial condition
         u_D_inner = Constant(0.0)  # zero inner BC
+
+        logging.warning(
+            "Working under the assumptions that the marker 2 is for the outer boundary, and 3 for the inner one")
 
         # Dirichlet state
         self.v_equation = HeatEquation()
         self.v_equation.set_mesh(self.optimization_domain.mesh, self.optimization_domain.facet_function, self.V_vol)
         self.v_equation.set_PDE_data(u0, marker_dirichlet=[2, 3],
-                                     dirichlet_BC=[self.u_ex,
+                                     dirichlet_BC=[self.u_D,
                                                    u_D_inner])
         self.v_equation.set_ODE_scheme(self.optimization_pde_dict["ode_scheme"])
         self.v_equation.verbose = True
-        self.v_equation.set_time_discretization(self.T, N_steps=self.optimization_pde_dict["N_steps"])
+        self.v_equation.set_time_discretization(self.T,
+                                                N_steps=int(self.optimization_pde_dict["N_steps"] * time_steps_factor),
+                                                relevant_mesh_size=self.exact_domain.mesh.hmax())
 
         # Dirichlet-Neumann state
         self.w_equation = HeatEquation()
@@ -286,7 +359,9 @@ class ShapeOptimizationProblem:
                                      neumann_BC=[self.u_N])
         self.w_equation.set_ODE_scheme(self.optimization_pde_dict["ode_scheme"])
         self.w_equation.verbose = True
-        self.w_equation.set_time_discretization(self.T, N_steps=self.optimization_pde_dict["N_steps"])
+        self.w_equation.set_time_discretization(self.T,
+                                                N_steps=int(self.optimization_pde_dict["N_steps"] * time_steps_factor),
+                                                relevant_mesh_size=self.exact_domain.mesh.hmax())
 
         # The cost functional
 
@@ -294,13 +369,35 @@ class ShapeOptimizationProblem:
         self.w_equation.solve()
 
         J = 0
-        logging.warning("Integral discretization only valid for implicit euler")
-        for v, w, dt, t in zip(self.v_equation.solution_list[1:], self.w_equation.solution_list[1:],
-                               self.v_equation.dts,
-                               self.v_equation.times[1:]):
-            J += assemble(dt * (v - w) ** 2 * dx(self.optimization_domain.mesh))  # *exp(-0.05/(T-t)**2)
+        final_smoothing = eval(self.cost_functional_dict["final_smoothing_lambda"])
+        it = zip(self.v_equation.solution_list[1:],
+                 self.w_equation.solution_list[1:],
+                 self.v_equation.dts,
+                 self.v_equation.times[1:])
+
+        ds = Measure("ds", subdomain_data=self.optimization_domain.facet_function, subdomain_id=2)
+        if self.cost_functional_dict["discretization"] in ["rectangle_end", "trapezoidal"]:
+            fs = 1.0    # final_smoothing
+            for v, w, dt, t in it:
+                fs = final_smoothing(self.T - t)
+                if fs > DOLFIN_EPS:
+                    J += assemble(.5 * dt * fs * (v - w) ** 2 * dx(self.optimization_domain.mesh))
+            if self.cost_functional_dict["discretization"] == "trapezoidal":
+                if fs > DOLFIN_EPS:
+                    J -= assemble(.25 * dt * fs * (v - w) ** 2 * dx(self.optimization_domain.mesh))
+        else:
+            raise Exception("Quadrature rule not supported")
+
+        if "H1_smoothing" in self.cost_functional_dict:
+            if disable_radial_parametrization:
+                logging.warning("H1 smoothing is not implemented for vector fields, assuming 0 smoothing")
+            else:
+                J += self.cost_functional_dict["H1_smoothing"] * assemble(
+                    inner(grad(self.q_opt), grad(self.q_opt)) * dx(self.optimization_sphere.mesh))
 
         self.j = ReducedFunctional(J, Control(self.q_opt))
+
+        return M, M2
 
     def do_taylor_test(self):
         if self.j is None:
@@ -310,12 +407,27 @@ class ShapeOptimizationProblem:
         taylor_test(self.j, self.q_opt, h)
 
     def solve(self):
+
+        def callback(x):
+            # self.w_equation.solve()
+            # self.v_equation.solve()
+            # pl = plot(self.w_equation.solution_list[-1] - self.v_equation.solution_list[-1])
+            # plt.colorbar(pl)
+            plot(self.optimization_domain.mesh)
+            plt.show()
+
         logging.info("Shape optimization starts now")
         import time
         duration = -time.time()
-        self.q_opt, self.opt_results = minimize(self.j, tol=1e-6, options=self.optimization_dict)
+        logging.warning("Generalize the bounds")
+        # bounds = [(-1 * np.ones(self.V_sph.dim())).tolist(), (1 * np.ones(self.V_sph.dim())).tolist()]
+        bounds = None
+        self.q_opt, self.opt_results = minimize(self.j, tol=1e-6, options=self.optimization_dict, bounds=bounds,
+                                                callback=callback)
         duration += time.time()
-        self.duration = duration
+        self.duration = duration / 60  # in minutes
+
+        logging.info(f"{self.duration} minutes elapsed")
 
     def visualize_result(self):
         logging.info("Visualizing the geometries")
@@ -349,23 +461,21 @@ class ShapeOptimizationProblem:
         plt.savefig(path + "cost_function.svg", bbox_inches="tight", pad_inches=0)
         plt.clf()
 
-        zero_function = Function(self.V_vol)    # for mesh visualization
+        zero_function = Function(self.V_vol)  # for mesh visualization
         mesh_file = File(path + "final_mesh.pvd")
         mesh_file << zero_function
 
-        coefficients_list_ex = []
         coefficients_list_v = []
         coefficients_list_w = []
 
-        for u, v, w in zip(self.exact_pde.solution_list, self.v_equation.solution_list, self.w_equation.solution_list):
-            coefficients_list_ex.append(u.vector()[:])
+        for v, w in zip(self.v_equation.solution_list, self.w_equation.solution_list):
             coefficients_list_v.append(v.vector()[:])
             coefficients_list_w.append(w.vector()[:])
 
-        optimization_results_dict = {
+        results_dict = {
             "final_cost_function_value": self.opt_results.fun,
             "final_gradient_infty_norm": np.max(np.abs(self.opt_results.jac)),
-            "duration": self.duration,
+            "duration_minutes": self.duration,
             "iterations": self.opt_results.nit,
             "message": self.opt_results.message,
             "success": self.opt_results.success,
@@ -373,30 +483,173 @@ class ShapeOptimizationProblem:
             "jacobian_evaluations": self.opt_results.njev,
             "cost_function_value_history": np.array(self.opt_results.energy_hist),
             "gradient_infty_norm_history": np.array(self.opt_results.gradient_infty_hist),
-            "u_ex": coefficients_list_ex,
             "v": coefficients_list_v,
-            "w": coefficients_list_w,
+            "w": coefficients_list_w
         }
 
-        with open(path + "optimization_results" + '.pickle', 'wb') as handle:
-            pickle.dump(optimization_results_dict, handle)
+        with open(path + "results" + '.pickle', 'wb') as handle:
+            pickle.dump(results_dict, handle)
 
         logging.info("Results and plots were saved")
 
+    def save_exact_data(self, path):
 
-# %%  Exemplary usage
+        coefficients_list_ex = []
 
-if __name__ == "__main__":
-    problem_path = "/home/leonardo_mutti/PycharmProjects/masters_thesis/code/results/test0/"
+        for u in self.exact_pde.solution_list:
+            coefficients_list_ex.append(u.vector()[:])
 
-    # u_N = Expression('exp(-a/pow(t,2))*sin(3*t)*pow(x[0],2)', t=0, a=.05, degree=4)
-    # u_N = Expression('exp(-a/pow(t,2))*sin(3*t)*(pow(x[0],2)-cos(4*x[1]))', t=0, a=.05, degree=5)
-    # q_ex_lambda = lambda circle_coords: -.5 * circle_coords[:, 0] ** 2 + .7 * circle_coords[:, 1] ** 2
+        reusables_dict = {
+            "u_ex": coefficients_list_ex,
+            "q_ex": self.q_ex.vector()[:],
+            "W_ex": self.W_ex.vector()[:]
+        }
 
-    shpb = ShapeOptimizationProblem()
-    shpb.initialize_from_data(problem_path, method="python")
-    shpb.create_cost_functional()
-    shpb.do_taylor_test()
-    shpb.solve()
-    shpb.visualize_result()
-    shpb.save_results_to_file(problem_path)
+        with open(path + "reusables" + '.pickle', 'wb') as handle:
+            pickle.dump(reusables_dict, handle)
+
+    def reset(self, disable_radial_parametrization=False, start_at_optimum=False,
+              time_steps_factor=1):  # resets the optimization to the initial conditions
+        logging.info("Resetting the problem")
+        self.initialize_optimization_domain(self.simulated_geometry_dict)
+        self.create_cost_functional(disable_radial_parametrization=disable_radial_parametrization,
+                                    start_at_optimum=start_at_optimum, time_steps_factor=time_steps_factor)
+
+    def debug_generic(self, path):
+
+        logging.info("Debugging")
+
+        consistency_error = self.j(interpolate(self.q_ex, self.V_sph))
+
+        # Solve equations on the perturbed domains, apparently the solution vectors are not automatically updated, after calling
+        self.w_equation.solve()
+        self.v_equation.solve()
+
+        # logging.info(f"Energy at interpolated optimum is {consistency_error}")
+        # derivative_at_optimum = self.j.derivative()
+        # logging.info(f"Gradient at interpolated optimum:\n{derivative_at_optimum.vector()[:][:, None]}")
+        #
+        # File(path + "gradient_at_interpolated_optimum.pvd") << derivative_at_optimum
+        #
+        # boundary_mesh_optimization = BoundaryMesh(self.optimization_domain.mesh,
+        #                                           "exterior")  # at the interpolated optimum
+        # # Let's plot the boundary values of w, that should be close to the boundary values of u_ex
+        # fw = File(path + "/w_dirichlet_plot/w_dirichlet_at_interpolated_optimum.pvd")
+        # fu = File(path + "/u_dirichlet_plot/u_dirichlet.pvd")
+        # Nw = len(self.w_equation.solution_list)
+        # wb = adjf.mesh_to_boundary(self.w_equation.solution_list[0], boundary_mesh_optimization)
+        # ub = adjf.mesh_to_boundary(self.w_equation.solution_list[0], boundary_mesh_optimization)
+        #
+        # ext_boundary_errors = []
+        # mf = self.w_equation.facet_indicator
+        # logging.info("Computing L2 norms of w-u on the boundary")
+        # for i in tqdm(range(Nw)):
+        #     w = self.w_equation.solution_list[i]
+        #
+        #     # Put everything to zero, but on the external boundary
+        #     ww = Function(self.V_vol)
+        #     dbc = DirichletBC(self.V_vol, w, mf, 2)
+        #     dbc.apply(ww.vector())
+        #
+        #     wb.vector()[:] = (adjf.mesh_to_boundary(ww, boundary_mesh_optimization)).vector()[:]
+        #     fw << wb
+        #
+        #     self.u_ex.t = self.w_equation.times[i]
+        #     u = interpolate(self.u_ex, self.V_vol)
+        #
+        #     # Let's also put everything to zero here
+        #     uu = Function(self.V_vol)
+        #     dbc = DirichletBC(self.V_vol, u, mf, 2)
+        #     dbc.apply(uu.vector())
+        #
+        #     ub.vector()[:] = (adjf.mesh_to_boundary(uu, boundary_mesh_optimization)).vector()[:]
+        #
+        #     fu << ub
+        #
+        #     ext_boundary_errors.append(errornorm(self.u_ex, w))
+        #
+        # logging.info(f"L2 norms of w-u on the boundary:\n{np.array(ext_boundary_errors)[:, None]}")
+        #
+        # logging.info("Studying PDEs discretization error")
+        # e_l2t = []
+        # a = 9
+        # b = 13
+        # sol_ie_past = []
+        # sol_cn_past = []
+        # change_ie = []
+        # change_cn = []
+        # for i in range(a, b):
+        #     self.w_equation.set_ODE_scheme("implicit_euler")
+        #     self.w_equation.set_time_discretization(self.T, int(2 ** i))
+        #     self.w_equation.solve()
+        #     sol_ie = []
+        #     for w in self.w_equation.solution_list:
+        #         u = Function(self.V_vol)
+        #         u.assign(w)
+        #         sol_ie.append(u)
+        #     self.w_equation.set_ODE_scheme("crank_nicolson")
+        #     self.w_equation.set_time_discretization(self.T, int(2 ** i))
+        #     self.w_equation.solve()
+        #     sol_cn = []
+        #     for w in self.w_equation.solution_list:
+        #         u = Function(self.V_vol)
+        #         u.assign(w)
+        #         sol_cn.append(u)
+        #     e = 0
+        #     for k in range(len(sol_ie)):
+        #         e += self.w_equation.dts[0] * assemble((sol_ie[k] - sol_cn[k]) ** 2 * dx(self.optimization_domain.mesh))
+        #     e_l2t.append(e)
+        #     if i > a:
+        #         rel_change_ie = 0
+        #         rel_change_cn = 0
+        #         for j in range(2 ** i // 2):
+        #             rel_change_ie += self.w_equation.dts[0] * assemble(
+        #                 (sol_ie[2 * j] - sol_ie_past[j]) ** 2 * dx(self.optimization_domain.mesh))
+        #             rel_change_cn += self.w_equation.dts[0] * assemble(
+        #                 (sol_cn[2 * j] - sol_cn_past[j]) ** 2 * dx(self.optimization_domain.mesh))
+        #         change_ie.append(rel_change_ie)
+        #         change_cn.append(rel_change_cn)
+        #
+        #     sol_ie_past = sol_ie
+        #     sol_cn_past = sol_cn
+
+        logging.info("Studying error behaviour")
+        a = 9
+        b = 10
+        coarse_sol = []
+        for i in range(a, b):
+            self.v_equation.set_ODE_scheme("implicit_euler")
+            self.v_equation.set_time_discretization(self.T, int(self.T * 2 ** i))
+            ts = self.v_equation.times
+            self.v_equation.set_time_discretization(self.T, custom_times_array=ts)
+            self.v_equation.solve()
+            for w in self.v_equation.solution_list:
+                u = Function(self.V_vol)
+                u.assign(w)
+                coarse_sol.append(u)
+        un = TimeExpressionFromList(0, self.v_equation.times, coarse_sol)
+
+        a = 10
+        b = 11
+        esol = []
+        for i in range(a, b):
+            self.v_equation.set_ODE_scheme("crank_nicolson")
+            self.v_equation.set_time_discretization(self.T, int(self.T * 2 ** i))
+            self.v_equation.solve()
+            for w in self.v_equation.solution_list:
+                u = Function(self.V_vol)
+                u.assign(w)
+                esol.append(u)
+        ue = TimeExpressionFromList(0, self.v_equation.times, esol)
+
+        data = []
+        point = [-1.5, 0]
+        for t in un.discrete_times:
+            ue.t = t
+            un.t = t
+            data.append(-ue(*point) + un(*point))
+
+        plt.plot(ts, data)
+        plt.show()
+
+        self.reset()
