@@ -19,7 +19,7 @@ set_log_level(LogLevel.ERROR)
 
 runs_path = "/home/leonardo_mutti/PycharmProjects/masters_thesis/code/runs/"
 
-# %% Solution set-up
+# %% Solution setup
 
 problem_name = "sq_oakley_oscillations_test"
 problem_path = runs_path + problem_name + "/"
