@@ -28,7 +28,7 @@ class HeatEquation:
         self.facet_indicator = None
         self.mesh = None
         self.domain = None
-        self.solution_list = None
+        self.solution_list = []
         self.implemented_time_schemes = ["implicit_euler", "crank_nicolson", "crank_nicolson_midpoint",
                                          "implicit_explicit_euler"]
         self.verbose = False
@@ -47,12 +47,14 @@ class HeatEquation:
             raise Exception("Unrecognized time stepping")
         self.ode_scheme = ode_scheme
 
-    def set_time_discretization(self, final_time, N_steps=None, custom_times_array=None):
+    def set_time_discretization(self, final_time, N_steps=None, custom_times_array=None, relevant_mesh_size=None):
         '''
         Note, one of N_steps and custom_time_array must be provided
         :param final_time: final time of simulation
         :param N_steps: optional, if present, we will use uniform timestepping with dt = final_time/N_steps
         :param custom_times_array: we can also set a custom time discretization of the form np.array([0, ..., final_time])
+        :param relevant_mesh_size: it is a spatial mesh size that is not necessarily the one of the current domain,
+            which we use to automatically compute the time mesh
         :return:
         '''
 
@@ -67,10 +69,14 @@ class HeatEquation:
             if self.mesh is None:
                 raise Exception("No mesh was specified, no default time stepping is available")
             ode_scheme_index = self.implemented_time_schemes.index(self.ode_scheme)
+            if relevant_mesh_size is not None:
+                h = relevant_mesh_size
+            else:
+                h = self.mesh.hmax()
             if ode_scheme_index == 0 or ode_scheme_index == 3:
-                N_steps = int(np.ceil(self.T / (self.mesh.hmax() ** 2)))
+                N_steps = int(np.ceil(self.T / (h ** 2)))
             elif ode_scheme_index == 1:
-                N_steps = int(np.ceil(self.T / (self.mesh.hmax())))
+                N_steps = int(np.ceil(self.T / h))
             self.times = np.linspace(0, self.T, N_steps + 1)
             dt = self.T / N_steps
             if dt < DOLFIN_EPS:
@@ -328,7 +334,7 @@ class HeatEquation:
             if hasattr(self.exact_solution, 't'):
                 self.exact_solution.t = self.times[time_index]
         if err_mode == "l2":
-            error = errornorm(self.exact_solution, current_solution) / self.domain_measure
+            error = errornorm(self.exact_solution, current_solution)
             return error
         elif err_mode == "linf":
             u_ex_interp = project(self.exact_solution, self.S1h)
@@ -1189,7 +1195,7 @@ class PDETestProblems:
 
 # Now, create an expression from solution list, hopefully it works
 class TimeExpressionFromList(UserExpression):
-    def __init__(self, t, discrete_times, solution_list, **kwargs):
+    def __init__(self, t, discrete_times, solution_list, reverse=False, **kwargs):
         super().__init__(self, **kwargs)
         self.t = t
 
@@ -1199,17 +1205,29 @@ class TimeExpressionFromList(UserExpression):
         self.t_min = np.min(self.discrete_times)
         self.t_max = np.max(self.discrete_times)
 
+        self.reverse = reverse
+
         self.solution_list = solution_list
+        self.solution_list_original = []
+        for u in solution_list:
+            v = Function(u.function_space())
+            v.assign(u)
+            self.solution_list_original.append(v)
 
     def eval(self, values, x):
 
-        if self.t <= self.t_min:
+        t = self.t
+
+        if self.reverse:
+            t = self.t_max - t
+
+        if t <= self.t_min:
             values[0] = self.solution_list[0](*x)
-        elif self.t >= self.t_max:
+        elif t >= self.t_max:
             values[0] = self.solution_list[-1](*x)
         else:
 
-            i_right = np.searchsorted(self.discrete_times, self.t, side='right')
+            i_right = np.searchsorted(self.discrete_times, t, side='right')
             i_left = i_right - 1
 
             t_left = self.discrete_times[i_left]
@@ -1221,8 +1239,20 @@ class TimeExpressionFromList(UserExpression):
             dt = t_right - t_left
 
             # Linear interpolation
-            w = (self.t - t_left) / dt
+            w = (t - t_left) / dt
             values[0] = v_left + w * (v_right - v_left)
 
     def value_shape(self):
         return ()
+
+    def perturb(self, noise_level):
+        logging.fatal("No perturbation implemented")
+        sh = self.solution_list[0].vector()[:].shape
+        for (u, t) in zip(self.solution_list, self.discrete_times):
+            u.vector()[:] += (np.random.rand(*sh) - .5) * noise_level
+            # u.vector()[:] += .003 * t
+            pass
+
+    def unperturb(self):
+        for (up, uu) in zip(self.solution_list, self.solution_list_original):
+            up.vector()[:] = uu.vector().copy()
