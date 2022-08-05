@@ -7,6 +7,8 @@ import numpy as np
 from dolfin import *
 from dolfin_adjoint import *
 
+from utilities.overloads import radial_function_to_square
+
 
 class AbstractMesh:
     """
@@ -183,6 +185,103 @@ class AnnulusMesh(AbstractMesh):
         return self.outer_radius * np.ones(x.shape[0])
 
 
+class SquareAnnulusMesh(AbstractMesh):
+
+    def __init__(self, resolution=.0125,
+                 path="/home/leonardo_mutti/PycharmProjects/masters_thesis/meshes/square_annulus/", inner_radius=1,
+                 side_length=4):
+
+        self.side_length = side_length
+        center = np.array([0, 0])
+        super().__init__(resolution, path, 2, center, inner_radius)
+
+        if not isinstance(center, np.ndarray):
+            raise ValueError("The center must be a numpy array")
+        if len(center) != 2:
+            raise Exception("The center is not a 2-dimensional point")
+        if 0 >= inner_radius or inner_radius >= side_length / 2:
+            raise Exception("The radius/side length values are not valid")
+
+    def create_mesh(self):
+        L = self.side_length
+        H = self.side_length
+        c = [self.center[0], self.center[1], 0]
+        r = self.inner_radius
+
+        resolution = self.resolution
+
+        # Create a model to add data to
+        model = self.geometry.__enter__()
+
+        # The square
+        points = [model.add_point((c[0] - L / 2, c[1] - H / 2, 0), mesh_size=2.5 * resolution),
+                  model.add_point((c[0] + L / 2, c[1] - H / 2, 0), mesh_size=2.5 * resolution),
+                  model.add_point((c[0] + L / 2, c[1] + H / 2, 0), mesh_size=2.5 * resolution),
+                  model.add_point((c[0] - L / 2, c[1] + H / 2, 0), mesh_size=2.5 * resolution)]
+
+        # Add lines between all points creating the rectangle
+        channel_lines = [model.add_line(points[i], points[i + 1])
+                         for i in range(-1, len(points) - 1)]
+
+        channel_loop = model.add_curve_loop(channel_lines)
+
+        # A hole
+        hole = model.add_circle(c, r, mesh_size=1 * resolution)
+
+        # My surface
+        plane_surface = model.add_plane_surface(channel_loop, [hole.curve_loop])
+
+        # Sinchronize, before adding physical entities
+        model.synchronize()
+
+        model.add_physical([plane_surface], "volume")
+        model.add_physical([channel_lines[0], channel_lines[1], channel_lines[3], channel_lines[2]], "outer_boundary")
+        model.add_physical(hole.curve_loop.curves, "inner_ring")
+
+        # Generate the mesh
+        # Generate mesh
+        self.geometry.generate_mesh(dim=2)
+
+    def generate_mesh_xdmf(self):
+        resolution = self.resolution
+        path = self.path
+
+        self.create_mesh()
+        self.save_to_msh()
+        mesh_from_file = self.load_from_msh()
+
+        # Using the above function, create line and "plane" mesh
+        line_mesh = self.mesh_to_meshio(mesh_from_file, "line", prune_z=True)
+        meshio.write(path + "facet_mesh_" + str(resolution) + ".xdmf", line_mesh)
+        triangle_mesh = self.mesh_to_meshio(mesh_from_file, "triangle", prune_z=True)
+        meshio.write(path + "mesh_" + str(resolution) + ".xdmf", triangle_mesh)
+
+    def xdmf_to_dolfin(self):
+        mesh_path = self.path
+        resolution = self.resolution
+
+        # The volumetric mesh
+        mesh = Mesh()
+        with XDMFFile(mesh_path + "mesh_" + str(resolution) + ".xdmf") as infile:
+            infile.read(mesh)
+
+        # The boundary meshes
+        mvc = MeshValueCollection("size_t", mesh, 1)  # 1 means: we consider lines, 1D things
+        with XDMFFile(mesh_path + "facet_mesh_" + str(resolution) + ".xdmf") as infile:
+            infile.read(mvc, "name_to_read")
+        mf = MeshFunction("size_t", mesh, mvc)  # remember, tag 3 is inner ring, tag 2 outer ring
+
+        self.mesh = mesh
+        self.facet_function = mf
+
+        return mesh, mf
+
+    def boundary_radial_function(self, x):
+        if not isinstance(x, np.ndarray):
+            raise Exception("The query point must be a numpy array")
+        return radial_function_to_square(x, self.side_length)
+
+
 class CircleMesh(AbstractMesh):
     """
     Example usage
@@ -216,7 +315,7 @@ class CircleMesh(AbstractMesh):
         # Sinchronize, before adding physical entities
         model.synchronize()
 
-        # %% (this could also be done in gmsh with the GUI)
+        # (this could also be done in gmsh with the GUI)
 
         # Tagging/marking boundaries and volume. To get a feeling for what "physical" means: https://bthierry.pages.math.cnrs.fr/tutorial/gmsh/basics/physical_vs_elementary/
         # Boundaries with the same tag should be added simultaneously
