@@ -2868,6 +2868,220 @@ Here, $A_T:=  (DT)^{-1}(DT)^{-t}|\det(DT)|$.
 
 \end{thm}
 
+\chapter{Inhomogenous FEM on smooth domains}
+
+We consider a finite element method for approximating problems of the following form.
+
+\begin{pb}[Inhomogeneous elliptic problem]
+\label{pb:inh_elliptic}
+
+Consider $\Omega \subseteq \mR^n$, $n=2,3$, with $C^2$ boundary, and data $f \in L^2(\Omega), g_D \in H^{3/2}(\Gamma_D), g_N \in H^{1/2}(\Gamma_N)$, where $\Gamma_D \sqcup \Gamma_N = \partial \Omega$ and $\overline{\Gamma_D}\cap \overline{\Gamma_N}=\emptyset$.
+
+We assume $\Gamma_D$ to be non-empty.
+
+The problem is:
+
+$$
+\left\{\begin{matrix}
+-\Delta u + k u = f & \text{ on } \Omega \\ 
+u = g_D & \text{ on } \Gamma_D \\ 
+\partial_\nu u = g_N & \text{ on } \Gamma_N 
+\end{matrix}\right.
+$$
+
+where $k \geq 0$ is a constant.
+
+By this we mean to find $u \in H^1(\Omega)$ with:
+
+$$a(u,v) = l(v), \text{ for all } v \in H^1_{0,D}$$
+
+where $a(u,v) =\ds \int_{\Omega}\nabla u \nabla v + k \int_{\Omega} u  v$, and $l(v) = \ds\int_{\Omega}f v + \int_{\Gamma_N} g_{N}v$ and $H^1_{0,D}$ is the space of all $H^1$ functions with vanishing trace on $\Gamma_D$.
+
+\textcolor{red}{Add existence, uniqueness, regularity}
+
+\end{pb}
+4.1, for an explanation), we define a polygonal/polyhedral meshing $\Omega_h$ of $\Omega$, which has boundary nodes on $\partial \Omega$. We denote by $\Gamma_{D,h}, \Gamma_{N,h}$ the discrete Dirichlet and Neumann boundaries, and by $S^1_{h,D} $ the space of piecewise linear lagrangian FEM $S^1_h$ which are zero on $\Gamma_{D,h}$.
+
+We collect some useful tools to relate $\	Omega_h$ and $\Omega$.
+
+\begin{prop}[Deformation into smooth boundary]
+There exists $G_h: \Omega_h \rightarrow \Omega$ satisfying:
+
+\begin{itemize}
+	\item $G_h$ is a homeomorphism
+	\item $G_h|_T$ is of class $C^2(T)$ for all $T$ simplex composing $\Omega_h$
+	\item $G_h|_T = \id$ on interior simplices $T$
+	\item $G_h(\partial \Omega_h) = \partial \Omega$
+	\item $G_h|_e=p$, where $e$ is an edge/face of $\partial \Omega_H$ and $p$ is the closest point operator to $\partial \Omega$ (so that $G_h|_{\partial \Omega_h}$ coincides with the boundary lift in Definition 4.12 of \cite{elliott})
+
+\end{itemize}
+
+\end{prop}
+\begin{mproof}
+See Section 4.1 of \cite{elliott} for the first three points, while the second-last one follows from $G_h$ being a homeomorphism.
+
+The last one is a consequence of the definition of $G_h$, see \cite{elliott}.
+
+\end{mproof}
+
+Given $G_h$, we can define pullbacks and pushforwards of functions defined on $\Omega$ or $\Omega_h$.
+
+\begin{prop}[Lift]
+\label{prop:lift}
+We define, for $u: \Omega \rightarrow \mR$, $u^{-l}:=u\circ G_h : \Omega_h \rightarrow \mR$, and analogously for $u_h: \Omega_h \rightarrow \mR$ we define $u_h^l:=u_h\circ G_h^{-1}$. We also need the mesh to be quasi-uniform (see Proposition 4.7 of \cite{elliott}).
+
+There holds:
+
+\begin{itemize}
+	\item for $v_h \in S^1_{h}$, we have $v_h^l \in H^1(\Omega)$
+	\item for $v_h \in S^1_{h,D}$, we have $v_h^l \in H^1(\Omega)$, with zero trace on $\Gamma_D$ 
+	\item for $v_h  \in S^1_h$, one has the following norm equivalences, which don't depend on $h$:
+	\begin{enumerate}
+		\item $\norm{v_h}_{L^2(\partial \Omega_h)} \sim \norm{v_h^l}_{L^2(\partial \Omega)}$
+		\item $\norm{v_h}_{L^2( \Omega_h)} \sim \norm{v_h^l}_{L^2( \Omega)}$
+		\item $\norm{\nabla v_h}_{L^2( \Omega_h)} \sim \norm{\nabla v_h^l}_{L^2( \Omega)}$
+	\end{enumerate}
+\end{itemize}
+
+\end{prop}
+
+\begin{mproof}
+The lifted $v_h$ mantains continuity at the edges, so that $v_h^l$ is in $H^1(\Omega)$ by an application of the divergence theorem on every (possibly curved) simplex $T^l$ composing $\Omega$.
+
+For the zero trace property, given that $v_h^l \in H^1(\Omega)\cap C(\overline{\Omega})$, we use $G_h(\partial \Gamma_{D,h}) = \partial \Gamma_D$.
+
+The other points are all contained in \cite{elliott}.
+
+\end{mproof}
+
+Now, define $f_h \in S^1_h, g_{N,h} \in S^1_h(\Gamma_{N,h})$ to be any finite element approximations of $f, g_N$. Note, here $S^1_h(\Gamma_{N,h})$ means the usual piecewise linear FEM space over  $\Gamma_{N,h}$.
+
+We can now define the discrete approximation of \cref{pb:inh_elliptic}.
+
+\begin{pb}[FEM approximation of \cref{pb:inh_elliptic}]
+We find $u_h \in S^1_h$ with $u_h(p)=g_D(p)$ for all $p$ external nodes of $\partial \Omega_h$, and solving:
+
+$$a_h(u_h,v_h) = l_h(v_h), \text{ for all } v_h \in S^1_{h,D}$$
+
+where $a_h(u_h,v_h) =\ds \int_{\Omega_h}\nabla u_h \nabla v_h + k \int_{\Omega_h} u_h  v_h$, and $l_h(v_h) =\ds \int_{\Omega_h}f_h v_h + \int_{\Gamma_{N,h}} g_{h,N}v_h$
+
+
+\textcolor{red}{Add existence, uniqueness, connection with Fenics}
+
+\end{pb}
+
+Note, we assumed $g_D \in H^{3/2}(\partial \Omega)$. Applying Sobolev embeddings will yield the continuity of $g_D$ only for $n=2$. But thanks to the $C^2$ smoothness of $\partial \Omega$ we can apply theorem 1.5.1.2 of \cite{grisvard} and obtain a $G \in H^2(\Omega)$ with $\tr_2 G = g_D$. Here $\tr_2$ denotes the trace operator from $H^2(\Omega)$. By Sobolev embeddings, $G \in C(\overline{\Omega})$. 
+
+Now, we can pick $G_k \in C^\infty(\overline{\Omega})\cap H^2(\Omega)$ converging in $H^2(\Omega)$ to $G$. We can do so by \cite{adams}, theorem 3.18 at page 54. Then: $G_k|_{\partial \Omega}= \tr_2 G_k \rightarrow \tr_2 G = g_D$, and by $H^2(\Omega)\emb C(\overline{\Omega})$ we obtain $G|_{\partial \Omega} = g_D$, so that $g_D$ is continuous in both $n=2,3$ and so we can define its pointwise interpolation.
+
+\begin{prop}[Interpolation on curved domains]
+\label{prop:interp_curv}
+Let $u \in H^2(\Omega)$, let $g \in H^2(\partial \Omega)$.
+
+Let $u\in H^2(\Omega)$ and define $\Pi_c u = (\Pi_h u )^l$, where $\Pi_h$ is the usual pointwise Lagrange interpolator on $S^1_h$.
+
+We can also define $\Pi_c g $ for $g \in H^2(\partial \Omega)$ in the same fashion.
+
+It follows that:
+
+\begin{itemize}
+	\item $\norm{u-\Pi_c u}_{L^2(\Omega)} + h \norm{u-\Pi_c u}_{H^1(\Omega)}\lesssim h^2\norm{u}_{H^2(\Omega)}$
+	\item $\norm{g-\Pi_c g}_{L^2(\partial \Omega)} + h \norm{g-\Pi_c g}_{H^1(\partial \Omega)}\lesssim h^2\norm{g}_{H^2(\partial \Omega)}$
+\end{itemize}
+Here $a \lesssim b$ means $a \leq Cb$ for $C\geq 0$ not depending on $h$.
+\end{prop}
+
+\begin{mproof}
+See Proposition 5.4 of \cite{elliott}.
+\end{mproof}
+
+\begin{thm}[$H^1$ estimate]
+For $h$ small enough, we have $\norm{u-u_h^l}_{H^1(\Omega)} \lesssim h + \norm{f-f_h^l}_{L^2(\Omega)}+ \norm{g-g_{h,N}^l}_{L^2(\Gamma_N)}$
+\end{thm}
+\begin{mproof}
+
+We partially follow the structure of the arguments in \cite{edelmann}, making some simplifications, and modifications to adapt them to our case.
+
+\underline{Conclusion}
+
+$\norm{u-u_h^l}_{H^1(\Omega)}\leq \norm{u-\Pi_c u }_{H^1(\Omega)}+\norm{\Pi_c u-u_h^l}_{H^1(\Omega)}$. The interpolation estimates \cref{prop:interp_curv} allow us to worry only about the second term. It is  $\norm{(\Pi_h u-u_h)^l}_{H^1(\Omega)}\lesssim \norm{\Pi_h u-u_h}_{H^1(\Omega_h)}$ by \cref{prop:lift}. We estimate the latter quantity, calling $e_h := u_h - \Pi_h u$, which is zero on $\Gamma_{D,h}$.
+
+\underline{Defect, $e_h$ and $u$}
+
+Let $d_h \in S^1_{h,D}$ be the unique solution to $a_h(d_h,v_h)=l_h(v_h)-a_h(\Pi_h u,v_h)$, $v_h \in S^1_{h,D}$.
+
+Using $0 = l_h(v_h)-a_h(u_h,v_h)$, $v_h \in S^1_{h,D}$, we come to $a_h(d_h-e_h,v_h)=0$,  $v_h \in S^1_{h,D}$. Testing with $d_h-e_h=0$ on $\Gamma_{D,h}$ and using the connectedness of $\Omega_h$, we conclude that $e_h=d_h$.
+
+Moreover, by \cref{prop:lift}, we have $v_h^l \in H^1_{0,D}$, so that $a(u,v_h^l) = l(v_h^l)$ and thus :
+
+$$a_h(e_h,v_h) = l_h(v_h)-l(v_h^l) + a(u,v_h^l)-a_h(\Pi_h u, v_h)$$
+
+\underline{Estimation of $e_h$}
+
+The form $a_h$ is $H^1$ coercive, $h-$uniformly. This we show by the following estimate, $C$ not depending on $h$:
+
+\begin{align*}
+a_h(v_h,v_h) = a(v_h^l,v_h^l) + a_h(v_h,v_h) - a(v_h^l,v_h^l)\\
+\geq C\norm{v_h^l}_{H^1(\Omega)}^2 - |a_h(v_h,v_h) - a(v_h^l,v_h^l)|\\
+\geq C\norm{v_h}_{H^1(\Omega_h)}^2 -C h \norm{v_h^l}_{H^1(\Omega)}^2\\
+\geq C(1-h)\norm{v_h}_{H^1(\Omega_h)}^2
+\end{align*} 
+
+We used, in order:
+\begin{itemize}
+	\item  the $h-$uniform coercivity of $a$ (descending from the Poincaré inequality in which functions vanish only on part of the boundary, $\Gamma_D$, see e.g. lemma 1 of \cite{dorfler})
+	\item \cref{prop:lift} on $\norm{v_h^l}_{H^1(\Omega)}^2$
+	\item Proposition 4.6 of \cite{edelmann}
+\end{itemize}
+
+Therefore $\norm{e_h}^2_{H^1(\Omega_h)}\lesssim a_h(e_h,e_h) = l_h(e_h)-l(e_h^l) + a(u,e_h^l)-a_h(\Pi_h u, e_h)$, where we can test by $e_h=0$ on $\Gamma_{D,h}$.
+
+This last term is estimated exactly as in Proposition 5.5 of \cite{edelmann}. In particular, we make use of th $H^2$ regularity of $u$, and we extend $g_{N,h}, g_N$ to zero, on $\Gamma_{D,h}, \Gamma_D$
+
+\end{mproof}
+
+For an $L^2$ error estimate we apply the Aubin-Nitsche trick, following \cite{fairweather} and \cite{edelmann}.
+
+\begin{thm}[$L^2$ estimate]
+Assume either that $f \in H^1(\Omega)$ or that $\norm{f^l_h}_{H^1(\Omega)}\lesssim \norm{f}_{L^2(\Omega)}$. Then, for $h$ small enough, we have $\norm{u-u_h^l}_{L^2(\Omega)}\lesssim h^2 + \norm{f-f_h^l}_{L^2(\Omega)}+ \norm{g-g_{h,N}^l}_{L^2(\Gamma_N)} + \norm{g_D - \Pi_c g_D}_{L^2(\Gamma_D)} + A$, where $A = 0$ if  $\norm{f^l_h}_{H^1(\Omega)}\lesssim \norm{f}_{L^2(\Omega)}$ and $A = h^2\norm{f-f_h^l}_{H^1(\Omega)}$ otherwise.
+\end{thm}
+
+\begin{mproof}
+
+Define $e:=u-u_h^l$ (whose boundary values at $\Gamma_D$ are not necessarily $0$!), and $z$ solving the dual problem:
+
+$$
+\left\{\begin{matrix}
+-\Delta z + k z = e & \text{ on } \Omega \\ 
+z = 0 & \text{ on } \Gamma_D \\ 
+\partial_\nu z = 0 & \text{ on } \Gamma_N 
+\end{matrix}\right.
+$$
+
+This problem possesses $H^2$ regularity, so that we can write, after multiplying both sides by $e \in H^1$ (thanks to \cref{prop:lift}):
+
+$$\norm{e}^2_{L^2(\Omega)} = a(z,e) - \int_{\partial \Omega} e \partial_\nu z  $$
+
+Using that $z \in H^2$ we have that $\partial_\nu z=0$ on $\Gamma_N$, together with the estimate $\norm{z}_{H^2(\Omega)}\lesssim \norm{e}_{L^2(\Omega)}$ (\textcolor{red}{check!! It's done at page 92 of Grisvard}) and thus:
+
+\begin{align*}
+\norm{e}^2_{L^2(\Omega)} = a(z,e) +\norm{e}_{L^2(\Gamma_D)}\norm{ \partial_\nu z}_{L^2(\partial \Omega)} \\
+\leq a(z,e) + C \norm{e}_{L^2(\Gamma_D)}\norm{e}_{L^2( \Omega)}
+\end{align*}
+
+Only $ a(z,e)$ remains to be estimated, and this is done in the proof of Theorem 5.3 of \cite{edelmann}, and in remark 5.6.
+
+\end{mproof}
+
+\begin{cor}[Actual estimates]
+By assuming $f,g_N, g_D$ in $H^2$ we conclude $\norm{u-u_h^l}_{H^1(\Omega)} \lesssim h$,$ \norm{u-u_h^l}_{L^2(\Omega)} \lesssim h^2$.
+\end{cor}
+
+\begin{mproof}
+It suffices to take $f_h:=\Pi_h f$, $g_{N,h} = \Pi_h g$ and employ \cref{prop:interp_curv}.
+\end{mproof}
+
+Unfortunately the smoothness assumptions to obtain optimal order of convergence are quite strict. However, the advantage of this approach is that it is straightforward to implement.
 
 \printbibliography[title={Bibliography}]
 
