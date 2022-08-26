@@ -2909,8 +2909,8 @@ There exists $G_h: \Omega_h \rightarrow \Omega$ satisfying:
 
 \begin{itemize}
 	\item $G_h$ is a homeomorphism
-	\item $G_h|_T$ is of class $C^2(T)$ for all $T$ simplex composing $\Omega_h$
-	\item $G_h|_T = \id$ on interior simplices $T$
+	\item $G_h|_T$ is of class $C^2(T)$ for all closed simplices $T$ composing $\Omega_h$
+	\item $G_h|_T = \id$ on interior simplices $T$ (those with at most one node on $\partial \Omega$)
 	\item $G_h(\partial \Omega_h) = \partial \Omega$
 	\item $G_h|_e=p$, where $e$ is an edge/face of $\partial \Omega_H$ and $p$ is the closest point operator to $\partial \Omega$ (so that $G_h|_{\partial \Omega_h}$ coincides with the boundary lift in Definition 4.12 of \cite{elliott})
 
@@ -2970,9 +2970,11 @@ where $a_h(u_h,v_h) =\ds \int_{\Omega_h}\nabla u_h \nabla v_h + k \int_{\Omega_h
 
 \end{pb}
 
-Note, we assumed $g_D \in H^{3/2}(\partial \Omega)$. Applying Sobolev embeddings will yield the continuity of $g_D$ only for $n=2$. But thanks to the $C^2$ smoothness of $\partial \Omega$ we can apply theorem 1.5.1.2 of \cite{grisvard} and obtain a $G \in H^2(\Omega)$ with $\tr_2 G = g_D$. Here $\tr_2$ denotes the trace operator from $H^2(\Omega)$. By Sobolev embeddings, $G \in C(\overline{\Omega})$. 
+Note, we assumed $g_D \in H^{3/2}(\partial \Omega)$. Thanks to the $C^2$ smoothness of $\partial \Omega$ we can apply theorem 1.5.1.2 of \cite{grisvard} and obtain a $G \in H^2(\Omega)$ with $\tr_2 G = g_D$. Here $\tr_2$ denotes the trace operator from $H^2(\Omega)$. By Sobolev embeddings, $G \in C(\overline{\Omega})$. 
 
 Now, we can pick $G_k \in C^\infty(\overline{\Omega})\cap H^2(\Omega)$ converging in $H^2(\Omega)$ to $G$. We can do so by \cite{adams}, theorem 3.18 at page 54. Then: $G_k|_{\partial \Omega}= \tr_2 G_k \rightarrow \tr_2 G = g_D$, and by $H^2(\Omega)\emb C(\overline{\Omega})$ we obtain $G|_{\partial \Omega} = g_D$, so that $g_D$ is continuous in both $n=2,3$ and so we can define its pointwise interpolation.
+
+Alternatively we could have used Sobolev embeddings on manifolds to arrive to the same conclusion.
 
 \begin{prop}[Interpolation on curved domains]
 \label{prop:interp_curv}
@@ -2996,7 +2998,7 @@ See Proposition 5.4 of \cite{elliott}.
 \end{mproof}
 
 \begin{thm}[$H^1$ estimate]
-For $h$ small enough, we have $\norm{u-u_h^l}_{H^1(\Omega)} \lesssim h + \norm{f-f_h^l}_{L^2(\Omega)}+ \norm{g-g_{h,N}^l}_{L^2(\Gamma_N)}$
+For $h$ small enough, we have $\norm{u-u_h^l}_{H^1(\Omega)} \lesssim h + \norm{f-f_h^l}_{L^2(\Omega)}+ \norm{g_N-g_{h,N}^l}_{L^2(\Gamma_N)}$
 \end{thm}
 \begin{mproof}
 
@@ -3043,7 +3045,7 @@ This last term is estimated exactly as in Proposition 5.5 of \cite{edelmann}. In
 For an $L^2$ error estimate we apply the Aubin-Nitsche trick, following \cite{fairweather} and \cite{edelmann}.
 
 \begin{thm}[$L^2$ estimate]
-Assume either that $f \in H^1(\Omega)$ or that $\norm{f^l_h}_{H^1(\Omega)}\lesssim \norm{f}_{L^2(\Omega)}$. Then, for $h$ small enough, we have $\norm{u-u_h^l}_{L^2(\Omega)}\lesssim h^2 + \norm{f-f_h^l}_{L^2(\Omega)}+ \norm{g-g_{h,N}^l}_{L^2(\Gamma_N)} + \norm{g_D - \Pi_c g_D}_{L^2(\Gamma_D)} + A$, where $A = 0$ if  $\norm{f^l_h}_{H^1(\Omega)}\lesssim \norm{f}_{L^2(\Omega)}$ and $A = h^2\norm{f-f_h^l}_{H^1(\Omega)}$ otherwise.
+Assume either that $f \in H^1(\Omega)$ or that $\norm{f^l_h}_{H^1(\Omega)}\lesssim \norm{f}_{L^2(\Omega)}$. Then, for $h$ small enough, we have $\norm{u-u_h^l}_{L^2(\Omega)}\lesssim h^2 + \norm{f-f_h^l}_{L^2(\Omega)}+ \norm{g_N-g_{h,N}^l}_{L^2(\Gamma_N)} + \norm{g_D - \Pi_c g_D}_{L^2(\Gamma_D)} + A$, where $A = 0$ if  $\norm{f^l_h}_{H^1(\Omega)}\lesssim \norm{f}_{L^2(\Omega)}$ and $A = h^2\norm{f-f_h^l}_{H^1(\Omega)}$ otherwise.
 \end{thm}
 
 \begin{mproof}
@@ -3081,7 +3083,82 @@ By assuming $f,g_N, g_D$ in $H^2$ we conclude $\norm{u-u_h^l}_{H^1(\Omega)} \les
 It suffices to take $f_h:=\Pi_h f$, $g_{N,h} = \Pi_h g$ and employ \cref{prop:interp_curv}.
 \end{mproof}
 
-Unfortunately the smoothness assumptions to obtain optimal order of convergence are quite strict. However, the advantage of this approach is that it is straightforward to implement.
+Unfortunately the smoothness assumptions to obtain optimal order of convergence are quite strict. However, the advantage of this approach is that it is straightforward to implement, and works in both dimensions $n=2,3$.
+
+If one is concerned with just $H^1$ error estimates, without taking numerical integration into account, we can relax the requirements on $f$. Incidentally, how we are about to choose $f$, is more in line with the implementation of Fenics.
+
+\begin{prop}[$H^1$ estimate with rougher $f$]
+We choose $f_h=f $ on $\Omega \cap \Omega_h$ and $0$ otherwise, assuming $f \in H^1(\Omega)$. Then we obtain, for $h$ small enough, $\norm{u-u_h^l}_{H^1(\Omega)} \lesssim h + \norm{g_N-g_{h,N}^l}_{L^2(\Gamma_N)}$
+\end{prop}
+\begin{mproof}
+
+Analysing the proof of Proposition 5.5 in \cite{edelmann} we see that we only need to prove that $\ds \left | \int_\Omega f v_h^l - \int_{\Omega_h}f_h v_h \right |\lesssim h \norm{v_h^l}_{H^1(\Omega)} $, for $v_h \in S^1_{h,D}$.
+
+We can rewrite the difference as follows:
+
+\begin{align*}
+\int_\Omega f v_h^l - \int_{\Omega_h}f_h v_h   =\\
+\int_{\Omega \cap \Omega_h} f v_h^l - \int_{\Omega_h \cap \Omega} f_h v_h  + \int_{\Omega \setminus \Omega_h} f v_h^l - \int_{\Omega_h \setminus \Omega} f_h v_h  =\\
+\int_{\Omega \cap \Omega_h} f v_h^l - \int_{\Omega_h \cap \Omega} f_h v_h  + \int_{\Omega \setminus \Omega_h} f v_h^l = \\
+\int_{\Omega \cap \Omega_h^\partial} f (v_h^l - v_h)  + \int_{\Omega \setminus \Omega_h} f v_h^l
+\end{align*}
+
+where we used that $f=0$ outside of $\Omega$, that $f=f_h$ in $\Omega \cap \Omega_h$ and that $v_h^l=v_h$ for all simplices with at most one node on $\partial \Omega$ (by the definition of $G_h$). The set of all the other (straight) simplices is denoted by $\Omega_h^\partial$.
+
+For the first integral we have that for $h$ small enough, \textcolor{red}{$\Omega \setminus \Omega_h \subseteq N_{ch^2}$} (see \cite{tiihonen} for this), for $N_\delta :=\{ x \in \Omega, 0 <\text{dist}(x,\partial \Omega) < \delta\}$.
+
+Using the assumption $f 	\in H^1(\Omega)$, together with Lemma 4.10 of \cite{elliott}, we conclude that:
+
+\begin{align*}
+\left | \int_{\Omega \setminus \Omega_h} f v_h^l \right | \leq \norm{f}_{L^2(N_\delta)} \norm{v_h^l}_{L^2(N_\delta)} \lesssim \delta \norm{f}_{H^1(\Omega)} \norm{v_h^l}_{H^1(\Omega)}
+\end{align*} 
+
+To control the other integral, we note that \textcolor{red}{$\Omega \cap \Omega_h^\partial \subseteq N_h$}, also for $h$ small enough. Then:
+
+\begin{align*}
+\left | \int_{\Omega \cap \Omega_h^\partial} f (v_h^l - v_h) \right | \leq \norm{f}_{L^2(N_h)}( \norm{v_h^l}_{L^2(N_h)} + \norm{v_h}_{L^2(\Omega \cap \Omega_h^\partial)})\\ \lesssim h^{1/2} \norm{f}_{H^1(\Omega)} ( h^{1/2}\norm{v_h^l}_{H^1(\Omega)}+ \norm{v_h}_{L^2(\Omega \cap \Omega_h^\partial)})
+\end{align*} 
+
+But $\norm{v_h}_{L^2(\Omega \cap \Omega_h^\partial)} \leq \norm{v_h}_{L^2(\Omega_h^\partial)} \lesssim \norm{v_h^l}_{L^2(G_h(\Omega_h^\partial))}$, the last inequality resulting upon a change of variables applied elementwise, and an application of (4.10b) from \cite{elliott} to estimate the appearing determinant.
+
+Because \textcolor{red}{$G_h(\Omega_h^\partial)\subseteq N_h$}, the proof is concluded.
+
+\end{mproof}
+
+This same strategy brings us to an optimal $L^2$ error estimate, too.
+
+\begin{prop}[$L^2$ estimate with rougher $f$]
+We choose $f_h=f $ on $\Omega \cap \Omega_h$ and $0$ otherwise, assuming $f \in H^1(\Omega)$. Then we obtain, for $h$ small enough, we have $\norm{u-u_h^l}_{L^2(\Omega)}\lesssim h^{2} + \norm{g_N-g_{h,N}^l}_{L^2(\Gamma_N)} + \norm{g_D - \Pi_c g_D}_{L^2(\Gamma_D)}$.
+\end{prop}
+
+\begin{mproof}
+Analyizing the proof of the $L^2$ estimate, and of Theorem 5.3 in \cite{edelmann}, we see that we only need to prove that $\ds \left | \int_\Omega f \Pi_c z - \int_{\Omega_h}f_h \Pi_h z \right |\lesssim h^2 \norm{e}_{L^2(\Omega)} $.
+
+Just like before, we arrive at:
+
+\begin{align*}
+\int_\Omega f \Pi_c z - \int_{\Omega_h}f_h \Pi_h z   =\int_{\Omega \cap \Omega_h^\partial} f (\Pi_c z - \Pi_h z )  + \int_{\Omega \setminus \Omega_h} f \Pi_c z 
+\end{align*}
+
+Here, \cref{prop:interp_curv} lets us estimate $\norm{\Pi_c z}_{H^1(\Omega)}\lesssim \norm{z}_{H^2(\Omega)}$, for $h$ small, so that, just like in the previous proof, and using the $H^2$ regularity of $z$:
+
+\begin{align*}
+\left |\int_{\Omega \setminus \Omega_h} f \Pi_c z  \right | \lesssim h^2 \norm{f}_{H^1(\Omega)} \norm{z}_{H^2(\Omega)}\lesssim h^2 \norm{f}_{H^1(\Omega)} \norm{e}_{L^2(\Omega)}
+\end{align*} 
+
+Now, $\Omega$ is smooth enough for the existence of a bounded extension operator $E : H^2(\Omega) \rightarrow H^2(\mR^n)$ (see \cite{leoni}, theorem 13.17 at page 425, 13.13 at page 424, and definition 9.57 at page 273). Therefore:
+
+\begin{align*}
+\left | \int_{\Omega \cap \Omega_h^\partial} f (\Pi_c z - \Pi_h z )  \right |  \lesssim h^{1/2} \norm{f}_{H^1(\Omega)} \norm{\Pi_c z - \Pi_h z}_{L^2(\Omega \cap \Omega_h^\partial)}
+\end{align*} 
+
+But $\norm{\Pi_c z - \Pi_h z}_{L^2(\Omega \cap \Omega_h^\partial)} \leq \norm{\Pi_c z - z}_{L^2(\Omega)} +  \norm{Ez - \Pi_h Ez}_{L^2(\Omega_h)}$.
+
+By \cref{prop:interp_curv} and by Theorem 3.1.6 of \cite{ciarlet}, with constants independent of $h$, we obtain $\norm{\Pi_c z - \Pi_h z}_{L^2(\Omega \cap \Omega_h^\partial)}  \leq C h^2(\norm{z}_{H^2(\Omega)} + \norm{Ez}_{H^2(\Omega_h)})\leq Ch^2(\norm{z}_{H^2(\Omega)} + \norm{Ez}_{H^2(\mR^n)})\lesssim h^2 \norm{z}_{H^2(\Omega)} \leq h^2  \norm{e}_{L^2(\Omega)}$.
+
+Hence $\ds \left | \int_{\Omega \cap \Omega_h^\partial} f (\Pi_c z - \Pi_h z )  \right |  \lesssim h^{5/2} $ and the proof is concluded.
+
+\end{mproof}
 
 \printbibliography[title={Bibliography}]
 
