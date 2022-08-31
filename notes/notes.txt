@@ -90,6 +90,9 @@ Pipeline to set up a virtual environment
 - to use scipy minize with bounds, go to /home/leonardo_mutti/anaconda3/envs/masters_thesis/venv_with_mshr/lib/python3.8/site-packages/pyadjoint/optimization/optimization.py:28 and change:
     # bound_len = len(rf_np.get_global(rf_np.controls[j]))
     const_bound = np.array([bound] * 1)
+- install moola as suggested, and then modify it
+
+# optional
 - pip install tensorflow==1.15.2 (note, this requires python 3.7 to work, and this is the only way in which graph visualization works)
 - pip install protobuf==3.20.*
 - fix some tensorflow things:
