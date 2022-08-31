@@ -11,7 +11,7 @@ from utilities.meshing import AnnulusMesh
 
 class HeatEquation:
 
-    def __init__(self):
+    def __init__(self, efficient=False):
         self.domain_measure = None
         self.S1h = None
         self.exact_solution = None
@@ -33,13 +33,20 @@ class HeatEquation:
                                          "implicit_explicit_euler"]
         self.verbose = False
 
-    def set_mesh(self, mesh, mf, V=None):
+        self.efficient = efficient
+        self.A = None  # pre_assembled system matrix, just in case
+        self.pre_assembled_BCs = None  # a vector of functions, not a time dependent expression
+        if self.efficient:
+            logging.warning(
+                "This code is suitable for shape optimization only if boundary conditions are constant/they are on fixed boundaries, and source terms are constant/defined with SpatialCoordinate")
+
+    def set_mesh(self, mesh, mf, V=None, order=1):
 
         self.mesh = mesh
         self.mesh.rename("PDEMesh", "")
         self.facet_indicator = mf
 
-        self.set_function_space(V=V)
+        self.set_function_space(V=V, order=order)
         self.compute_domain_volume()
 
     def set_ODE_scheme(self, ode_scheme):
@@ -109,7 +116,8 @@ class HeatEquation:
 
     def set_PDE_data(self, initial_value, source=None, marker_neumann=None, marker_dirichlet=None, neumann_BC=None,
                      dirichlet_BC=None,
-                     exact_solution=None):
+                     exact_solution=None,
+                     pre_assembled_BCs=None):
         '''
         :param source: right hand side f in u_t - \Delta u = f. It can be either a function on self.S1h or an expression
         :param marker_neumann: with reference to self.mf, it is the integer describing the part of the boundary where we
@@ -147,6 +155,9 @@ class HeatEquation:
             if len(neumann_BC) != len(marker_neumann):
                 raise Exception("The number of boundary conditions must match the number of markers")
 
+        if pre_assembled_BCs is not None:
+            self.pre_assembled_BCs = pre_assembled_BCs
+
         self.initial_value = initial_value
 
         # Some values may be None
@@ -157,12 +168,12 @@ class HeatEquation:
         self.neumann_marker = marker_neumann
         self.exact_solution = exact_solution
 
-    def set_function_space(self, V=None):
+    def set_function_space(self, V=None, order=1):
         if not hasattr(self, "mesh"):
             raise Exception("A mesh needs to be defined at first")
         if V is None:
             logging.warning("No finite element space was provided, using default one")
-            L1 = FiniteElement("Lagrange", self.mesh.ufl_cell(), 1)  # only linear FEM for now
+            L1 = FiniteElement("Lagrange", self.mesh.ufl_cell(), order)  # only linear FEM for now
             self.S1h = FunctionSpace(self.mesh, L1)
         else:
             self.S1h = V
@@ -175,6 +186,44 @@ class HeatEquation:
             raise Exception("No mesh was defined")
 
         self.domain_measure = assemble(Constant(1.0) * dx(self.mesh))
+
+    def include_neumann_conditions(self, t, dt, L, v, time_index):
+        if (self.neumann_marker is not None): # note, let's add the neumann term even if we want to be efficient, as we need to attach a form to a vector, for dolfin adjoint
+            for (f_N, marker) in zip(self.f_N, self.neumann_marker):
+
+                if self.efficient and marker in self.pre_assembled_BCs.keys():
+                    if self.pre_assembled_BCs[marker]["type"] == "neumann":
+                        # Check the index is correct
+                        assert(np.allclose(self.pre_assembled_BCs[marker]["data"].times[time_index-1],t))
+                        # If so
+                        f_N_real = Function(self.S1h)
+                        f_N_real.vector()[:] = self.pre_assembled_BCs[marker]["data"].interpolated_BC[time_index-1].vector()[:]
+                        L += dt * f_N_real * v * ds(self.mesh)
+                    else:
+                        raise Exception("Wrong type of boundary condition")
+
+                else:
+                    if hasattr(f_N, 't'):
+                        f_N.t = t
+                    L += dt * f_N * v * ds(self.mesh)
+
+        return L
+
+    def include_dirichlet_conditions(self, t):
+
+        if self.dirichlet_marker is not None:
+            for f_D in self.f_D:
+                if hasattr(f_D, 't'):
+                    f_D.t = t
+
+    def include_source(self, t, L, dt, v, dx):
+
+        if self.f is not None:
+            if hasattr(self.f, 't'):
+                self.f.t = t
+            L += dt * self.f * v * dx
+
+        return L
 
     def get_instant_variational_formulation(self, time_index, last_solution):
         '''
@@ -213,80 +262,45 @@ class HeatEquation:
         dt = Constant(self.dts[time_index - 1])
         dt.rename("dt", "")
 
+        t_neumann = -np.inf
+        t_dirichlet = -np.inf
+        t_source = -np.inf
+
         # Choose the correct time scheme
+        L = last_solution * v * dx
+        a = u * v * dx
         if ode_scheme_index == 0:  # implicit euler
             t = self.times[time_index]
+            t_neumann = t
+            t_dirichlet = t
+            t_source = t
 
-            a = u * v * dx + dt * inner(grad(u), grad(v)) * dx
-            L = last_solution * v * dx
-
-            if self.neumann_marker is not None:
-                for f_N in self.f_N:
-                    if hasattr(f_N, 't'):
-                        f_N.t = t
-                    L = L + dt * f_N * v * ds
-
-            if self.f is not None:
-                if hasattr(self.f, 't'):
-                    self.f.t = t
-                L = L + dt * self.f * v * dx
-
-            if self.dirichlet_marker is not None:
-                for f_D in self.f_D:
-                    if hasattr(f_D, 't'):
-                        f_D.t = t
-
-            return a, L
+            a += dt * inner(grad(u), grad(v)) * dx
 
         elif ode_scheme_index == 1:  # CN (standard)
             t = self.times[time_index]
             t_prev = self.times[time_index - 1]
+            t_neumann = (t + t_prev) / 2
+            t_dirichlet = t
+            t_source = (t + t_prev) / 2
 
-            a = u * v * dx + dt / 2 * inner(grad(u), grad(v)) * dx
-            L = last_solution * v * dx - dt / 2 * inner(grad(last_solution), grad(v)) * dx
-
-            if self.neumann_marker is not None:
-                for f_N in self.f_N:
-                    if hasattr(f_N, 't'):
-                        f_N.t = (t + t_prev) / 2
-                    L = L + dt * f_N * v * ds
-
-            if self.f is not None:
-                if hasattr(self.f, 't'):
-                    self.f.t = (t + t_prev) / 2
-                L = L + dt * self.f * v * dx
-
-            if self.dirichlet_marker is not None:
-                for f_D in self.f_D:
-                    if hasattr(f_D, 't'):
-                        f_D.t = t
-
-            return a, L
+            a += dt / 2 * inner(grad(u), grad(v)) * dx
+            L += - dt / 2 * inner(grad(last_solution), grad(v)) * dx
 
         elif ode_scheme_index == 3:  # implicit-explicit euler
             t = self.times[time_index]
             t_last = self.times[time_index - 1]
+            t_neumann = t_last
+            t_dirichlet = t_last # this could be changed, depending the kind of consistency want
+            t_source = t_last
 
-            a = u * v * dx + dt * inner(grad(u), grad(v)) * dx
-            L = last_solution * v * dx
+            a += dt * inner(grad(u), grad(v)) * dx
 
-            if self.neumann_marker is not None:
-                for f_N in self.f_N:
-                    if hasattr(f_N, 't'):
-                        f_N.t = t_last
-                    L = L + dt * f_N * v * ds
+        L_no_neumann = self.include_source(t_source, L, dt, v, dx)
+        L = self.include_neumann_conditions(t_neumann, dt, L_no_neumann, v, time_index)
+        self.include_dirichlet_conditions(t_dirichlet)
 
-            if self.f is not None:
-                if hasattr(self.f, 't'):
-                    self.f.t = t_last
-                L = L + dt * self.f * v * dx
-
-            if self.dirichlet_marker is not None:
-                for f_D in self.f_D:
-                    if hasattr(f_D, 't'):
-                        f_D.t = t_last  # this could be changed, depending the kind of consistency want
-
-            return a, L
+        return a, L, L_no_neumann
 
     def solve_single_step(self, time_index, last_solution=None, err_mode="none"):
         if not isinstance(time_index, int):
@@ -305,18 +319,47 @@ class HeatEquation:
         elif last_solution is None:
             raise Exception("The previous time solution was not provided")
 
-        a, L = self.get_instant_variational_formulation(time_index, last_solution)
+        a, L, L_no_neumann = self.get_instant_variational_formulation(time_index, last_solution)
         current_solution = Function(self.S1h)
 
-        # Dirichlet BCs
-        dirichlet_BC = []
-        if self.dirichlet_marker is not None:
-            # self.f_D.t = self.times[time_index] # this is already taken care of in get_instant_variational_formulation
-            for marker, f_D in zip(self.dirichlet_marker, self.f_D):
-                dirichlet_BC.append(DirichletBC(self.S1h, f_D, self.facet_indicator, marker))
+        if not self.efficient:
 
-        solve(a == L, current_solution,
-              dirichlet_BC)  # dirichlet BC might be empty. Also, they're imposed at possibily a different time than the Neumann conditions, in the case of CN
+            # Dirichlet BCs
+            dirichlet_BC = []
+            if self.dirichlet_marker is not None:
+                # self.f_D.t = self.times[time_index] # this is already taken care of in get_instant_variational_formulation
+                for marker, f_D in zip(self.dirichlet_marker, self.f_D):
+                    dirichlet_BC.append(DirichletBC(self.S1h, f_D, self.facet_indicator, marker))
+
+            solve(a == L, current_solution,
+                  dirichlet_BC)  # dirichlet BC might be empty. Also, they're imposed at possibily a different time than the Neumann conditions, in the case of CN
+        else:
+            C = self.A.copy()
+            C.form = a
+
+            b = assemble(L)
+
+            # Dirichlet BCs
+            dirichlet_BC = []
+            if self.dirichlet_marker is not None:
+                # self.f_D.t = self.times[time_index] # this is already taken care of in get_instant_variational_formulation
+                for marker, f_D in zip(self.dirichlet_marker, self.f_D):
+
+                    if self.efficient and marker in self.pre_assembled_BCs.keys():
+                        if self.pre_assembled_BCs[marker]["type"] == "dirichlet":
+                            # Check the index is correct
+                            assert (np.allclose(self.pre_assembled_BCs[marker]["data"].times[time_index - 1], f_D.t))
+                            dirichlet_BC.append(DirichletBC(self.S1h, self.pre_assembled_BCs[marker]["data"].interpolated_BC[time_index -1], self.facet_indicator, marker))
+
+                        else:
+                            raise Exception("Wrong boundary condition")
+                    else:
+                        dirichlet_BC.append(DirichletBC(self.S1h, f_D, self.facet_indicator, marker))
+
+                    dirichlet_BC[-1].apply(C, b)
+
+
+            solve(C, current_solution.vector(), b)
 
         # Error computation
         if err_mode != "none":
@@ -354,6 +397,8 @@ class HeatEquation:
         last_solution.assign(first_solution)  # no need to create a copy of first solution
 
         logging.info("Solving the heat equation")
+        if self.efficient:
+            self.pre_assemblage()
         for time_step in tqdm(range(1, len(self.times))):
             current_solution, current_error = self.solve_single_step(time_step, last_solution, err_mode=err_mode)
             solution_list.append(current_solution)
@@ -366,6 +411,10 @@ class HeatEquation:
             return solution_list, None
         else:
             return solution_list, error_list
+
+    def pre_assemblage(self):
+        a, _, _= self.get_instant_variational_formulation(1, Function(self.S1h))
+        self.A = assemble(a)
 
 
 class PDETestProblems:
@@ -1214,6 +1263,8 @@ class TimeExpressionFromList(UserExpression):
             v.assign(u)
             self.solution_list_original.append(v)
 
+        self.V = solution_list[-1].function_space()
+
     def eval(self, values, x):
 
         t = self.t
@@ -1251,8 +1302,52 @@ class TimeExpressionFromList(UserExpression):
         for (u, t) in zip(self.solution_list, self.discrete_times):
             u.vector()[:] += (np.random.rand(*sh) - .5) * noise_level
             # u.vector()[:] += .003 * t
-            pass
 
     def unperturb(self):
         for (up, uu) in zip(self.solution_list, self.solution_list_original):
             up.vector()[:] = uu.vector().copy()
+
+
+class PreAssembledBC():
+    """
+    Given an expression depending on time, we return a list of functions, the interpolations at a time vector of the expression
+    Noise can be applied
+    """
+
+    def __init__(self, expression, time_instants, V, noise_level=0):
+        if not hasattr(expression, 't'):
+            raise Exception("This expression doesn't depend on time")
+        self.expression = expression  # must have t as attribute
+        self.times = time_instants
+        self.noise_level = noise_level
+
+        self.V = V  # the function space in which to interpolate
+
+        self.interpolated_BC = []
+        self.pre_assemble()  # actually, interpolate
+
+    def pre_assemble(self):
+
+        if isinstance(self.expression, TimeExpressionFromList):
+
+            # Collect nodal vectors in an array
+            fine_nodal_values = np.array([u.vector()[:] for u in self.expression.solution_list_original])
+            from scipy.interpolate.interpolate import interp1d
+            interp = interp1d(self.expression.discrete_times, fine_nodal_values, axis=0)
+
+            new_vals = interp(self.times)
+
+            for i in tqdm(range(new_vals.shape[0])):
+                u = Function(self.expression.V)
+                u.vector()[:] = new_vals[i]
+                bc = Function(self.V)
+                bc.assign(interpolate(u, self.V))
+                bc.vector()[:] += self.noise_level * (np.random.rand(len(bc.vector())) * .5 - 1)
+                self.interpolated_BC.append(bc)
+        else:
+            for t in tqdm(self.times):
+                self.expression.t = t
+                bc = Function(self.V)
+                bc.assign(interpolate(self.expression, self.V))
+                bc.vector()[:] += self.noise_level * (np.random.rand(len(bc.vector())) * .5 - 1)
+                self.interpolated_BC.append(bc)
