@@ -22,7 +22,7 @@ logging.basicConfig(level=logging.INFO,
 
 set_log_level(LogLevel.ERROR)
 
-runs_path = "/home/leonardo_mutti/PycharmProjects/masters_thesis/code/runs/"
+runs_path = "/home/leonardo_mutti/PycharmProjects/masters_thesis/code/runs/old_runs/"
 
 # %% Functional set-up
 
