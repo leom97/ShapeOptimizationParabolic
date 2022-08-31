@@ -21,31 +21,27 @@ runs_path = "/home/leonardo_mutti/PycharmProjects/masters_thesis/code/runs/"
 
 # %% Solution setup
 
-problem_name = "sq_oakley_oscillations_test"
+problem_name = "sea_urchin"
 problem_path = runs_path + problem_name + "/"
 
 problem = ShapeOptimizationProblem()
-problem.initialize_from_data(problem_path, regenerate_exact_data=True)
-problem.save_exact_data(problem_path)
+problem.initialize_from_data(problem_path, regenerate_exact_data=False)
+# problem.save_exact_data(problem_path)
+# problem.save_firedrake_files(problem_path)
 problem.create_cost_functional()
 # tape = get_working_tape()
 # tape.visualise()
 # problem.debug_generic(problem_path)
 
-# %% Solution and save things to file
+ # %% Solution and save things to file
 problem.solve()
-problem.do_taylor_test()
+# problem.do_taylor_test()
 problem.visualize_result()
 problem.save_results_to_file(problem_path)
 
 # %% Todo
 # 2) try elasticity method
 # 5) make PDE code faster
-# 6) how important is e^-1/t^2 in the initial condition? Does it give use OOC of 2?
-# 9) complicate the boundary conditions to highly spatially varying
-# 12) implement trapezoidal rule cost function
-# 13) implement Stoermer-Verlet
-# 15) verify shape derivatives
+# 6) how important is e^-1/t^2 in the initial condition? Does it give use OOC of 2?# 15) verify shape derivatives
 # 16) try a complicated domain
 # 19) do some more error tests with pdes, including initial smoothing, see if OOC2 in time is achievable
-# 21) add noise to the working cases, do they still work?
