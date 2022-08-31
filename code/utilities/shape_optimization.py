@@ -4,10 +4,11 @@ import numpy as np
 import pickle
 import logging
 import matplotlib.pyplot as plt
+import moola
 from tqdm import tqdm
 
-from utilities.meshing import AnnulusMesh, CircleMesh, SquareAnnulusMesh
-from utilities.pdes import HeatEquation, TimeExpressionFromList
+from utilities.meshing import AnnulusMesh, CircleMesh, SquareAnnulusMesh, EfficientAnnulusMesh, SmoothedSquareAnnulusMesh, sea_urchin
+from utilities.pdes import HeatEquation, TimeExpressionFromList, PreAssembledBC
 from utilities.overloads import compute_spherical_transfer_matrix, \
     compute_radial_displacement_matrix, radial_displacement, radial_function_to_square
 import fenics_adjoint.shapead_transformations as adjf
@@ -41,8 +42,9 @@ class ShapeOptimizationProblem:
         self.exact_geometry_dict = None
         self.optimization_geometry_dict = None
         self.simulated_geometry_dict = None
+        self.problem_folder = None
 
-        # PDE data: dictionaries that contain info to simulate pdes
+        # PDE data: dictionaries and variables that contain info to simulate pdes
         self.exact_pde_dict = None
         self.optimization_pde_dict = None
         self.marker_neumann = None
@@ -53,6 +55,7 @@ class ShapeOptimizationProblem:
         self.u_ex = None
         self.exact_pde = None  # it will be of HeatEquation class
         self.exact_exterior_BC = None  # can be "N" or "D" (it corresponds to which one is the exact data we prescribe)
+        self.pre_assembled_BCs = None  # it contains time-lists of functions, representing the time-dependent boundary conditions at the right instants
 
         # Function spaces
         self.V_vol = None
@@ -69,23 +72,66 @@ class ShapeOptimizationProblem:
         self.v_equation = None
         self.w_equation = None
 
-    def get_domain(self, domain_dict):
+    def get_domain(self, domain_dict, ground_truth):
+        if ground_truth:
+            subfolder = "meshes/domain/ground_truth/"
+        else:
+            subfolder = "meshes/domain/simulation/"
+        xdmf_path = None
+        if "reload_xdmf" in domain_dict.keys() and ground_truth == True:
+            if domain_dict["reload_xdmf"]:
+                xdmf_path = self.problem_folder + subfolder
         if domain_dict["type"] == "annulus":
             domain = AnnulusMesh(resolution=domain_dict["resolution"],
+                                 path=self.problem_folder + subfolder,
+                                 int_refinement=domain_dict["int_refinement"],
+                                 ext_refinement=domain_dict["ext_refinement"],
                                  inner_radius=domain_dict["inner_radius"],
-                                 outer_radius=domain_dict["outer_radius"], center=domain_dict["center"])
+                                 outer_radius=domain_dict["outer_radius"],
+                                 center=domain_dict["center"],
+                                 xdmf_path=xdmf_path)
         elif domain_dict["type"] == "square_annulus":
             domain = SquareAnnulusMesh(resolution=domain_dict["resolution"],
+                                       path=self.problem_folder + subfolder,
                                        inner_radius=domain_dict["inner_radius"],
-                                       side_length=domain_dict["side_length"]
+                                       side_length=domain_dict["side_length"],
+                                       int_refinement=domain_dict["int_refinement"],
+                                       ext_refinement=domain_dict["ext_refinement"],
+                                       xdmf_path=xdmf_path
+                                       )
+        elif domain_dict["type"] == "efficient_annulus":
+            domain = EfficientAnnulusMesh(resolution=domain_dict["resolution"],
+                                          path=self.problem_folder + subfolder,
+                                          int_refinement=domain_dict["int_refinement"],
+                                          ext_refinement=domain_dict["ext_refinement"],
+                                          inner_radius=domain_dict["inner_radius"],
+                                          outer_radius=domain_dict["outer_radius"],
+                                          center=domain_dict["center"],
+                                          xdmf_path=xdmf_path,
+                                          power=domain_dict["power"]
+                                          )
+        elif domain_dict["type"] == "smoothed_square_annulus":
+            domain = SmoothedSquareAnnulusMesh(resolution=domain_dict["resolution"],
+                                       path=self.problem_folder + subfolder,
+                                       inner_radius=domain_dict["inner_radius"],
+                                       side_length=domain_dict["side_length"],
+                                       int_refinement=domain_dict["int_refinement"],
+                                       ext_refinement=domain_dict["ext_refinement"],
+                                       xdmf_path=xdmf_path,
+                                       smoothing_radius=domain_dict["smoothing_radius"]
                                        )
         else:
             raise ValueError("Domain unsupported")
         return domain
 
-    def get_sphere(self, sphere_dict):
+    def get_sphere(self, sphere_dict, ground_truth):
+        if ground_truth:
+            subfolder = "ground_truth/"
+        else:
+            subfolder = "simulation/"
         if sphere_dict["dimension"] == 2:
-            sphere = CircleMesh(resolution=sphere_dict["resolution"])
+            sphere = CircleMesh(resolution=sphere_dict["resolution"],
+                                path=self.problem_folder + "meshes/sphere/" + subfolder)
         else:
             raise ValueError("Only 2D is supported for now")
         return sphere
@@ -95,8 +141,8 @@ class ShapeOptimizationProblem:
         logging.info("Creating optimal geometry")
 
         with stop_annotating():
-            self.exact_domain = self.get_domain(exact_geometry_dict["domain"])
-            self.exact_sphere = self.get_sphere(exact_geometry_dict["sphere"])
+            self.exact_domain = self.get_domain(exact_geometry_dict["domain"], ground_truth=True)
+            self.exact_sphere = self.get_sphere(exact_geometry_dict["sphere"], ground_truth=True)
             self.exact_geometry_dict = exact_geometry_dict
 
             p = self.exact_domain.center  # star shape point
@@ -126,6 +172,22 @@ class ShapeOptimizationProblem:
                 self.W_ex.vector()[:] = reusables_dict["W_ex"]
 
             ALE.move(self.exact_domain.mesh, self.W_ex)  # note, id(domain) = id(self.domain), so, both are moved
+
+    def save_firedrake_files(self, path):
+        """
+        We obtain some interesting Firedrake stuff and then save it to file
+        """
+
+        vtd = vertex_to_dof_map(self.u_ex.solution_list[-1].function_space())
+        dtv = dof_to_vertex_map(self.u_ex.solution_list[-1].function_space())
+
+        firedrake_dict = {"vertex_to_dof_map": vtd,
+                          "dof_to_vertex_map": dtv}
+
+        with open(path + "firedrake_data" + '.pickle', 'wb') as handle:
+            pickle.dump(firedrake_dict, handle)
+
+
 
     def simulate_exact_pde(self, exact_pde_dict, reusables_dict=None):
         if self.exact_domain is None:
@@ -193,13 +255,17 @@ class ShapeOptimizationProblem:
             raise Exception("Exact geometry dictionary not initialized")
 
         optimization_geometry_dict = self.exact_geometry_dict.copy()
-        if simulated_geometry_dict["domain_resolution"] is not None:
-            optimization_geometry_dict["domain"]["resolution"] = simulated_geometry_dict["domain_resolution"]
+        optimization_geometry_dict["reload_xdmf"] = False
+        # if simulated_geometry_dict["domain_resolution"] is not None:
+        #     optimization_geometry_dict["domain"]["resolution"] = simulated_geometry_dict["domain_resolution"]
+        if simulated_geometry_dict["additional_domain_data"] is not None:
+            for key in simulated_geometry_dict["additional_domain_data"].keys():
+                optimization_geometry_dict["domain"][key] = simulated_geometry_dict["additional_domain_data"][key]
         if simulated_geometry_dict["sphere_resolution"] is not None:
             optimization_geometry_dict["sphere"]["resolution"] = simulated_geometry_dict["sphere_resolution"]
 
-        self.optimization_domain = self.get_domain(optimization_geometry_dict["domain"])
-        self.optimization_sphere = self.get_sphere(optimization_geometry_dict["sphere"])
+        self.optimization_domain = self.get_domain(optimization_geometry_dict["domain"], ground_truth=False)
+        self.optimization_sphere = self.get_sphere(optimization_geometry_dict["sphere"], ground_truth=False)
 
         self.optimization_geometry_dict = optimization_geometry_dict
 
@@ -214,10 +280,43 @@ class ShapeOptimizationProblem:
         if simulated_pde_dict["N_steps"] is not None:
             self.optimization_pde_dict["N_steps"] = simulated_pde_dict["N_steps"]
 
+        logging.fatal("Remove perturbation from here, put it elsewhere")
         if self.exact_exterior_BC == "N":
             self.u_D.perturb(simulated_pde_dict["noise_level_on_exact_BC"])
         elif self.exact_exterior_BC == "D":
             self.u_N.perturb(simulated_pde_dict["noise_level_on_exact_BC"])
+
+        # Generic set-up
+        L1_vol = FiniteElement("Lagrange", self.optimization_domain.mesh.ufl_cell(), 1)
+        self.V_vol = FunctionSpace(self.optimization_domain.mesh, L1_vol)
+
+        self.v_equation = HeatEquation(efficient=True)
+        self.w_equation = HeatEquation(efficient=False)
+
+        self.v_equation.set_ODE_scheme(self.optimization_pde_dict["ode_scheme"])
+        self.v_equation.verbose = True
+        self.v_equation.set_time_discretization(self.T,
+                                                N_steps=int(self.optimization_pde_dict["N_steps"]),
+                                                relevant_mesh_size=self.exact_domain.mesh.hmax())
+
+        self.w_equation.set_ODE_scheme(self.optimization_pde_dict["ode_scheme"])
+        self.w_equation.verbose = True
+        self.w_equation.set_time_discretization(self.T,
+                                                N_steps=int(self.optimization_pde_dict["N_steps"]),
+                                                relevant_mesh_size=self.exact_domain.mesh.hmax())
+
+        # Pre-assembling the boundary conditions
+        if self.optimization_pde_dict["ode_scheme"] == "crank_nicolson":
+            times = (self.v_equation.times[1:] + self.v_equation.times[:-1]) / 2
+        elif self.optimization_pde_dict["ode_scheme"] in ["implicit_euler", "implicit_explicit_euler"]:
+            times = self.v_equation.times[1:]
+        else:
+            raise Exception("No matching ode scheme")
+
+        logging.info("Pre-assembling the boundary conditions")
+        external_DBC = PreAssembledBC(self.u_ex, self.v_equation.times[1:], self.V_vol)
+        external_NBC = PreAssembledBC(self.u_N, times, self.V_vol)
+        self.pre_assembled_BCs = {"ext_neumann": external_NBC, "ext_dirichlet": external_DBC}
 
     # def save_problem_data(self, path):
     #
@@ -251,6 +350,7 @@ class ShapeOptimizationProblem:
     #         pickle.dump(self.optimization_dict, handle)
 
     def initialize_from_data(self, path, regenerate_exact_data=True):
+        self.problem_folder = path
         try:
             import importlib.util
             import sys
@@ -272,18 +372,21 @@ class ShapeOptimizationProblem:
             self.create_optimal_geometry(exact_geometry_dict)
             self.simulate_exact_pde(exact_pde_dict)
         else:
-            try:
-                with open(path + "reusables" + '.pickle', 'rb') as handle:
-                    reusables_dict = pickle.load(handle)
+            # try:
+            logging.info("Opening reusables pickle")
+            with open(path + "reusables" + '.pickle', 'rb') as handle:
+                reusables_dict = pickle.load(handle)
 
-                # create_optimal_geometry
-                self.create_optimal_geometry(exact_geometry_dict, reusables_dict)
-                # simulate_exact_pde
-                self.simulate_exact_pde(exact_pde_dict, reusables_dict)
-            except:
-                logging.warning("Could not load exact data from files, regenerating")
-                self.create_optimal_geometry(exact_geometry_dict)
-                self.simulate_exact_pde(exact_pde_dict)
+            # create_optimal_geometry
+            self.create_optimal_geometry(exact_geometry_dict, reusables_dict)
+            # simulate_exact_pde
+            self.simulate_exact_pde(exact_pde_dict, reusables_dict)
+            # except:
+            #     logging.warning("Could not load exact data from files, regenerating")
+            #     simulated_geometry_dict["additional_domain_data"]["reload_xdmf"] = False
+            #     exact_geometry_dict["domain"]["reload_xdmf"] = False
+            #     self.create_optimal_geometry(exact_geometry_dict)
+            #     self.simulate_exact_pde(exact_pde_dict)
 
         self.initialize_optimization_domain(simulated_geometry_dict)
         self.initialize_pde_simulation(simulated_pde_dict)
@@ -291,9 +394,12 @@ class ShapeOptimizationProblem:
         self.cost_functional_dict = cost_functional_dict
         self.simulated_geometry_dict = simulated_geometry_dict
 
+        if regenerate_exact_data:
+            self.exact_geometry_dict["domain"]["reload_xdmf"] = False
+
         logging.info("Shape optimization data successfully loaded")
 
-    def create_cost_functional(self, disable_radial_parametrization=False, start_at_optimum=False, time_steps_factor=1):
+    def create_cost_functional(self, disable_radial_parametrization=False, start_at_optimum=False):
 
         """
 
@@ -305,10 +411,8 @@ class ShapeOptimizationProblem:
 
         logging.info("Setting up the cost functional")
 
-        L1_vol = FiniteElement("Lagrange", self.optimization_domain.mesh.ufl_cell(), 1)
         L1_sph = FiniteElement("Lagrange", self.optimization_sphere.mesh.ufl_cell(), 1)
 
-        self.V_vol = FunctionSpace(self.optimization_domain.mesh, L1_vol)
         self.V_sph = FunctionSpace(self.optimization_sphere.mesh, L1_sph)
         self.V_def = VectorFunctionSpace(self.optimization_domain.mesh, "Lagrange", 1)
 
@@ -340,53 +444,61 @@ class ShapeOptimizationProblem:
             "Working under the assumptions that the marker 2 is for the outer boundary, and 3 for the inner one")
 
         # Dirichlet state
-        self.v_equation = HeatEquation()
-        self.v_equation.set_mesh(self.optimization_domain.mesh, self.optimization_domain.facet_function, self.V_vol)
+        self.v_equation.set_mesh(self.optimization_domain.mesh, self.optimization_domain.facet_function, self.V_vol, order=1)
         self.v_equation.set_PDE_data(u0, marker_dirichlet=[2, 3],
-                                     dirichlet_BC=[self.u_D,
-                                                   u_D_inner])
-        self.v_equation.set_ODE_scheme(self.optimization_pde_dict["ode_scheme"])
-        self.v_equation.verbose = True
-        self.v_equation.set_time_discretization(self.T,
-                                                N_steps=int(self.optimization_pde_dict["N_steps"] * time_steps_factor),
-                                                relevant_mesh_size=self.exact_domain.mesh.hmax())
+                                     dirichlet_BC=[self.u_D, u_D_inner],
+                                     pre_assembled_BCs={2: {"type": "dirichlet", "marker": 2,
+                                                            "data": self.pre_assembled_BCs["ext_dirichlet"]}})
 
         # Dirichlet-Neumann state
-        self.w_equation = HeatEquation()
-        self.w_equation.set_mesh(self.optimization_domain.mesh, self.optimization_domain.facet_function, self.V_vol)
+        self.w_equation.set_mesh(self.optimization_domain.mesh, self.optimization_domain.facet_function, self.V_vol, order=1)
         self.w_equation.set_PDE_data(u0, marker_dirichlet=[3], marker_neumann=[2],
                                      dirichlet_BC=[u_D_inner],
-                                     neumann_BC=[self.u_N])
-        self.w_equation.set_ODE_scheme(self.optimization_pde_dict["ode_scheme"])
-        self.w_equation.verbose = True
-        self.w_equation.set_time_discretization(self.T,
-                                                N_steps=int(self.optimization_pde_dict["N_steps"] * time_steps_factor),
-                                                relevant_mesh_size=self.exact_domain.mesh.hmax())
+                                     neumann_BC=[self.u_N],
+                                     pre_assembled_BCs={
+                                         2: {"type": "neumann", "data": self.pre_assembled_BCs["ext_neumann"]}})
 
         # The cost functional
-
         self.v_equation.solve()
         self.w_equation.solve()
 
         J = 0
         final_smoothing = eval(self.cost_functional_dict["final_smoothing_lambda"])
+
+        # A check on the cost functional discretization type
+        if self.cost_functional_dict["discretization"] in ["rectangle_end", "trapezoidal", None]:
+            if self.cost_functional_dict["discretization"] is None:
+                logging.info("The cost functional is discretized with the default scheme")
+                if self.w_equation.ode_scheme == "implicit_euler":
+                    self.cost_functional_dict["discretization"] = "rectangle_end"
+                elif self.w_equation.ode_scheme == "crank_nicolson":
+                    self.cost_functional_dict["discretization"] = "trapezoidal"
+                else:
+                    raise Exception("ODE scheme not supported")
+            else:
+                logging.warning("A custom cost functional discretization has been chosen")
+        else:
+            raise Exception("Quadrature rule not supported")
+
         it = zip(self.v_equation.solution_list[1:],
                  self.w_equation.solution_list[1:],
                  self.v_equation.dts,
-                 self.v_equation.times[1:])
+                 self.v_equation.times[1:],
+                 range(len(self.v_equation.dts)))
 
-        ds = Measure("ds", subdomain_data=self.optimization_domain.facet_function, subdomain_id=2)
-        if self.cost_functional_dict["discretization"] in ["rectangle_end", "trapezoidal"]:
-            fs = 1.0    # final_smoothing
-            for v, w, dt, t in it:
-                fs = final_smoothing(self.T - t)
-                if fs > DOLFIN_EPS:
-                    J += assemble(.5 * dt * fs * (v - w) ** 2 * dx(self.optimization_domain.mesh))
-            if self.cost_functional_dict["discretization"] == "trapezoidal":
-                if fs > DOLFIN_EPS:
-                    J -= assemble(.25 * dt * fs * (v - w) ** 2 * dx(self.optimization_domain.mesh))
-        else:
-            raise Exception("Quadrature rule not supported")
+        # Building cost functional
+        # ds = Measure("ds", subdomain_data=self.optimization_domain.facet_function, subdomain_id=2)
+        dx = Measure("dx", domain=self.optimization_domain.mesh)
+        fs = 1.0  # final_smoothing
+        for (v, w, dt, t, i) in it:
+            fs = final_smoothing(self.T - t)
+            if fs > DOLFIN_EPS:
+                if self.cost_functional_dict["discretization"] == "trapezoidal" and i == len(
+                        self.v_equation.dts) - 1:
+                    J += assemble(.25 * dt * fs * (v - w) ** 2 * dx)
+                else:
+                    J += assemble(.5 * dt * fs * (v - w) ** 2 * dx)
+
 
         if "H1_smoothing" in self.cost_functional_dict:
             if disable_radial_parametrization:
@@ -395,6 +507,7 @@ class ShapeOptimizationProblem:
                 J += self.cost_functional_dict["H1_smoothing"] * assemble(
                     inner(grad(self.q_opt), grad(self.q_opt)) * dx(self.optimization_sphere.mesh))
 
+        # J+=1e-3*assemble(self.q_opt**2*dx(self.optimization_sphere.mesh)+1e-2*inner(grad(self.q_opt), grad(self.q_opt)) * dx(self.optimization_sphere.mesh))
         self.j = ReducedFunctional(J, Control(self.q_opt))
 
         return M, M2
@@ -419,12 +532,28 @@ class ShapeOptimizationProblem:
         logging.info("Shape optimization starts now")
         import time
         duration = -time.time()
-        logging.warning("Generalize the bounds")
-        # bounds = [(-1 * np.ones(self.V_sph.dim())).tolist(), (1 * np.ones(self.V_sph.dim())).tolist()]
-        bounds = None
-        self.q_opt, self.opt_results = minimize(self.j, tol=1e-6, options=self.optimization_dict, bounds=bounds,
-                                                callback=callback)
+
+        if self.optimization_dict["solver"] == "scipy":
+            logging.warning("Optimization in the L2 scalar product")
+            # the scipy way
+            bounds = None
+            self.q_opt, self.opt_results = minimize(self.j, tol=1e-6, options=self.optimization_dict["options"],
+                                                    bounds=bounds,
+                                                    callback=callback)
+        elif self.optimization_dict["solver"] == "moola":
+            # the moola way
+            # Set up moola problem and solve optimisation
+            problem_moola = MoolaOptimizationProblem(self.j)
+
+            m_moola = moola.DolfinPrimalVector(self.q_opt, inner_product=self.optimization_dict["inner_product"])
+            solver = moola.BFGS(problem_moola, m_moola, options=self.optimization_dict["options"])
+
+            self.q_opt, self.opt_results = solver.solve(callback=callback)
+        else:
+            raise Exception("Unsupported solver")
+
         duration += time.time()
+
         self.duration = duration / 60  # in minutes
 
         logging.info(f"{self.duration} minutes elapsed")
@@ -449,7 +578,7 @@ class ShapeOptimizationProblem:
     def save_results_to_file(self, path):
 
         plot(self.exact_domain.mesh)
-        plt.savefig(path + "exact_domain.svg", bbox_inches="tight", pad_inches=0)
+        plt.savefig(path + "exact_domain.png", bbox_inches="tight", pad_inches=0)
         plt.clf()
         plot(self.optimization_domain.mesh)
         plt.savefig(path + "estimated_domain.svg", bbox_inches="tight", pad_inches=0)
@@ -508,12 +637,16 @@ class ShapeOptimizationProblem:
         with open(path + "reusables" + '.pickle', 'wb') as handle:
             pickle.dump(reusables_dict, handle)
 
-    def reset(self, disable_radial_parametrization=False, start_at_optimum=False,
-              time_steps_factor=1):  # resets the optimization to the initial conditions
+        self.save_firedrake_files(path)
+
+        logging.info("Exact data successfully saved")
+
+    def reset(self, disable_radial_parametrization=False,
+              start_at_optimum=False):  # resets the optimization to the initial conditions
         logging.info("Resetting the problem")
         self.initialize_optimization_domain(self.simulated_geometry_dict)
         self.create_cost_functional(disable_radial_parametrization=disable_radial_parametrization,
-                                    start_at_optimum=start_at_optimum, time_steps_factor=time_steps_factor)
+                                    start_at_optimum=start_at_optimum)
 
     def debug_generic(self, path):
 
