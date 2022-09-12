@@ -65,13 +65,13 @@
 \newtheorem{es}[equation]{Example}
 
 % Colors
-\tcolorboxenvironment{thm}{colback=black!5!white,colframe=black!5!black, opacityframe=0}
-\tcolorboxenvironment{cor}{colback=black!5!white,colframe=black!5!black, opacityframe=0}
-\tcolorboxenvironment{lemma}{colback=black!5!white,colframe=black!5!black, opacityframe=0}
+\tcolorboxenvironment{thm}{colback=green!25!white,colframe=black!5!black, opacityframe=0}
+\tcolorboxenvironment{cor}{colback=green!5!white,colframe=black!5!black, opacityframe=0}
+\tcolorboxenvironment{lemma}{colback=green!5!white,colframe=black!5!black, opacityframe=0}
 \tcolorboxenvironment{defn}{colback=black!5!white,colframe=black!5!black, opacityframe=0}
-\tcolorboxenvironment{prop}{colback=black!5!white,colframe=black!5!black, opacityframe=0}
-\tcolorboxenvironment{ass}{colback=black!15!white,colframe=black!5!black, opacityframe=0}
-\tcolorboxenvironment{pb}{colback=black!10!white,colframe=black!5!black, opacityframe=0}
+\tcolorboxenvironment{prop}{colback=green!15!white,colframe=black!5!black, opacityframe=0}
+\tcolorboxenvironment{ass}{colback=red!15!white,colframe=black!5!black, opacityframe=0}
+\tcolorboxenvironment{pb}{colback=blue!15!white,colframe=black!5!black, opacityframe=0}
 \tcolorboxenvironment{es}{colback=black!5!white,colframe=black!5!black, opacityframe=0}
 \tcolorboxenvironment{obs}{colback=black!5!white,colframe=black!5!black, opacityframe=0}
 
@@ -3295,30 +3295,57 @@ where $a(u,v) =\ds \int_{\Omega}\nabla u \nabla v + k \int_{\Omega} u  v$, and $
 
 %4.1, for an explanation), ?? TODO
 
-We define a polygonal/polyhedral meshing $\Omega_h$ of $\Omega$, which has boundary nodes on $\partial \Omega$. We denote by $\Gamma_{D,h}, \Gamma_{N,h}$ the discrete Dirichlet and Neumann boundaries, and by $S^1_{h,D} $ the space of piecewise linear lagrangian FEM $S^1_h$ which are zero on $\Gamma_{D,h}$.
+We define a polygonal/polyhedral meshing $\Omega_h$ (open) of $\Omega$, which has boundary nodes on $\partial \Omega$. We denote by $\Gamma_{D,h}, \Gamma_{N,h}$ the discrete Dirichlet and Neumann boundaries, and by $S^1_{h,D} $ the space of piecewise linear lagrangian FEM $S^1_h$ which are zero on $\Gamma_{D,h}$.
 
 We collect some useful tools to relate $\Omega$ and $\Omega_h$.
 
 \begin{prop}[Deformation into smooth boundary]
-Assume a quasi-uniform mesh. There exists, for $h$ small enough, $G_h: \Omega_h \rightarrow \overline{\Omega}$ satisfying:
+\label{prop:G_h}
+Assume a quasi-uniform mesh. There exists, for $h$ small enough, $G_h: \overline{\Omega_h} \rightarrow \overline{\Omega}$ satisfying:
 
 \begin{itemize}
-	\item $G_h$ is a homeomorphism \textcolor{red}{Injectivity is actually not so easy, let's assume this}
-	\item $G_h|_T$ is of class $C^2(T)$ for all closed simplices $T$ composing $\Omega_h$
 	\item $G_h|_T = \id$ on interior simplices $T$ (those with at most one node on $\partial \Omega$)
-	\item $G_h(\partial \Omega_h) = \partial \Omega$
-	\item $G_h|_e=p$, where $e$ is an edge/face of $\partial \Omega_H$ and $p$ is the closest point operator to $\partial \Omega$ (so that $G_h|_{\partial \Omega_h}$ coincides with the boundary lift in Definition 4.12 of \cite{elliott})
+	\item $G_h(\partial \Omega_h) = \partial \Omega$, $G_h|_e=p$, where $e$ is an edge/face of $\partial \Omega_h$ and $p$ is the closest point operator to $\partial \Omega$ (so that $G_h|_{\partial \Omega_h}$ coincides with the boundary lift in Definition 4.12 of \cite{elliott})
+	\item $G_h$ is bi-Lipschitz, with $\norm{\id -G_h}_{W^{1,\infty}}(\Omega_h)\lesssim h$
+	\item given $G_h(K)$, all the facets are at least $C^1$ smooth
+	\item $G_h|_T$ is of class $C^1(T)$ for all closed simplices $T$ composing $\Omega_h$
 \end{itemize}
 
 \end{prop}
 \begin{mproof}
-See Section 4.1 of \cite{elliott} for the first three points, while the second-last one follows from $G_h$ being a homeomorphism.
 
-The last one is a consequence of the definition of $G_h$, see \cite{elliott}.
+\textcolor{red}{This proof is lacking a bound on the quasiconvexity constant and the fact that $G_h$ is surjective}
+
+See Section 4.1 of \cite{elliott} for the first two points, which follow from the definition of $G_h$.
+
+The last one is contained in Lemma 8.12, \cite{ranner}. We give more detail for the third and fourth points \textcolor{red}{which is not addressed in \cite{ranner}, \cite{elliott}}.
+
+\underline{$G_h$ is a bi-Lipschitz homeomorphism}
+
+We first note that $G_h|_K$ agrees with $G_h|_{K'}$ for $K\cap K' \neq \emptyset$. Therefore $G_h$ is continuous on $\overline{\Omega_h}$.
+
+Then, we also note that $G_h$ has $DG_h \in L^\infty(\Omega_h)$ as weak derivative, where the gradient is defined element-wise. To see this, pick $\phi \in C^\infty_c(\Omega_h)$.
+
+Then, applying \cref{thm:ibp}:
+$$\int_{\Omega_h} G_h \partial_i \phi = \sum_K \int_{\partial K}G_h|_{K} \phi \nu_{K,i}  - \int_{\Omega_h}\partial_i G_h \phi$$
+
+The first integral on the right is zero, because $G_h$ is continuous, the normal on the same interior facet is equal of opposite sign when referred to the two parent simplices it belongs to, and because $\phi=0$ on exterior facets.
+
+Thus, $G_h \in W^{1,\infty}(\Omega_h)$, and Lemma 8.12 of \cite{ranner} shows that $\norm{\id -G_h}_{W^{1,\infty}(\Omega_h)}\lesssim h$. Thanks to \cref{prop:lip}, we obtain that $G_h$ has a bounded Lipschitz representative, i.e., $G_h$ is bounded and Lipschitz on $\Omega_h$.Then $G_h$ is Lipschitz on all of $\overline{\Omega_h}$, and $\text{Lip}(\id -G_h) \lesssim  \norm{\id -G_h}_{W^{1,\infty}(\Omega_h)}$. (\textcolor{red}{This is not trivial: one could use quasiconvexity a sin Heinonen, and then bound the quasiconvexity constant uniformly})
+
+So, $G_h$ is a Lipschitz perturbation of identity, on $\overline{\Omega_h}$.  An application of the reverse triangle inequality also shows that $|G_h(x)-G_h(y)|\geq (1-\text{Lip}(G_h))|x-y|$, which shows that $G_h$ is bijective (for small $h$), with a Lipschitz inverse.
+
+%By compactness arguments, we see that it is a closed map $\overline{\Omega_h}\rightarrow\overline{\Omega}$.
+
+
+\underline{Smooth facets of curved simplex}
+
+From the last point we know that $G_h$ is of class $C^1$ when restricted to $K$, a closed simplex. By Whitney's extension theorem on simplices (see \cite{whitney}) we can conclude that $G_h|_K$ extends to a $C^1$ function on a neighbourhood of $K$. This extension is injective on $K$ as we saw before, and by Lemma 8.16 of \cite{ranner} (the determinant of $G_h$ is small), it has invertible jacobian on $K$. An application of a global version of the inverse function theorem (see e.g. \cite{pollack}, Chapter 1 \textcolor{red}{and wikipedia}) yields that $G_h$ extends to a $C^1$ diffeomorphism around $K$, so that the smoothness of $\partial K$ follows.
 
 \end{mproof}
 
 Given $G_h$, we can define pullbacks and pushforwards of functions defined on $\Omega$ or $\Omega_h$.
+
 
 \begin{prop}[Lift]
 \label{prop:lift}
@@ -3327,8 +3354,8 @@ We define, for $u: \Omega \rightarrow \mR$, $u^{-l}:=u\circ G_h : \Omega_h \righ
 There holds:
 
 \begin{itemize}
-	\item if $v\in H^m(T)$ if and only if $v^{-l} \in H^m(G_h(T))$, for $m=0,1$
-	\item for $v_h \in S^1_{h}$, we have $v_h^l \in H^1(\Omega)$
+	\item if $v\in H^m(Q)$ if and only if $v^{-l} \in H^m(G_h(Q))$, for $m=0,1$, and $Q\subseteq \Omega_h$ open
+%	\item for $v_h \in S^1_{h}$, we have $v_h^l \in H^1(\Omega)$
 	\item for $v_h \in S^1_{h,D}$, we have $v_h^l \in H^1(\Omega)$, with zero trace on $\Gamma_D$ 
 	\item for $v_h  \in S^1_h$, one has the following norm equivalences, which don't depend on $h$:
 	\begin{enumerate}
@@ -3344,13 +3371,15 @@ There holds:
 
 \begin{mproof}
 
-We refer to \cite{bernardi} for the first point, to Lemma 2.3. This is applicable as $G_h(T)$ is a curved simplex of class $C^1$ in the notation of \cite{bernardi}, and this fact is guaranteed by lemma 8.13 and by following example 2 of \cite{bernardi}.
+The first point follows by the fact that $G_h$ is bi-Lipschitz, see \cref{prop:G_h}, and Theorem 11.53 of \cite{leoni}.
+
+%We refer to \cite{bernardi} for the first point, to Lemma 2.3. This is applicable as $G_h(T)$ is a curved simplex of class $C^1$ in the notation of \cite{bernardi}, and this fact is guaranteed by lemma 8.13 and by following example 2 of \cite{bernardi}.
 %
 %The lifted $v_h$ mantains continuity at the edges, so that $v_h^l$ is in $H^1(\Omega)$ by an application of the divergence theorem on every (possibly curved) simplex $T^l$ composing $\Omega$.
 %
 %For the zero trace property, given that $v_h^l \in H^1(\Omega)\cap C(\overline{\Omega})$, we use $G_h(\partial \Gamma_{D,h}) = \partial \Gamma_D$.
 
-The second and third points follow by applying the arguments about conformity outlined in section 5 of \cite{bernardi}. Following again Example 2 therein, we discover that we can apply Proposition and Corollary 5.1.
+The second point follows by applying the arguments about conformity outlined in section 5 of \cite{bernardi}. Following Example 2 therein, we discover that we can apply Proposition and Corollary 5.1.
 
 The last point can be found in \cite{elliott}, see e.g Proposition 4.9 and 4.13.
 %
@@ -3407,8 +3436,21 @@ See Proposition 5.4 of \cite{elliott}.
 
 \begin{prop}[Approximation of linear and bilinear forms]
 \label{prop:lin_appr}
-\textcolor{red}{Prop. 4.6 of Edelmann}, add this.
+Let $v_h, w_h \in S^1_h$, $v,w \in H^2(\Omega)$. Then:
+
+\begin{itemize}
+	\item $\ds \left | \int_\Omega v_h^lw_h^l - \int_{\Omega_h}v_hw_h\right |\lesssim h \norm{v_h}_{L^2(\Omega_h)}\norm{w_h}_{L^2(\Omega_h)}$
+	\item $\ds \left | \int_\Omega v_h^lw_h^l - \int_{\Omega_h}v_hw_h\right |\lesssim h^2 \norm{v_h}_{H^1(\Omega_h)}\norm{w_h}_{H^1(\Omega_h)}$
+	\item $\ds \left | \int_{\partial \Omega} v_h^lw_h^l - \int_{\partial \Omega_h}v_hw_h\right |\lesssim h^2 \norm{v_h}_{L^2(\partial \Omega_h)}\norm{w_h}_{L^2(\partial \Omega_h)}$
+	\item $\ds \left | \int_\Omega \nabla v_h^l\nabla w_h^l - \int_{\Omega_h}\nabla v_h\nabla w_h\right |\lesssim h \norm{v_h}_{H^1(\Omega_h)}\norm{w_h}_{H^1(\Omega_h)}$
+	\item $\ds \left | \int_\Omega \nabla v\nabla w - \int_{\Omega_h}\nabla v^{-l}\nabla w^{-l}\right |\lesssim h^2 \norm{v}_{H^2(\Omega)}\norm{w}_{H^2(\Omega)}$
+
+\end{itemize}
 \end{prop}
+
+\begin{mproof}
+See \cite{edelmann}, and in particular, for the third point, Lemma 5.6 of \cite{kovacs}.
+\end{mproof}
 
 \begin{thm}[$H^1$ estimate]
 \label{thm:H1_est_ell}
@@ -4139,7 +4181,7 @@ If however we content ourselves with estimating the convergence of the derivativ
 Under \cref{ass:smoothness_par_discr}, \cref{ass:discr_reg} and \cref{ass:basic_par_mix} we have, for all $w \in L^2(I,H^1(\Omega))$:
 
 \begin{align*}
-	something
+\left | \int_I (\partial_t(u-u_h^l), w)_{L^2(\Omega)}\right |\lesssim h^2 \norm{w}_{L^2(I,H^1(\Omega)}
 \end{align*}
 
 \end{cor}
@@ -4174,7 +4216,7 @@ where in the last step we used the supposed stability of $\pi_h$. Integrating in
 
 We can also estimate:
 \begin{align*}
-\left | \int_I (\rho_t, w)_{L^2(\Omega)}\right |\lesssim \ind{as in the proof of \cref{thm:semidiscrete_error_bound}}\lesssim\\
+\left | \int_I (\rho_t, w)_{L^2(\Omega)}\right |\lesssim \ind{as in the proof of \cref{thm:semidiscrete_error_bound}}\lesssim\\\int_I
 h^2 (\norm{\partial_t w}_{H^2(\Omega)} + \norm{\partial_t g_D}_{H^2(\Gamma_D)})\norm{w}_{H^1(\Omega_h)} \lesssim \ind{Cauchy-Schwarz}\lesssim\\
 h^2 \sqrt{\norm{\partial_t u}_{H^2(\Omega)}^2 + \norm{\partial_t g_D}_{H^2(\Gamma_D)}^2}\norm{w}_{L^2(I,H^1(\Omega))}
 \end{align*}
@@ -4211,7 +4253,7 @@ In fact: $|\pi_h w|_{H^1(\Omega_h)}\leq |\pi_h w -\pi^* w^{-l}|_{H^1(\Omega_h)} 
 
 We can apply an inverse inequality to the first member: $|\pi_h w -\pi^* w^{-l}|_{H^1(\Omega_h)}\lesssim h^{-1}\norm{\pi_h w -\pi^* w^{-l}}_{L^2(\Omega_h)}\lesssim \norm{w}_{L^2(\Omega)}$.
 
-For the second term, consider a suitable $w_h \in S^{1}_{h,D}$. We have: $|\pi_h^* w^{-l}|_{H^1(\Omega_h)}\leq |\pi_h^* (w^{-l}-w_h)|_{H^1(\Omega_h)} +|\pi_h^* w_h|_{H^1(\Omega_h)}\lesssim h^{-1}\norm{\pi_h^*(w^{-l}-w_h)}_{L^2(\Omega_h)} +\norm{w_h}_{H^1(\Omega_h)}$, where we again applied inverse inequalities, together with the fact that $\pi_h^* w_h = w_h$ for $w_h \in S^1_{h,D}$ (i.e $\pi_h^*$ is really a projection, unlike $\pi_h$). Moreover, $\norm{\pi_h^* v}_{L^2(\Omega_h)}\leq \norm{v}_{L^2(\Omega_h)}$.
+For the second term, consider a suitable $w_h \in S^{1}_{h,D}$. We have: $|\pi_h^* w^{-l}|_{H^1(\Omega_h)}\leq |\pi_h^* (w^{-l}-w_h)|_{H^1(\Omega_h)} +|\pi_h^* w_h|_{H^1(\Omega_h)}\lesssim h^{-1}\norm{\pi_h^*(w^{-l}-w_h)}_{L^2(\Omega_h)} +\norm{w_h}_{H^1(\Omega_h)}$, where we again applied inverse inequalities, together with the fact that $\pi_h^* w_h = w_h$ for $w_h \in S^1_{h,D}$ (i.e $\pi_h^*$ is really a projection, unlike $\pi_h$). Moreover, $\norm{\pi_h^* v}_{L^2(\Omega_h)}\leq \norm{v}_{L^2(\Omega_h)}$, so that $|\pi_h^* w^{-l}|_{H^1(\Omega_h)}\leq \lesssim h^{-1}\norm{w^{-l}-w_h}_{L^2(\Omega_h)} +\norm{w_h}_{H^1(\Omega_h)}$
 
 So, if there holds $\norm{w^{-l}-w_h}_{L^2(\Omega_h)}\lesssim h \norm{w}_{H^1(\Omega)}$ and $\norm{w_h}_{H^1(\Omega_h)}\lesssim \norm{w}_{H^1(\Omega)}$, then we are done.
 
