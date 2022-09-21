@@ -22,9 +22,9 @@
  \geometry{
  a4paper,
  left=10mm,
- top=10mm,
+ top=20mm,
  right=10mm,
- bottom=10mm,
+ bottom=20mm,
  }
 \addbibresource{Bibliography/bibliography.bib}
 
@@ -498,6 +498,7 @@ And now, $J(\tau+\delta\te_k)-J(\tau) = J((\id+\delta\te_k \circ \tau^{-1})\circ
 \end{mproof}
 
 \begin{prop}[Gateaux differentiability of $J$]
+\label{prop:gateaux_diff}
 Given $\tau \in \cT_a$, $J$ is Gateaux differentiable at $\tau$ with respect to the $W^{1,\infty}$ topology. The Gateaux differential is:
 
 
@@ -963,7 +964,8 @@ These bounds are respectively: $C(\eps)(\norm{h}_\infty + 2\norm{D_T h}_\infty)$
 We want to increase the regularity of $f$ and see an increase in the regularity of $\partial \Omega_f$.
 
 \begin{prop}[Smooth radial function yields smooth star shaped domain]
-Let $f>0$ which is either $C^{1,1}(\mS)$ (that is, $C^1$ with all the components of $D_T f$ Lipschitz) ar $C^2(\mS)$. We say $f \in C^o(\mS)$. 
+\label{prop:Co_domain}
+Let $f>0$ which is either $C^{1,1}(\mS)$ (that is, $C^1$ with all the components of $D_T f$ Lipschitz) or $C^2(\mS)$. We say $f \in C^o(\mS)$. 
 
 Then, $\Omega_f$ has boundary of class $C^o$.
 
@@ -1028,6 +1030,131 @@ We have therefore a Lipschitz and $C^o$ domain in the style of \cite{burenkov}, 
 \underline{Remarks about the usage of the implicit function theorem}
 
 Examining the proofs of the inverse and implicit function theorems as given e.g. at pages 310, 311 of \cite{gilardi2}, we see that solving $f=0$ for $f$ Lipschitz and $C^o$, yields a Lipschitz and $C^o$ implicit function.
+
+\end{mproof}
+
+\chapter{Numerical approximation}
+
+\section{States and adjoints}
+
+Here we discuss the numerical approximation of the state and adjoint equations as seen in \cref{prop:gateaux_diff}. Let's have one unified problem for the states, one unified problem for the adjoints, just like in \cref{pb:mix}.
+
+\begin{pb}[Unified notation for state and adjoint equations]
+\label{pb:uni_state_adj}
+State equations:
+
+\begin{align*}
+\left\{\begin{matrix}
+u_t-\Delta u =0 & \text{ in } U\times (0,T)\\ 
+u = u_D & \text{ on } \Gamma_D\times(0,T)\\ 
+\partial_\nu u = u_N & \text{ on } \Gamma_N\times(0,T)\\ 
+u(0) =0 & 
+\end{matrix}\right.
+\end{align*}
+
+Adjoint equations:
+
+\begin{align*}
+\left\{\begin{matrix}
+-a_t-\Delta a =\eta (v-w) & \text{ in } U\times (0,T)\\ 
+a = 0 & \text{ on } \Gamma_D\times(0,T)\\ 
+\partial_\nu a = 0 & \text{ on } \Gamma_N\times(0,T)\\ 
+a(T) =0 & 
+\end{matrix}\right.
+\end{align*}
+
+We intend that $u$ can be $v$, in which case $a$ is $p$, or $u$ is $w$ and then $a$ is $q$, so that the Dirichlet and Neumann boundaries are coherent between state and adjoint equation. Note that we added a temporal weighting function $\eta$ which we will later specify.
+
+\end{pb}
+
+We have dropped, for simplicity, all the references to the domain transformation. Let us discuss the presence of the temporal weight $\eta$. This is a function $\eta: [0,T] \rightarrow \mR$ which in the above problem, we wrote equal for both adjoint states. This is a slight abuse of notation, in fact, for $p$ and $q$ we should be writing $\eta$ and $-\eta$.
+
+Its presence in the right hand side of the adjoint equation can be justified by modifying the energy function in \cref{pb:shopt} to be:
+
+$$J_\eta(\tau) = \frac{1}{2} \int_I \eta \norm{v_\tau - w_\tau}_{H_T}^2$$
+
+This modification is reasonable for a reasonable $\eta$ and its main purpose is to facilitate the analysis of the numerical discretization. In particular, we choose $\eta$ to be a smooth cut-off function that is positive in $(0,T)$, $1$ in $[0, T-\epsilon]$ and $0$ in $[T, +\infty]$. Note that in case a solution to the "classical" problem exists, then it is also a solution to this new problem, and viceversa. In fact, $J_\eta(\tau)=0 \implies \eta \norm{v_\tau - w_\tau}_{H_T}^2=0 \implies v_\tau = w_\tau$. This equality holds on all $I=[0,T]$ by the time continuity of the states.
+
+Modifying the final-time behaviour of the energy might have detrimental effects if the boundary data exhibts strong variations close to final time, which is physically implausible, given the physical nature of the partial differential equation. In fact, it is known that solutions to the heat equation tend to a steady state for long times, and we are only measuring the value of one such solution on the external boundary of $U$: we thus expect that in practice, this boundary data will not exhibit oscillatory behaviour for large times.
+
+We now discretize states and adjoints using the scheme \cref{pb:num_scheme} (the adjoint equation can be cast into a standard heat equation by time reversal). If one chose an optimize-then-discretize approach this would be satisfactory (at least with regards to the numerical approximation of states and adjoints). However we will conduct experiments in a discretize-then-optimize setting, so that the upcoming results are only partially satisfactory \textcolor{red}{add something on commutation}.
+
+\begin{ass}[Hypothesis for the numerical discretization of \cref{pb:uni_state_adj} ]
+\label{ass:num_discr_shopt}
+\textcolor{white}{ }
+\begin{enumerate}
+	\item $\partial U \in C^2$ (the star shaped functions must be of class $C^2$)
+	\item $u_D \in H^1(I, H^{2}(\Gamma_D)) \cap H^{1/\theta+1}(I,H^{3/2}(\Gamma_D))$, $u_N \in H^2(I,L^2(\Gamma_N)) \cap H^{1/\theta}(I, H^2(\Gamma_D))$
+	\item $g_D(0)=0$ and $g_N^{(k)}(0), g_D^{(k+1)}(0)  = 0$ for $k=0,..., 1/\theta$
+	\item $\eta^{(k)}(T)  = 0$ for $k=0,..., 1/\theta-1$, $\eta \geq 0$ and $\eta \in C^{\infty}([0,T];\mR)$
+\end{enumerate}
+
+\end{ass}
+
+\begin{prop}[Optimize-then-discretize approximation of state and adjoint equations]
+We have that \cref{ass:num_discr_shopt} is fulfilled. Therefore, for $0\leq k \leq K$:
+
+\begin{align*}
+	\norm{u(t^k)-(u_h^k)^l}_{L^2(\Omega)}\lesssim  h^2 + (\delta t)^{1/\theta}\\
+	\sqrt{\delta t \sum_{k=0}^{K-1} \norm{\theta(u(t^{k+1}) - u_h^{k+1})^l) + (1-\theta)(u(t^{k}) - u_h^{k})^l)}_{H^1(\Omega)}^2} \lesssim h + (\delta t)^{1/\theta}\\
+	\left | \int_I (\partial_t u , w_K)_{L^2(\Omega)}-\delta t \sum_{k=0}^{K-1}\left ( \frac{(u^{k+1}_h)^l - (u_h^k)^l}{\delta t} , w_{K,k}\right )_{L^2(\Omega)} \right |\lesssim \left ( h^2 + (\delta t)^{1/\theta} \right ) \norm{w_K}_{L^2(I,H^1_{0,D}(\Omega))}
+\end{align*}
+
+and
+
+\begin{align*}
+	\norm{a(t^k)-(a_h^k)^l}_{L^2(\Omega)}\lesssim  h^2 + (\delta t)^{1/\theta}\\
+	\sqrt{\delta t \sum_{k=1}^{K} \norm{(1-\theta)(a(t^{k}) - a_h^{k})^l) + \theta(a(t^{k-1}) - a_h^{k-1})^l)}_{H^1(\Omega)}^2} \lesssim h + (\delta t)^{1/\theta}\\
+	\left |- \int_I (\partial_t a , w_K)_{L^2(\Omega)}-\delta t \sum_{k=1}^{K}\left ( \frac{(a^{k-1}_h)^l - (a_h^{k})^l}{\delta t} , w_{K,k}\right )_{L^2(\Omega)} \right |\lesssim \left ( h^2 + (\delta t)^{1/\theta} \right ) \norm{w_K}_{L^2(I,H^1_{0,D}(\Omega))}
+\end{align*}
+
+where $w_K$ is piecewise constant on the time discretization, and with values $w_{K,k}$, on $[t^k,t^{k+1}]$, that belong to $H^1_{0,D}(\Omega)$ (i.e. it is $0$ on the Dirichlet boundary), and $\lesssim$ means $\leq C$, with $C\geq 0$ independent of $h$ and $\delta t$.
+
+\end{prop}
+
+\begin{mproof}
+
+We show all the hypothesis necessary to obtain \cref{thm:fully_discr_est_par} (where we track from there all the necessary assumptions), and then bound the constants therein, uniformly with respect to the space/time discretization. We do this for $u$ at first, then for $v$. We do not track the dependency on the domain $U$. This is just a more detailed repetition of the proof of the more general result \cref{cor:actual_par_est}.
+
+We note at first that in the star shaped setting, $\partial U \in C^2$ can be ensured by \cref{prop:Co_domain}.
+
+\underline{Smoothness of $u$: \cref{ass:smoothness_par_discr} and  \cref{ass:basic_par_mix}}
+
+We need to ensure that $u \in H^1(I,H^2(U))$. To do so we turn to \cref{thm:mix_reg}, which we apply with $k=1$. Hypothesis $1$ to $3$ suffice. 
+
+\underline{Assumptions for spatial semidiscretization of $u$: \cref{ass:discr_reg}}
+
+They are also satisfied by $1-3$.
+
+\underline{Assumptions for full discretization of $u$: \cref{ass:full_discr_smoothness}}
+
+The smoothness of the problem data is ensured by point $2$. We turn to the compatibility conditions of order $1,...,1/\theta$. The compatibility "residuals" $\delta_h^k(0)$ are all $0$ (see \cref{ass:full_discr_smoothness} for the notation) by hypothesis $3$.
+
+\underline{Bounding the constants $A,B,C,D$ of $u$: \cref{thm:fully_discr_est_par}}
+
+To bound $A,B$ uniformly with respect to $h$ we only need to note that the equation for $u$ has no source term. To bound $C$, this last fact, together with $\delta_h^k(0)$, $k=0,...,1/\theta$, suffices. $D=0$, in turn.
+
+We now turn verify the same facts for the adjoint states $a$.
+
+\underline{Smoothness of $a$}
+
+We need to ensure that $a \in H^1(I,H^2(U))$. To apply \cref{thm:mix_reg} with $k=1$ we see that $\eta(T)(v(T)-w(T))$ should be zero on the Dirichlet boundary, which it is, given the fact tht $\eta(T)=0$. We also need $v,w$ (so, generically, $u$), to be $H^1(I, L^2(U))$, which we have already checked (we even have $u \in H^1(I,H^2(U))$.  \cref{ass:basic_par_mix} is also easily verified.
+
+\underline{Assumptions for spatial semidiscretization of $a$}
+
+To fulfill \cref{ass:discr_reg} we see by the triangle inequality that $\norm{\eta(u-u_h^l)}_{L^2(U)}\lesssim C_u h^2$ would suffice, for a suitable $C_u$ (see \cref{ass:discr_reg} for the definition of $C_u$). Actually, given the properties of $\eta$, only $\norm{u-u_h^l}_{L^2(U)}\lesssim C_u h^2$ has to be asked. But the hypothesis we have verified for $u$ were sufficient for the conclusions of \cref{thm:semidiscrete_error_bound} to hold. We can therefore take $C_u = A = A(u)$, which is a constant in space and time, independent of $\delta t$ and $h$, as we saw before.
+
+\underline{Assumptions for full discretization of $a$}
+
+The compatibility conditions listed in \cref{ass:full_discr_smoothness} are satisfied as long as $\eta(T)=0$ in the case $\theta = 1$, and also $\eta'(T)=0$ in the case $\theta=1/2$. We also have $u_h \in H^{1/\theta}(I,S^1_h)$ by $2$.
+
+\underline{Bounding the constants $A(a),B(a),C(a),D(a)$ of $a$}
+
+This would be the last step to ensure the thesis of \cref{thm:fully_discr_est_par}, for $a$. Starting from $D(a)^2$, we see, thanks to the boundedness of $\eta$, that $D(a)^2 \leq \delta t \sum_{k=0}^{K-1}\norm{\theta(u_h(t^{k+1})-u_h^{k+1}) + (1-\theta)(u_h(t^k)-u_h^k)}^2_{L^2(\Omega_h)}$. This $O(\delta t^{2/\theta})$ by \cref{prop:d_vd_sd} and the above reasonings ($D=D(u)=0$, $C=C(u)$ is bounded uniformly).
+
+Moving on to $C(a)$. We see that there only remains to bound, by the triangle inequality, the already checked compatibility relations and the boundedness of $\eta$, the term $\ds \int_I\norm{u_h^{1/\theta}}_{-1,h}^2\lesssim \int_I\norm{u_h^{1/\theta}}_{L^2(\Omega_h)}^2$. This can be done as above \cref{eqn:dd_est}.
+
+To bound $A(a)$ (equivalently $B(a)$), we need to check the boundedness of $\ds \int_IC_{\eta(v-w)}^2 + \int_I \norm{\eta(v_h - w_h)}_{H^1(\Omega_h)}^2$. In fact, we have chosen $\eta(v_h - w_h) \in S^1_h$ as a right hand side for the semidiscrete equation of $a_h$. A triangle inequality and basic energy estimates yield a bound for the second term. The definition of $C_{\eta(v-w)}$ comes directly from \cref{ass:discr_reg} and we see that, thanks to \cref{thm:semidiscrete_error_bound}, it is dominated by $A(v)+A(w)$, which we have already estimated.
 
 \end{mproof}
 
@@ -2117,7 +2244,7 @@ It is an application of \cref{thm:well_pos_parabolic}, \cref{thm:reg_time} and \
 
 Here, we build on the results of the last subsections, and prove higher spatial and time regularity, under suitable smoothness assumptions.
 
-The overall problem, comprehending \cref{pb:diri}, \cref{pb:neu}, is:
+The overall problem, comprehensive of both \cref{pb:diri} and \cref{pb:neu}, is:
 
 \begin{pb}[Inhomogeneous heat equation, general case]
 \label{pb:mix}
@@ -2141,7 +2268,9 @@ where $\langle G(t), v \rangle_{V^*,V}:=\int_{\Gamma_N} g(t)\tr v d\sigma$, $\si
 
 \end{pb}
 
-Note, for the regular case, we will be discussing only a homogeneous initial condition. This will suffice for our purposes. A generalization will entail handling more complicated compatibility conditions, see \cite{lions}, Chapter 2. Also note that the requirements imposed on the data below, are only sufficient, to ensure the desired regularity.
+\textcolor{red}{Remove the comment below}
+
+Note, for the regular case, we will be discussing only a homogeneous initial condition. This will suffice for our purposes. A generalization would entail handling more complicated compatibility conditions, see \cite{lions}, Chapter 2. Also note that the requirements imposed on the data below, are only sufficient, to ensure the desired regularity.
 
 \begin{ass}[Basic assumption for \cref{pb:mix}]
 \label{ass:basic_par_mix}
@@ -2171,6 +2300,8 @@ G_D(t) = 0 & \text{ on } \Gamma_N
 $$
 
 We ask, aside from \cref{ass:basic_par_mix}:
+
+\textcolor{red}{Make it more general, and hide the fact that this won't work unless I consider more general theories of compatibility conditions. In particular, just put the conditions in terms of the derivatives of $u$ at initial time}
 
 \begin{enumerate}
 %	\item $\partial U \in C^{1,1}$
@@ -3636,6 +3767,8 @@ On top of \cref{ass:inh_ell} we have assumed:
 
 \section{Parabolic problems}
 
+\subsection{Semidiscrete estimates}
+
 We partly build upon the previous section, to deal with problems of the following form.
 
 \textcolor{red}{Add a more precise reference to the triangulation, quasi uniformity...}
@@ -3766,7 +3899,7 @@ Follows from \cref{lemma:bochner_Hk_map}, and the fact that $R_c$ is linear and 
 
 \end{mproof}
 
-\begin{ass}[Smoothness on solution]
+\begin{ass}[Smoothness requirement on continuous solution]
 \label{ass:smoothness_par_discr}
 
 We assume that $u \in H^1(I, H^2(\Omega))$.
@@ -3791,8 +3924,8 @@ We are making the following assumptions on the data:
 \begin{itemize}
 	\item $\partial \Omega \in C^2$
 	\item $g_N \in L^2(I,H^2(\Omega))$, so that $g_{N,h}:=\Pi_h g_N \in L^2(I, S^1_h(\Gamma_{N,h}))$
-	\item $g_N \in H^1(I, H^{2}(\Gamma_D))$, so that, with reference to \cref{prop:trace}, we have $G_D:=Eg_D \in H^1(I,H^2(\Omega))$ and therefore (see \cref{lemma:bochner_Hk_map}), there holds	 $G_{D,h}:=\Pi_h G_D \in H^1(I, S^1_h)$ and $g_{D,h}:=G_{D,h}|_{\Gamma_{D,h}} \in H^1(I, S^1_h(\Gamma_{D,h}))$ (note, $g_{D,h} = \Pi_h g_D$)
-	\item $f \in L^2(I,L^2(\Omega))$ and $f_h \in L^2(I, S^1_h)$, with error bound  $\norm{f-f_h^l}\lesssim C_f h^2$, for a.e. $t$, and also $\norm{f_h}_{H^1(\Omega_h)}\lesssim C_f$, $C_f$ independent of $h$ and belonging to $L^2(I)$.
+	\item $g_D \in H^1(I, H^{2}(\Gamma_D))$, so that, with reference to \cref{prop:trace}, we have $G_D:=Eg_D \in H^1(I,H^2(\Omega))$ and therefore (see \cref{lemma:bochner_Hk_map}), there holds	 $G_{D,h}:=\Pi_h G_D \in H^1(I, S^1_h)$ and $g_{D,h}:=G_{D,h}|_{\Gamma_{D,h}} \in H^1(I, S^1_h(\Gamma_{D,h}))$ (note, $g_{D,h} = \Pi_h g_D$)
+	\item $f \in L^2(I,L^2(\Omega))$ and $f_h \in L^2(I, S^1_h)$, with error bound  $\norm{f-f_h^l}_{L^2(\Omega_h)}\lesssim C_f h^2$, for a.e. $t$, $C_f$ independent of $h$ and belonging to $L^2(I)$.
 	\item $u_0\in H^2(\Omega$), with the compatibility condition $u_{0} = g_{D}(0)$ on $\Gamma_{D}$, and $u_{0h}:=\Pi_h u_0$
 \end{itemize}
 
@@ -3803,10 +3936,11 @@ We are making the following assumptions on the data:
 \end{pb}
 
 \begin{prop}[Well posedness of \cref{pb:inh_parabolic_discr}]
+\label{prop:wp_discr_par}
 There exists a unique solution to \cref{pb:inh_parabolic_discr}, and this satisfies the stability estimate, holding for small enough $h$:
 
 \begin{align*}
-	\norm{u_h}_{C([0,T],L^2(\Omega_h))} + \norm{u_h}_{L^2(I,H^1(\Omega_h))}\lesssim \\C_f + \norm{g_{N}}_{L^2(I,H^2(\Gamma_{N}))} + \norm{g_D}_{H^1(I,H^{3/2}(\Gamma_D)))} + \norm{u_{0}}_{H^2(\Omega)}
+	\norm{u_h}_{C([0,T],L^2(\Omega_h))} + \norm{u_h}_{L^2(I,H^1(\Omega_h))}\lesssim \\\norm{f_h}_{L^2(I,(S^1_{h,D})^*)}  + \norm{g_{N}}_{L^2(I,H^2(\Gamma_{N}))} + \norm{g_D}_{H^1(I,H^{3/2}(\Gamma_D)))} + \norm{u_{0}}_{H^2(\Omega)}
 \end{align*}
 
 We remember that $\lesssim$ stands for $\leq C$, $C\geq 0$ independent of $h$ and $t$.
@@ -3817,13 +3951,14 @@ We remember that $\lesssim$ stands for $\leq C$, $C\geq 0$ independent of $h$ an
 
 \underline{Existence}
 
-A function $\delta_h \in H^1(I, S^1_{D,h})$ can be written as $u_h=\sum_j d_j(t)v_{hj}$, for the usual finite element basis $\{v_{hj}\}_j$ of $S^1_{D,h}$. We employ the splitting technique $\delta_h = u_h - G_{D,h}$, where $G_{D,h} \in H^1(I,S^1_h)$ is a suitable extension. By testing with the equation of \cref{pb:inh_parabolic_discr} with the basis functions $v_{hj}$ we obtain the problem:
-\begin{align*}
-	Md'(t)+Ad(t)= F(t), \text{ a.e. } t\\
-	d(0) = D_0	
-\end{align*}
+A function $\delta_h \in H^1(I, S^1_{D,h})$ can be written as $\delta_h=\sum_j d_{hj}(t)v_{hj}$, for the usual finite element basis $\{v_{hj}\}_j$ of $S^1_{D,h}$. We employ the splitting technique $\delta_h = u_h - G_{D,h}$. By testing with the equation of \cref{pb:inh_parabolic_discr} with the basis functions $v_{hj}$ we obtain the problem:
+\begin{align}
+\label{eqn:ode}
+	M_h d_h'(t)+A_hd_h(t)= F_h(t), \text{ a.e. } t\\
+	d_h(0) = d_{h,0}	
+\end{align}
 
-Here, $M_{ij} = (v_{hi}, v_{hj})_{L^2(\Omega_h)}, A_{ij} = a(v_{hi}, v_{hj})$ are the so called mass and stiffness matrices, both invertible. We also have $F_j(t):= - (\partial_t G_{D,h}, v_{hj})_{L^2(\Omega_h)} - a_h(G_{D,h}, v_{hj}) + (f_h, v_{hj})_{L^2(\Omega_h)} + (g_{N,h}, v_{hj})_{L^2(\Gamma_{N,h})}$, together with $D_0:= u_{0h} - G_{D,h}$ (we are able to come to this problem thanks to the assumed compatibility between $u_{0h}, g_{D,h}$).
+Here, $M_{h,ij} = (v_{hi}, v_{hj})_{L^2(\Omega_h)}, A_{h,ij} = a(v_{hi}, v_{hj})$ are the so called mass and stiffness matrices, both invertible, with respect to the nodal basis of $S^1_{h,D}$. We also have $F_{h,j}(t):= - (\partial_t G_{D,h}, v_{hj})_{L^2(\Omega_h)} - a_h(G_{D,h}, v_{hj}) + (f_h, v_{hj})_{L^2(\Omega_h)} + (g_{N,h}, v_{hj})_{L^2(\Gamma_{N,h})}$, together with $d_{h,0}:= u_{0h} - G_{D,h}$, in the sense of the non-Dirichlet nodal values (we are able to come to this problem thanks to the assumed compatibility between $u_{0h}, g_{D,h}$).
 
 Thanks to the smoothness assumptions on the data, we have that $F$ has $L^2(I)$ entries.
 
@@ -3844,28 +3979,28 @@ We can test the equation by $e_h$, use that $a_h(v_h,v_h) = \norm{v_h}_{H^1(\Ome
 Following \cite{gilardi}, page 20, 21, we can prove, for $\delta_h$, that:
 
 \begin{align*}
-	\norm{\delta_h}_{C([0,T],L^2(\Omega_h))} + \norm{\delta_h}_{L^2(I,H^1(\Omega_h))}\lesssim \\\norm{f_h}_{L^2(I,L^2(\Omega_h))} + \norm{g_{N,h}}_{L^2(I,L^2(\Gamma_{N,h}))} + \norm{G_{D,h}}_{H^1(I,H^1(\Omega_h)))} + \norm{u_{0h}}_{L^2(\Omega_h)}
+	\norm{\delta_h}_{C([0,T],L^2(\Omega_h))} + \norm{\delta_h}_{L^2(I,H^1(\Omega_h))}\lesssim \\\norm{f_h}_{L^2(I,(S^1_{h,D})^*)} + \norm{g_{N,h}}_{L^2(I,L^2(\Gamma_{N,h}))} + \norm{G_{D,h}}_{H^1(I,H^1(\Omega_h)))} + \norm{u_{0h}}_{L^2(\Omega_h)}
 \end{align*}
 
 so that, by triangle inequality:
 
 \begin{align*}
-	\norm{u_h}_{C([0,T],L^2(\Omega_h))} + \norm{u_h}_{L^2(I,H^1(\Omega_h))}\lesssim \\\norm{f_h}_{L^2(I,L^2(\Omega_h))} + \norm{g_{N,h}}_{L^2(I,L^2(\Gamma_{N,h}))} + \norm{G_{D,h}}_{H^1(I,H^1(\Omega_h)))}+\norm{u_{0h}}_{L^2(\Omega_h)}
+	\norm{u_h}_{C([0,T],L^2(\Omega_h))} + \norm{u_h}_{L^2(I,H^1(\Omega_h))}\lesssim \\\norm{f_h}_{L^2(I,(S^1_{h,D})^*)} + \norm{g_{N,h}}_{L^2(I,L^2(\Gamma_{N,h}))} + \norm{G_{D,h}}_{H^1(I,H^1(\Omega_h)))}+\norm{u_{0h}}_{L^2(\Omega_h)}
 \end{align*}
 
 Now, thanks to \cref{ass:discr_reg}:
 
 \begin{itemize}
-	\item $\norm{f_h}_{L^2(I,L^2(\Omega_h))}^2\lesssim \int_I C_f^2$ (here we use the same arguments as in \cref{prop:rough_L2_est_ell})
+%	\item $\norm{f_h}_{L^2(I,L^2(\Omega_h))}^2\lesssim \int_I C_f^2$ (here we use the same arguments as in \cref{prop:rough_L2_est_ell})
 	\item $\norm{g_{N,h}}_{L^2(I,L^2(\Gamma_{N,h}))} \lesssim \norm{g_{N}}_{L^2(I,H^2(\Gamma_{N}))} $ (here is suffices to use \cref{prop:interp_curv}))
-	\item because the Lagrange interpolator is linear bounded $H^2(\Omega)\rightarrow S^1_h$ there holds, by \cref{prop:interp_curv}: $\partial_t G_{D,h}=\Pi_h \partial_t G_D$, so that $\norm{\partial_t G_{D,h}}_{H^1(\Omega_h)} = \norm{\Pi_h \partial_t G_D}_{H^1(\Omega_h)} \lesssim \norm{\partial_t G_D}_{H^2(\Omega))}$, where we used \cref{prop:interp_curv} and \cref{prop:lift}. Thanks to the properties of $G_D$, and the fact that the extension $E$ of \cref{prop:trace} commutes with $\Pi_h$ (by \cref{lemma:bochner_Hk_map}), there holds $\norm{\partial_t G_{D,h}}_{H^1(\Omega_h)}\lesssim \norm{\partial_t g_D}_H^{3/2}(\Gamma_D))$. With analogous reasonings we can conclude that $\norm{G_{D,h}}_{H^1(I,H^1(\Omega_h)))}\lesssim \norm{g_D}_{H^1(I,H^{3/2}(\Gamma_D))}$
+	\item because the Lagrange interpolator is linear bounded $H^2(\Omega)\rightarrow S^1_h$ there holds, by \cref{prop:interp_curv}: $\partial_t G_{D,h}=\Pi_h \partial_t G_D$, so that $\norm{\partial_t G_{D,h}}_{H^1(\Omega_h)} = \norm{\Pi_h \partial_t G_D}_{H^1(\Omega_h)} \lesssim \norm{\partial_t G_D}_{H^2(\Omega))}$, where we used \cref{prop:interp_curv} and \cref{prop:lift}. Thanks to the properties of $G_D$, and the fact that the extension $E$ of \cref{prop:trace} commutes with $\Pi_h$ (by \cref{lemma:bochner_Hk_map}), there holds $\norm{\partial_t G_{D,h}}_{H^1(\Omega_h)}\lesssim \norm{\partial_t g_D}_{H^{3/2}(\Gamma_D)}$. With analogous reasonings we can conclude that $\norm{G_{D,h}}_{H^1(I,H^1(\Omega_h)))}\lesssim \norm{g_D}_{H^1(I,H^{3/2}(\Gamma_D))}$
 	\item similarly, $\norm{u_{0h}}_{L^2(\Omega_h)}\lesssim \norm{u_{0}}_{H^2(\Omega)}$
 \end{itemize}
 
 All in all:
 
 \begin{align*}
-	\norm{u_h}_{C([0,T],L^2(\Omega_h))} + \norm{u_h}_{L^2(I,H^1(\Omega_h))}\lesssim \norm{C_f}_{L^2(I)} + \norm{g_{N}}_{L^2(I,H^2(\Gamma_{N}))} + \norm{g_D}_{H^1(I,H^{3/2}(\Gamma_D)))} + \norm{u_{0}}_{H^2(\Omega})
+	\norm{u_h}_{C([0,T],L^2(\Omega_h))} + \norm{u_h}_{L^2(I,H^1(\Omega_h))}\lesssim \norm{f_h}_{L^2(I,(S^1_{h,D})^*)} + \norm{g_{N}}_{L^2(I,H^2(\Gamma_{N}))} + \norm{g_D}_{H^1(I,H^{3/2}(\Gamma_D)))} + \norm{u_{0}}_{H^2(\Omega})
 \end{align*}
 
 \end{mproof}
@@ -3879,7 +4014,7 @@ There holds:
 	 h^4A^2
 \end{align*}
 
-where $A^2:= \norm{u}_{H^1(I,H^2(\Omega))}^2 + \norm{g_D}_{H^1(I,H^2(\Gamma_D))}^2 + \norm{u_0}_{H^2(\Omega)}^2 +  \int_0^T C_f^2+  \int_0^T  \norm{g_N}_{H^2(\Gamma_N)}^2 $.
+where $A^2:= \ds \norm{u}_{H^1(I,H^2(\Omega))}^2 + \norm{g_D}_{H^1(I,H^2(\Gamma_D))}^2 + \norm{u_0}_{H^2(\Omega)}^2 +  \int_0^T C_f^2+ \int_0^T \norm{f_h}_{H^1(\Omega_h)}^2 + \int_0^T  \norm{g_N}_{H^2(\Gamma_N)}^2 $.
 
 For this to hold, \cref{ass:smoothness_par_discr}, \cref{ass:discr_reg} and \cref{ass:basic_par_mix} must be fulfilled.
 
@@ -3960,7 +4095,7 @@ Analogously:
 
 \begin{align*}
 	|(f, v_h^l)_{L^2(\Omega)} - (f_h, v_h)_{L^2(\Omega_h)}|\lesssim\\
-	\norm{f-f_h^l}_{L^2(\Omega)}\norm{v_h}_{H^1(\Omega_h)} + h^2 C_f\norm{v_h}_{H^1(\Omega_h)}\lesssim C_f h^2 \norm{v_h}_{H^1(\Omega_h)}
+	\norm{f-f_h^l}_{L^2(\Omega)}\norm{v_h}_{H^1(\Omega_h)} + h^2 \norm{f_h}_{H^1(\Omega_h)}\norm{v_h}_{H^1(\Omega_h)}\lesssim (C_f + \norm{f_h}_{H^1(\Omega_h)}) h^2 \norm{v_h}_{H^1(\Omega_h)}
 \end{align*}
 
 We used throughout \cref{ass:discr_reg}.
@@ -3969,7 +4104,7 @@ Calling $E_h(v_h):=(\partial_t \theta_h , v_h)_{L^2(\Omega_h)} + a_h(\theta_h, v
 
 \begin{align}
 \label{eqn:theta_residual}
-	|E_h(v_h)|\lesssim h^2 \norm{v_h}_{H^1(\Omega_h)} (C_f + \norm{g_N}_{H^2(\Gamma_N)} + \norm{\partial_t u}_{H^2(\Omega)} + \norm{\partial_t g_D}_{H^2(\Gamma_D)} )
+	|E_h(v_h)|\lesssim h^2 \norm{v_h}_{H^1(\Omega_h)} (C_f + \norm{f_h}_{H^1(\Omega_h)} + \norm{g_N}_{H^2(\Gamma_N)} + \norm{\partial_t u}_{H^2(\Omega)} + \norm{\partial_t g_D}_{H^2(\Gamma_D)} )
 \end{align}
 
 \underline{Estimating the size of $\theta_h$: energy estimate}
@@ -3986,7 +4121,7 @@ Hence:
 	\frac{1}{2} \frac{d}{dt} \norm{\theta_h}_{L^2(\Omega_h)}^2 + \norm{\theta_h}^2_{H^1(\Omega_h)} \lesssim \norm{\theta_h}^2_{L^2(\Omega_h)}  + Qh^2\norm{\theta_h}_{H^1(\Omega_h)}
 \end{align*}
 
-Here we called $Q:=C_f + \norm{g_N}_{H^2(\Gamma_N)} + \norm{\partial_t u}_{H^2(\Omega)} + \norm{\partial_t g_D}_{H^2(\Gamma_D)}$.
+Here we called $Q:=C_f + \norm{f_h}_{H^1(\Omega_h)} + \norm{g_N}_{H^2(\Gamma_N)} + \norm{\partial_t u}_{H^2(\Omega)} + \norm{\partial_t g_D}_{H^2(\Gamma_D)}$.
 
 By Young's inequality:
 
@@ -4009,7 +4144,7 @@ We now integrate from $0$ to $t$:
 Adding non-negative terms on the right hand side yields:
 
 \begin{align*}
-	\frac{1}{2} \norm{\theta_h(t)}_{L^2(\Omega_h)}^2 + \frac{1}{2}\int_0^t\norm{\theta_h}^2_{H^1(\Omega_h)} \lesssim 2\left (\int_0^t\frac{1}{2}\norm{\theta_h}^2_{L^2(\Omega_h)} + \frac{t}{2}\int_0^t\norm{\theta_h}^2_{H^1(\Omega_h)}\right) + 2h^4 \int_0^t Q^2 \\+ \frac{1}{2} \norm{\theta_h(0)}_{L^2(\Omega_h)}^2
+	\frac{1}{2} \norm{\theta_h(t)}_{L^2(\Omega_h)}^2 + \frac{1}{2}\int_0^t\norm{\theta_h}^2_{H^1(\Omega_h)} \lesssim 2\left (\int_0^t\frac{1}{2}\norm{\theta_h}^2_{L^2(\Omega_h)} + \int_0^t\frac{1}{2}\int_0^s\norm{\theta_h}^2_{H^1(\Omega_h)}dsdt\right) + 2h^4 \int_0^t Q^2 \\+ \frac{1}{2} \norm{\theta_h(0)}_{L^2(\Omega_h)}^2
 \end{align*}
 
 Gronwall's inequality (25, page 19 of \cite{gilardi}) now yields:
@@ -4048,14 +4183,14 @@ A triangle inequality applied to $\norm{\theta_h^l(0)}_{L^2(\Omega)}^2$, an appl
 \begin{align*}
 	 h^{-4}\norm{e(t)}_{L^2(\Omega)}^2 + h^{-2}\int_0^T\norm{e}^2_{H^1(\Omega)} \lesssim\\
 	  \norm{u(t)}_{H^2(\Omega)}^2 + \norm{g_D(t)}_{L^2(\Gamma_D)}^2 + \int_0^T\norm{u}^2_{H^2(\Omega)} + \norm{u_0}_{H^2(\Omega)}^2 \\
-	 +  \int_0^T C_f^2+  \int_0^T  \norm{g_N}_{H^2(\Gamma_N)}^2 +\int_0^T \norm{\partial_t u}_{H^2(\Omega)}^2 + \int_0^T\norm{ \partial_t g_D}_{H^2(\Gamma_D)}^2
+	 +  \int_0^T C_f^2 + \int_0^T \norm{f_h}_{H^1(\Omega_h)}^2+  \int_0^T  \norm{g_N}_{H^2(\Gamma_N)}^2 +\int_0^T \norm{\partial_t u}_{H^2(\Omega)}^2 + \int_0^T\norm{ \partial_t g_D}_{H^2(\Gamma_D)}^2
 \end{align*}
 
 This means that:
 
 \begin{align*}
 	 h^{-4}\norm{e(t)}_{L^2(\Omega)}^2 + h^{-2}\int_0^T\norm{e}^2_{H^1(\Omega)} \lesssim\\
-	 \norm{u}_{H^1(I,H^2(\Omega))}^2 + \norm{g_D}_{H^1(I,H^2(\Gamma_D))}^2 + \norm{u_0}_{H^2(\Omega)}^2 +  \int_0^T C_f^2+  \int_0^T  \norm{g_N}_{H^2(\Gamma_N)}^2
+	 \norm{u}_{H^1(I,H^2(\Omega))}^2 + \norm{g_D}_{H^1(I,H^2(\Gamma_D))}^2 + \norm{u_0}_{H^2(\Omega)}^2 +  \int_0^T C_f^2+ \int_0^T \norm{f_h}_{H^1(\Omega_h)}^2 +  \int_0^T  \norm{g_N}_{H^2(\Gamma_N)}^2
 \end{align*}
 
 \end{mproof}
@@ -4071,7 +4206,7 @@ Apart from \cref{ass:smoothness_par_discr}, \cref{ass:discr_reg} and \cref{ass:b
 \end{align*}
 
 
-where $B:=\ds \norm{u}_{H^1(I,H^2(\Omega))}^2 + \norm{g_D}_{H^1(I,H^2(\Gamma_D))}^2 +  \int_0^T C_f^2+  \norm{g_N}_{H^1(H^2(\Gamma_N))}^2+\norm{u_0}_{H^2(\Omega)}^2$.
+where $B:=\ds \norm{u}_{H^1(I,H^2(\Omega))}^2 + \norm{g_D}_{H^1(I,H^2(\Gamma_D))}^2 +  \int_0^T C_f^2+  \norm{f_h}_{L^2(I,L^2(\Omega_h))}^2 +\norm{g_N}_{H^1(H^2(\Gamma_N))}^2+\norm{u_0}_{H^2(\Omega)}^2$.
 
 \end{cor}
 
@@ -4130,7 +4265,7 @@ For the right hand side, estimating every piece but the first two, with the help
 \int_0^t\norm{\partial_t \theta_h}^2_{L^2(\Omega_h)} + \frac{1}{2} \norm{\theta_h(t)}_{H^1(\Omega_h)}^2 \leq  \frac{1}{2} \norm{\theta_h(t)}_{L^2(\Omega_h)}^2 + \frac{1}{2} \norm{\theta_h(0)}_{H^1(\Omega_h)}^2\\
 + Ch\int_0^t \norm{\partial_t u}_{H^2(\Omega)}\norm{\partial_t \theta_h}_{L^2(\Omega_h)}\\
 + Ch\int_0^t(\norm{\partial_t u}_{H^2(\Omega)}+	\norm{\partial_t g_D}_{H^2(\Gamma_D)})\norm{\partial_t \theta_h}_{L^2(\Omega_h)}\\
-+ Ch\int_0^t C_f\norm{\partial_t \theta_h}_{L^2(\Omega_h)}\\ 
++ Ch^2\int_0^t C_f\norm{\partial_t \theta_h}_{L^2(\Omega_h)}+ Ch\int_0^t \norm{f_h}_{L^2(\Omega_h)}\norm{\partial_t \theta_h}_{L^2(\Omega_h)}\\ 
 + Ch\int_0^t \norm{\partial_t g_N}_{H^2(\Gamma_N)}\norm{ \theta_h}_{H^1(\Omega_h)}\\
 + Ch\norm{g_N(t)}_{H^2(\Gamma_N)}\norm{ \theta_h(t)}_{H^1(\Omega_h)}\\
 + Ch\norm{g_N(0)}_{H^2(\Gamma_N)}\norm{ \theta_h(0)}_{H^1(\Omega_h)}
@@ -4142,7 +4277,7 @@ Applying Young's inequality several times, with possibly a different $C$, still 
 \int_0^t\norm{\partial_t \theta_h}^2_{L^2(\Omega_h)} + \frac{1}{2} \norm{\theta_h(t)}_{H^1(\Omega_h)}^2 \leq  \frac{1}{2} \norm{\theta_h(t)}_{L^2(\Omega_h)}^2 + \frac{1}{2} \norm{\theta_h(0)}_{H^1(\Omega_h)}^2\\
 + Ch^2\int_0^t \norm{\partial_t u}_{H^2(\Omega)}^2 + \frac{1}{6}\int_0^t\norm{\partial_t \theta_h}^2_{L^2(\Omega_h)}\\
 + Ch^2\int_0^t(\norm{\partial_t u}_{H^2(\Omega)}+	\norm{\partial_t g_D}_{H^2(\Gamma_D)})^2 + \frac{1}{6} \int_0^t\norm{\partial_t \theta_h}_{L^2(\Omega_h)}^2\\
-+ Ch^2\int_0^t C_f^2 + \frac{1}{6}\int_0^t\norm{\partial_t \theta_h}^2_{L^2(\Omega_h)}\\ 
++ Ch^2\int_0^t C_f^2+ Ch^2\int_0^t \norm{f_h}_{L^2(\Omega_h)}^2  + \frac{1}{6}\int_0^t\norm{\partial_t \theta_h}^2_{L^2(\Omega_h)}\\ 
 + Ch^2\int_0^t \norm{\partial_t g_N}_{H^2(\Gamma_N)}^2 + \int_0^t \norm{ \theta_h}_{H^1(\Omega_h)}^2\\
 + Ch^2\norm{g_N(t)}_{H^2(\Gamma_N)}^2 + \frac{1}{4}\norm{ \theta_h(t)}_{H^1(\Omega_h)}^2\\
 + Ch^2\norm{g_N(0)}_{H^2(\Gamma_N)}^2 + \frac{1}{2}\norm{ \theta_h(0)}_{H^1(\Omega_h)}^2
@@ -4150,7 +4285,7 @@ Applying Young's inequality several times, with possibly a different $C$, still 
 
 We re-arrange, and apply \cref{eqn:theta_energy} to the term $\ds \norm{ \theta_h(t)}^2_{L^2(\Omega_h)} + \int_0^t \norm{ \theta_h}_{H^1(\Omega_h)}^2$. 
 
-Calling $q=\ds \int_0^T \left [ \norm{\partial_t u}_{H^2(\Omega)}^2 +	\norm{\partial_t g_D}_{H^2(\Gamma_D)}^2 + C_f^2 + Q^2+ \norm{g_N}_{H^2(\Gamma_N)}^2 + \norm{\partial_t g_N}_{H^2(\Gamma_N)}^2 \right ] $ we read:
+Calling $q=\ds \int_0^T \left [ \norm{\partial_t u}_{H^2(\Omega)}^2 +	\norm{\partial_t g_D}_{H^2(\Gamma_D)}^2 + C_f^2 +  \norm{f_h}_{L^2(\Omega_h)}^2 + Q^2+ \norm{g_N}_{H^2(\Gamma_N)}^2 + \norm{\partial_t g_N}_{H^2(\Gamma_N)}^2 \right ] $ we read:
 
 
 \begin{align*}
@@ -4178,10 +4313,11 @@ h^2\int_0^T(\norm{\partial_t u }_{H^2(\Omega)}^2 + \norm{\partial_t g_D }_{H^2(\
 If however we content ourselves with estimating the convergence of the derivatives in a weaker norm, we can actually obtain $O(h^2)$ convergence, in every case. To do so, it will be crucial to establish the $H^1$ stability of the $L^2$ projection in our context. This fact is known for polyhedral domains with some assumptions on the meshes, see e.g. \cite{yserentant}.
 
 \begin{cor}[Order two convergence of derivatives in dual norm]
-Under \cref{ass:smoothness_par_discr}, \cref{ass:discr_reg} and \cref{ass:basic_par_mix} we have, for all $w \in L^2(I,H^1(\Omega))$:
+\label{cor:deriv_est_semid}
+Under \cref{ass:smoothness_par_discr}, \cref{ass:discr_reg} and \cref{ass:basic_par_mix} we have, for all $w \in L^2(I,H^1_{0,D}(\Omega))$:
 
 \begin{align*}
-\left | \int_I (\partial_t(u-u_h^l), w)_{L^2(\Omega)}\right |\lesssim h^2 \norm{w}_{L^2(I,H^1(\Omega)}
+\left | \int_I (\partial_t(u-u_h^l), w)_{L^2(\Omega)}\right |\lesssim h^2 A \norm{w}_{L^2(I,H^1(\Omega))}
 \end{align*}
 
 \end{cor}
@@ -4198,20 +4334,20 @@ First, let us show how this projection helps in the estimate.
 
 \underline{Conclusion}
 
-For $w \in H^1(\Omega)$ we estimate $(\partial_t(\theta_h^l), w)_{L^2(\Omega)} = (w, (\partial_t\theta_h^l))_{L^2(\Omega)} =  (\pi_h w,\partial_t\theta_h)_{L^2(\Omega_h)}$. We have also used that lifting and differentiating with respect to time commute, by \cref{prop:lift} and \cref{lemma:bochner_Hk_map}. We can now apply \cref{eqn:theta}:
+For $w \in H^1_{0,D}(\Omega)$ we estimate $(\partial_t(\theta_h^l), w)_{L^2(\Omega)} = (w, (\partial_t\theta_h^l))_{L^2(\Omega)} =  (\pi_h w,\partial_t\theta_h)_{L^2(\Omega_h)}$. We have also used that lifting and differentiating with respect to time commute, by \cref{prop:lift} and \cref{lemma:bochner_Hk_map}. We can now apply \cref{eqn:theta}:
 
 \begin{align*}
 	(\partial_t(\theta_h^l), w)_{L^2(\Omega)} = a_h(\theta_h, \pi_h w) - E_h(\pi_h w ) \lesssim \ind{\cref{eqn:theta_residual}}\lesssim\\
-	\norm{\theta_h}_{H^1(\Omega_h)} \norm{\pi_h w}_{H^1(\Omega_h)} + h^2 \norm{\pi_h w }_{H^1(\Omega_h)} (C_f + \norm{g_N}_{H^2(\Gamma_N)} + \norm{\partial_t u}_{H^2(\Omega)} + \norm{\partial_t g_D}_{H^2(\Gamma_D)} ) \lesssim\\
-	\norm{\theta_h}_{H^1(\Omega_h)} \norm{ w}_{H^1(\Omega)} + h^2 \norm{w }_{H^1(\Omega)} (C_f + \norm{g_N}_{H^2(\Gamma_N)} + \norm{\partial_t u}_{H^2(\Omega)} + \norm{\partial_t g_D}_{H^2(\Gamma_D)} )
+	\norm{\theta_h}_{H^1(\Omega_h)} \norm{\pi_h w}_{H^1(\Omega_h)} + h^2 (\norm{\pi_h w }_{H^1(\Omega_h)} C_f + \norm{f_h}_{H^1(\Omega_h)} + \norm{g_N}_{H^2(\Gamma_N)} + \norm{\partial_t u}_{H^2(\Omega)} + \norm{\partial_t g_D}_{H^2(\Gamma_D)} ) \lesssim\\
+	\norm{\theta_h}_{H^1(\Omega_h)} \norm{ w}_{H^1(\Omega)} + h^2 \norm{w }_{H^1(\Omega)} (C_f + \norm{f_h}_{H^1(\Omega_h)} + \norm{g_N}_{H^2(\Gamma_N)} + \norm{\partial_t u}_{H^2(\Omega)} + \norm{\partial_t g_D}_{H^2(\Gamma_D)} )
 \end{align*}
 
 where in the last step we used the supposed stability of $\pi_h$. Integrating in time and using the Cauchy-Schwarz inequality:
 
 \begin{align*}
-	\left | \int_I(\partial_t(\theta_h^l), w)_{L^2(\Omega)} \right | \lesssim\\
-	\left ( \sqrt{\int_I \norm{\theta_h}_{H^1(\Omega_h)}^2}+ h^2 \sqrt{\int_I (C_f^2 + \norm{g_N}^2_{H^2(\Gamma_N)} + \norm{\partial_t u}^2_{H^2(\Omega)} + \norm{\partial_t g_D}^2_{H^2(\Gamma_D)} )}\right) \sqrt{\int_I\norm{ w}_{H^1(\Omega)}^2} \lesssim \ind{\cref{eqn:theta_energy}} \lesssim\\
-	h^2 \left (  \sqrt{\int_T Q^2} + \norm{u_0}_{H^2(\Omega)} + \sqrt{\int_I (C_f^2 + \norm{g_N}^2_{H^2(\Gamma_N)} + \norm{\partial_t u}^2_{H^2(\Omega)} + \norm{\partial_t g_D}^2_{H^2(\Gamma_D)} )}\right) \norm{w}_{L^2(I,H^1(\Omega))}
+	\left | \int_I(\partial_t(\theta_h^l), w)_{L^2(\Omega)} \right |^2 \lesssim\\
+	\left (\int_I \norm{\theta_h}_{H^1(\Omega_h)}^2+ h^4 \int_I (C_f^2 + \norm{f_h}_{H^1(\Omega_h)}^2 + \norm{g_N}^2_{H^2(\Gamma_N)} + \norm{\partial_t u}^2_{H^2(\Omega)} + \norm{\partial_t g_D}^2_{H^2(\Gamma_D)} )\right) \int_I\norm{ w}_{H^1(\Omega)}^2 \lesssim \ind{\cref{eqn:theta_energy}} \lesssim\\
+	h^4 \left (  \int_I Q^2 + \norm{u_0}_{H^2(\Omega)}^2 + \int_I (C_f^2 +\norm{f_h}_{H^1(\Omega_h)}^2 + \norm{g_N}^2_{H^2(\Gamma_N)} + \norm{\partial_t u}^2_{H^2(\Omega)} + \norm{\partial_t g_D}^2_{H^2(\Gamma_D)} )\right) \norm{w}_{L^2(I,H^1(\Omega))}^2
 \end{align*}
 
 We can also estimate:
@@ -4231,7 +4367,7 @@ $$(\pi_h w, v_h)_{L^2(\Omega_h)}=(w, v_h^l)_{L^2(\Omega)}  = (w^{-l} \xi, v_h)_{
 
 where $\xi \in L^\infty(\Omega_h)$ is a term originating from the change of variables. We therefore recognize that $\pi_h w$ is the usual $L^2$ projection of $w^{-l} \xi\in L^2(\Omega_h)$ onto the closed subspace $S^1_{h,D}$, for which we know existence and uniqueness.
 
-\textcolor{red}{To be precise we don't know whether $G_h$ takes measurable functions into measurable functions. But for $L^2$ arguments, we can reason as follows: $w^{-l}$ we know to be piecewise in $L^2$, so we can glue it to an $L^2$ fcn by in case modifying it on a null set. Also $\xi$ is piecewise measurable (it is peicewise $C^1$). So $w^{-l}\xi$ is measurable and $L^2$}
+\textcolor{red}{To be precise we don't know whether $G_h$ takes measurable functions into measurable functions. But for $L^2$ arguments, we can reason as follows: $w^{-l}$ we know to be piecewise in $L^2$, so we can glue it to an $L^2$ fcn by in case modifying it on a null set. Also $\xi$ is piecewise measurable (it is peicewise $C^1$). So $w^{-l}\xi$ is measurable and $L^2$. Well actually now we know it...}
 
 \underline{$L^2$ projection: stability}
 
@@ -4253,7 +4389,7 @@ In fact: $|\pi_h w|_{H^1(\Omega_h)}\leq |\pi_h w -\pi^* w^{-l}|_{H^1(\Omega_h)} 
 
 We can apply an inverse inequality to the first member: $|\pi_h w -\pi^* w^{-l}|_{H^1(\Omega_h)}\lesssim h^{-1}\norm{\pi_h w -\pi^* w^{-l}}_{L^2(\Omega_h)}\lesssim \norm{w}_{L^2(\Omega)}$.
 
-For the second term, consider a suitable $w_h \in S^{1}_{h,D}$. We have: $|\pi_h^* w^{-l}|_{H^1(\Omega_h)}\leq |\pi_h^* (w^{-l}-w_h)|_{H^1(\Omega_h)} +|\pi_h^* w_h|_{H^1(\Omega_h)}\lesssim h^{-1}\norm{\pi_h^*(w^{-l}-w_h)}_{L^2(\Omega_h)} +\norm{w_h}_{H^1(\Omega_h)}$, where we again applied inverse inequalities, together with the fact that $\pi_h^* w_h = w_h$ for $w_h \in S^1_{h,D}$ (i.e $\pi_h^*$ is really a projection, unlike $\pi_h$). Moreover, $\norm{\pi_h^* v}_{L^2(\Omega_h)}\leq \norm{v}_{L^2(\Omega_h)}$, so that $|\pi_h^* w^{-l}|_{H^1(\Omega_h)}\leq \lesssim h^{-1}\norm{w^{-l}-w_h}_{L^2(\Omega_h)} +\norm{w_h}_{H^1(\Omega_h)}$
+For the second term, consider a suitable $w_h \in S^{1}_{h,D}$. We have: $|\pi_h^* w^{-l}|_{H^1(\Omega_h)}\leq |\pi_h^* (w^{-l}-w_h)|_{H^1(\Omega_h)} +|\pi_h^* w_h|_{H^1(\Omega_h)}\lesssim h^{-1}\norm{\pi_h^*(w^{-l}-w_h)}_{L^2(\Omega_h)} +\norm{w_h}_{H^1(\Omega_h)}$, where we again applied inverse inequalities, together with the fact that $\pi_h^* w_h = w_h$ for $w_h \in S^1_{h,D}$ (i.e $\pi_h^*$ is really a projection, unlike $\pi_h$). Moreover, $\norm{\pi_h^* v}_{L^2(\Omega_h)}\leq \norm{v}_{L^2(\Omega_h)}$, so that $|\pi_h^* w^{-l}|_{H^1(\Omega_h)} \lesssim h^{-1}\norm{w^{-l}-w_h}_{L^2(\Omega_h)} +\norm{w_h}_{H^1(\Omega_h)}$
 
 So, if there holds $\norm{w^{-l}-w_h}_{L^2(\Omega_h)}\lesssim h \norm{w}_{H^1(\Omega)}$ and $\norm{w_h}_{H^1(\Omega_h)}\lesssim \norm{w}_{H^1(\Omega)}$, then we are done.
 
@@ -4274,13 +4410,396 @@ Applying Corollary 5.1 of \cite{bernardi} to $\Gamma_0=\Gamma_D$ ($\Gamma_0$ is 
 
 Therefore we also get $\norm{w_h^l}_{H^1(\Omega)} \lesssim(C(1+h)+1)\norm{w}_{H^1(\Omega)}$.
 
-Applying \cref{prop:lift} we see that $w_h$ satisfies all the requirements.
+Applying \cref{prop:lift} we see that $w_h$ satisfies all the requirements. Note, is is essential here that $w=0$ on $\Gamma_D$.
 
 %\textcolor{red}{One could be extra careful here, or maybe just assume the existence of $u_h$}
 
 \end{mproof}
 
+\subsection{Fully discrete estimates}
+
+Here, we attempt at deriving fully discrete estimates given the semidiscrete results just above. We found difficulties in adapting the arguments of \cite{thomee}, and this is the main reason for passing through the semidiscrete world at first. In particular, one would have to compare at some point quantities similar to $(\partial_t u, e_h^l)_{L^2(\Omega)}$ and $(\partial_t u_h, e_h)_{L^2(\Omega_h)}$, for $e_h$ the discretization error we want to bound. This difference is $O(h^2)$, but then $H^1$ norms of $e_h$ appear, which makes it difficult to apply some algebraic manipulations to bound the weaker $L^2$ norm. To keep only $L^2$ norms, one has to content himself with an $O(h)$ discrepancy in the aforementioned term, which would yield suboptimal results.
+
+\begin{ass}[Assumptions for full discretization]
+\label{ass:full_discr_smoothness}
+\textcolor{white}{ }
+
+We discuss the implicit Euler method ($\theta=1$) and the Crank-Nicolson method ($\theta=1/2$).
+
+We ask \cref{ass:discr_reg}.
+
+We further assume:
+
+\begin{itemize}
+	\item $g_N \in H^{1/\theta}(I, H^2(\Gamma_N))$
+	\item $g_D \in H^{1/\theta+1}(I, H^{3/2}(\Gamma_D))$
+	\item $f_h\in H^{1/\theta}(I, S^1_{h})$
+	\item $\norm{\delta_{h}(0)^{(1/\theta)}}_{L^2(\Omega_h)}$ is bounded uniformly for small $h$
+\end{itemize}
+
+\end{ass}
+
+\begin{pb}[Numerical scheme]
+\label{pb:num_scheme}
+Under \cref{ass:full_discr_smoothness}, it is:
+
+\begin{align*}
+\left ( \frac{u_{h}^{k+1}-u_h^k}{\delta t}, v_h\right)_{L^2(\Omega_h)} + a_h(\theta u_h^{k+1}+(1-\theta)u^k_h, v_h) =\\ (\theta f_h^{k+1}+(1-\theta)f_h^k, v_h)_{L^2(\Omega_h)} + (\theta g_{N,h}^{k+1} + (1 - \theta)g_{N,h}^{k} , v_h)_{L^2(\Gamma_{N,h})},\quad v_h \in S^1_{D,h}, 1\leq k \leq K\\
+u_h^{k+1}=g_{D,h}^{k+1},\quad 1\leq k \leq K \text{,  on } \Gamma_{D,h}\\
+u_h^0=u_{0h}
+\end{align*}
+
+\end{pb}
+
+\begin{prop}[Discrete versus semidiscrete]
+\label{prop:d_vd_sd}
+We are working under \cref{{ass:full_discr_smoothness}}.
+
+Call $e_h^k:=u_h^k-u_h(t^k)$ and $\delta f_h^k:=f_h^k-f_h(t^k)$. Then, for $\theta=1, 1/2$, we have $u_h \in H^{1/\theta+1}(I, S^1_h)$ and:
+
+\begin{align*}
+\delta t \sum_{k=0}^{n-1} \norm{ \frac{e_{h}^{k+1}-e_h^k}{\delta t}}_{(H^1_{0,Dh}(\Omega_h))^*}^2 + \norm{e_{h}^{n}}_{L^2(\Omega_h)}^2 + \delta t \sum_{k=0}^{n-1}\norm{\theta e_h^{k+1}+(1-\theta)e^k_h}_{H^1(\Omega_h)}^2 \lesssim \\
+D^2 + (\delta t)^{2/\theta} C^2
+\end{align*}
+
+where $C^2:=\ds \int_I \norm{f^{(1/\theta)}_h}_{-1,h}^2+\int_I\norm{ g_{N}^{(1/\theta)}}_{H^{2}(\Gamma_{N})}^2 + \int_I\norm{g_D^{(1/\theta+1)}}_{H^{3/2}(\Gamma_D)}^2 + \norm{\delta_{h}(0)^{(1/\theta)}}_{L^2(\Omega_h)}^2$.
+
+Moreover, $\ds D^2:= \ds {\delta t\sum_{k=0}^{n-1} \norm{\theta \delta f_h^{k+1}+(1-\theta)\delta f_h^k}_{L^2(\Omega_h)}^2}$.
+
+We refer to the proof of \cref{prop:wp_discr_par} for the definition and properties of $\delta_h$.
+
+\end{prop}
+
+\begin{mproof}
+
+Recall the semidiscrete problem, \cref{pb:inh_parabolic_discr}, for  $u_h \in H^1(I, S^1_h)$:
+ 
+\begin{align*}
+(\partial_t u_h, v_h)_{L^2(\Omega_h)} + a_h(u_h, v_h) = (f_h, v_h)_{L^2(\Omega_h)} + (g_{N,h}, v_h)_{L^2(\Gamma_{N,h})}, v_h \in S^1_{D,h}, a.e. t\\
+u_h=g_{D,h}\text{ for a.e. }t \text{,  on } \Gamma_{D,h}\\
+u_h(0)=u_{0h}
+\end{align*}
+
+For the $L^2$ estimate we closely follow \cite{quarteroni} here, page 385 and following, in particular, Theorem 11.3.1 and 11.3.2.
+
+\underline{Error equation}
+
+We note that the sole smoothness assumptions allow us to conclude that $u_h \in H^2(I, S^1_h)$, so that $\partial_t u_h$ admits pointwise values. Then we have:
+
+\begin{align*}
+\left ( \frac{u_{h}(t^{k+1})-u_h(t^k)}{\delta t}, v_h\right)_{L^2(\Omega_h)} + a_h(\theta u_h(t^{k+1}) + (1-\theta) u_h(t^{k}), v_h) =\\ \left ( \frac{u_{h}(t^{k+1})-u_h(t^k)}{\delta t} - \partial_t u_h(t^{k+1}) - (1-\theta)\partial_t u_h(t^k), v_h\right)_{L^2(\Omega_h)} +\\ (\theta f_h(t^{k+1})+(1-\theta)f_h(t^{k}), v_h)_{L^2(\Omega_h)} + (\theta g_{N,h}(t^{k+1})+(1-\theta)g_{N,h}(t^{k}), v_h)_{L^2(\Gamma_{N,h})}
+\end{align*}
+
+By the equations for the fully discrete problem, and calling $e_h^k:=u_h^k-u_h(t^k)$, and $\delta f_h^k:=f_h^k-f_h(t^k)$:
+
+\begin{align}
+\label{eqn:discr_err}
+\left ( \frac{e_{h}^{k+1}-e_h^k}{\delta t}, v_h\right)_{L^2(\Omega_h)} + a_h(\theta e_h^{k+1}+(1-\theta)e^k_h, v_h) = (\theta \delta f_h^{k+1}+(1-\theta)\delta f_h^k + Q_h^k, v_h)_{L^2(\Omega_h)} \\
+e_h^{k+1}=0  \text{,  on } \Gamma_{D,h}\\
+e_h^0=0
+\end{align}
+
+where we defined $Q_h^k:\ds =\frac{u_{h}(t^{k+1})-u_h(t^k)}{\delta t} - \partial_t u_h(t^{k+1}) - (1-\theta)\partial_tu_h(t^k)$.
+
+\underline{Stability}
+
+We test the above error equation with $\theta e_h^{k+1}+(1-\theta)e_h^k \in S^1_{h,D}$ to obtain, also thanks to the $h$ uniform coercivity of $a_h$ we have shown in \cref{thm:H1_est_ell}:
+
+\begin{align*}
+\norm{e_{h}^{k+1}}_{L^2(\Omega_h)}^2-\norm{e_h^k}^2_{L^2(\Omega_h)}+ (2\theta -1)\norm{e_h^{k+1}-e_h^{k}}_{L^2(\Omega_h)}^2 + 2C\delta t \norm{\theta e_h^{k+1}+(1-\theta)e^k_h}_{H^1(\Omega_h)}^2 \leq \\ 2\delta t \norm{\theta \delta f_h^{k+1}+(1-\theta)\delta f_h^k}_{L^2(\Omega_h)}\norm{\theta e_h^{k+1}+(1-\theta)e_h^k}_{L^2(\Omega_h)} +\\ 2\delta t \norm{ Q_h^k}_{-1,h}\norm{\theta e_h^{k+1}+(1-\theta)e_h^k}_{H^1(\Omega_h)}
+\end{align*}
+
+where $C$ is independent of $h,k$. Here $\norm{w}_{-1,h}:=\ds \sup_{0 \neq v_h \in S^1_{h,D} }\frac{(w,v_h)_{L^2(\Omega_h)}}{\norm{v_h}_{H^1(\Omega_h)}}$. We now apply Young's inequality and leave out a non-negative term on the left to obtain:
+
+\begin{align*}
+\norm{e_{h}^{k+1}}_{L^2(\Omega_h)}^2-\norm{e_h^k}^2_{L^2(\Omega_h)}+ 2(C - 2\epsilon) \delta t \norm{\theta e_h^{k+1}+(1-\theta)e^k_h}_{H^1(\Omega_h)}^2 \leq \\
+2\delta t\epsilon^{-1} \norm{\theta \delta f_h^{k+1}+(1-\theta)\delta f_h^k}_{L^2(\Omega_h)}^2 + 2\delta t \epsilon^{-1}\norm{ Q_h^k}_{-1,h}^2
+\end{align*}
+
+$\epsilon$ must be of course chosen small enough. We then sum from $k=0$ to $n-1$ to obtain:
+
+\begin{align*}
+\norm{e_{h}^{n}}_{L^2(\Omega_h)}^2 + \delta t \sum_{k=0}^{n-1}\norm{\theta e_h^{k+1}+(1-\theta)e^k_h}_{H^1(\Omega_h)}^2 \lesssim \\
+\delta t\sum_{k=0}^{n-1} \norm{\theta \delta f_h^{k+1}+(1-\theta)\delta f_h^k}_{L^2(\Omega_h)}^2 + \delta t \sum_{k=0}^{n-1}\norm{ Q_h^k}_{-1,h}^2
+\end{align*}
+
+\underline{Conclusion: $L^2$ estimate}
+
+It remains to qualify $ Q_h^k$.
+
+In the case $\theta = 1/2$, from the smoothness assumptions on the data we obtain $u_h \in H^3(I,S^1_h)$, together with:
+
+\begin{align*}
+( u_h''', v_h)_{L^2(\Omega_h)} + a_h(u_h'', v_h) = (f_h'', v_h)_{L^2(\Omega_h)} + (g_{N,h}'', v_h)_{L^2(\Gamma_{N,h})}
+\end{align*}
+
+By the smoothness of $u_h$ we obtain $(Q_h^k,v_h)=	\ds \frac{1}{2\delta t}\left(\int_{t^k}^{t^{k+1}}(t^{k+1}-s)(t^k-s)u_h'''(s)ds, v_h\right)_{L^2(\Omega_h)}$, which means that:
+
+$$|(Q_h^k,v_h)|\leq \frac{1}{2\delta t} \sqrt{\int_{t^k}^{t^{k+1}}(t^{k+1}-s)^2(t^k-s)^2ds}\sqrt{\int_{t^k}^{t^{k+1}}(u_h'''(s), v_h)_{L^2(\Omega_h)}^2ds}\leq C \delta t^{3/2}	\sqrt{\int_{t^k}^{t^{k+1}} \norm{u_h'''(s)}_{-1,h}^2 ds} \norm{v_h}_{H^1(\Omega_h)} $$ 
+
+This means that:  $$\delta t \sum_{k=0}^{n-1}\norm{ Q_h^k}_{-1,h}^2\lesssim \delta t^4 \int_I \norm{u_h'''}_{-1,h}^2$$
+
+Differentiating \cref{pb:inh_parabolic_discr} twice we obtain:
+
+$$\norm{u_h'''(t)}_{-1,h}\leq \norm{f''_h}_{-1,h}+\norm{g_{N,h}''}_{L^2(\Gamma_{N,h})} + \norm{u_h''}_{H^1(\Omega_h)}$$
+
+We therefore only need to estimate the very last piece. This is done by energy estimates, as in \ref{prop:wp_discr_par}. 
+We consider the splitting $u_h = \delta_h + G_{D,h}$, see \cref{ass:discr_reg}, and estimate $\norm{\delta_h''}_{H^1(\Omega_h)}$. We find out in particular that:
+
+\begin{align*}
+	\norm{\delta_h''}_{C([0,T],L^2(\Omega_h))} + \norm{\delta_h''}_{L^2(I,H^1(\Omega_h))}\lesssim \\\norm{f_h''}_{L^2(I,(S^{1}_{h,D})^*)} + \norm{g_{N,h}''}_{L^2(I,L^2(\Gamma_{N,h}))} + \norm{G_{D,h}'''}_{L^2(I,H^1(\Omega_h)))} + \norm{\delta_{h}(0)''}_{L^2(\Omega_h)}
+\end{align*}
+
+and by definition of $u_h$:
+
+\begin{align}
+\label{eqn:dd_est}
+\norm{u_h''}_{L^2(I,H^1(\Omega_h))}\lesssim \\\norm{f_h''}_{L^2(I,(S^{1}_{h,D})^*)} + \norm{g_{N,h}''}_{L^2(I,L^2(\Gamma_{N,h}))} + \norm{G_{D,h}'''}_{L^2(I,H^1(\Omega_h)))} + \norm{\delta_{h}(0)''}_{L^2(\Omega_h)}
+\end{align}
+
+We only need to estimate the term on the right. Using \cref{eqn:ode} we find out that:
+
+\begin{align*}
+	d_h'(0)=-M_h^{-1}(A_h d_h(0)+F_h(0))\\
+	d_h''(0)=-M_h^{-1}(A_h d_h'(0)+F_h'(0))
+\end{align*}
+
+Under our hypothesis \cref{ass:full_discr_smoothness}, we have that $\norm{\delta_h''(0)}_{L^2(\Omega_h)}^2 = |M^{1/2}_hd_h(0)''|\lesssim C$. This, and \cref{ass:discr_reg}, yield a bound, uniform on $h$, on $\ds \int_I \norm{u_h'''}_{-1,h}^2$.
+
+This bound is:
+
+\begin{align*}
+	\int_I \norm{u_h'''(t)}_{-1,h}^2\lesssim \int_I \norm{f''_h}_{-1,h}^2+\int_I\norm{g_{N,h}''}_{L^2(\Gamma_{N,h})}^2 + \int_I\norm{G_{D,h}'''}_{H^1(\Omega_h)}^2 + \norm{\delta_{h}(0)''}_{L^2(\Omega_h)}^2
+\end{align*}
+
+But $\norm{g_{N,h}''}_{L^2(\Gamma_{N,h})}=\norm{\Pi_h g_{N}''}_{L^2(\Gamma_{N,h})}$, where $\Pi_h$ is the nodal interpolator (see \cref{ass:discr_reg}). By \cref{prop:lin_appr}, $\norm{g_{N,h}''}_{L^2(\Gamma_{N,h})}\lesssim \norm{\Pi_c g_{N}''}_{L^2(\Gamma_{N})}\leq (1+h^2)\norm{ g_{N}''}_{H^2(\Gamma_{N})}$, where we also used \cref{prop:interp_curv}.
+
+Moreover $\norm{G_{D,h}'''}_{H^1(\Omega_h)} = \norm{\Pi_h G_D'''}_{H^1(\Omega_h)}\lesssim  \norm{\Pi_c G_D'''}_{H^1(\Omega)}\lesssim (1+h)\norm{G_D'''}_{H^2(\Omega)}\lesssim \norm{g_D'''}_{H^{3/2}(\Gamma_D)}$.
+
+Therefore:
+
+\begin{align*}
+	\int_I \norm{u_h'''(t)}_{-1,h}^2\lesssim \int_I \norm{f''_h}_{-1,h}^2+\int_I\norm{ g_{N}''}_{H^{2}(\Gamma_{N})}^2 + \int_I\norm{g_D'''}_{H^{3/2}(\Gamma_D)}^2 + \norm{\delta_{h}(0)''}_{L^2(\Omega_h)}^2
+\end{align*}
+
+
+The proof for $\theta=1$ is very similar.
+
+%\underline{Conclusion: estimates in energy norm}
+%
+%We go back to \cref{eqn:discr_err}. Starting with the case $\theta = 1/2$, we test with $e_h^{k+1}-e_h^{k}$ instead. We obtain:
+%
+%\begin{align*}
+%	a_h((e_h^{k+1}+e^k_h)/2, e_h^{k+1}-e_h^{k}) \leq \frac{1}{2}( \delta f_h^{k+1} + \delta f_h^k + Q_h^k, e_h^{k+1}-e_h^{k})_{L^2(\Omega_h)}
+%\end{align*}
+%
+%This means:
+%
+%\begin{align*}
+%	(\norm{\nabla e_h^{k+1}}_{L^2(I,\Omega_h)} - \norm{\nabla e^k_h}_{L^2(I,\Omega_h)})(\norm{\nabla e_h^{k+1}}_{L^2(I,\Omega_h)} + \norm{\nabla e^k_h}_{L^2(I,\Omega_h)})\leq\norm{ \delta f_h^{k+1} + \delta f_h^k + Q_h^k}_{-1,h}\norm{ e_h^{k+1}-e_h^{k}}_{H^1(\Omega_h)}
+%\end{align*}
+%
+%Taking again advantage of the $h$ uniform coercivity $\norm{ v_h}_{H^1(\Omega_h)}\lesssim \norm{v_h}_{\nabla (\Omega_h)}$, for any $v_h \in S^1_{h,D}$, we find:
+%
+%\begin{align*}
+%	\norm{\nabla e_h^{k+1}}_{L^2(I,\Omega_h)} - \norm{\nabla e^k_h}_{L^2(I,\Omega_h)}\lesssim \norm{ \delta f_h^{k+1} + \delta f_h^k + Q_h^k}_{-1,h}
+%\end{align*}
+%
+%\textcolor{red}{what if we are dividing by $0$? Np}
+
+\underline{Conclusion: estimates for the difference quotient}
+
+We go back to \cref{eqn:discr_err}.  We employ the $L^2$ projection $\pi_h^*$ as in the proof of \cref{cor:deriv_est_semid}, where we proved its stabilities properties. Consider then any $v \in H^1_{0,D}(\Omega)$, so that $v^{-l} \in H^1_{0,Dh}(\Omega_h)$ (i.e. $v^{-l}=0$ on $\Gamma_{D,h}$) \textcolor{red}{are you sure :D?}.
+
+Then:
+
+\begin{align*}
+\left ( \frac{e_{h}^{k+1}-e_h^k}{\delta t}, v^{-l}\right)_{L^2(\Omega_h)} = \left ( \frac{e_{h}^{k+1}-e_h^k}{\delta t}, \pi_h^* v^{-l}\right)_{L^2(\Omega_h)} =  \\- a_h(\theta e_h^{k+1}+(1-\theta)e^k_h, \pi_h^* v^{-l}) + (\theta \delta f_h^{k+1}+(1-\theta)\delta f_h^k + Q_h^k, \pi_h^* v^{-l})_{L^2(\Omega_h)}
+\end{align*}
+
+which leads us to:
+
+\begin{align*}
+\norm{ \frac{e_{h}^{k+1}-e_h^k}{\delta t}}_{(H^1_{0,Dh}(\Omega_h))^*} \lesssim  \\\norm{\theta e_h^{k+1}+(1-\theta)e^k_h}_{H^1(\Omega_h)} + \norm{\theta \delta f_h^{k+1}+(1-\theta)\delta f_h^k + Q_h^k}_{-1,h}
+\end{align*}
+
+We have thus:
+
+\begin{align*}
+\delta t \sum_{k=0}^{n-1} \norm{ \frac{e_{h}^{k+1}-e_h^k}{\delta t}}_{(H^1_{0,Dh}(\Omega_h))^*}^2 \lesssim  \\\delta t \sum_{k=0}^{n-1}\norm{\theta e_h^{k+1}+(1-\theta)e^k_h}_{H^1(\Omega_h)}^2 + \delta t \sum_{k=0}^{n-1} \norm{\theta \delta f_h^{k+1}+(1-\theta)\delta f_h^k}_{L^2(\Omega_h)}^2+ \delta t \sum_{k=0}^{n-1} \norm{Q_h^k}_{-1,h}^2\lesssim\\
+\delta t \sum_{k=0}^{n-1} \norm{\theta \delta f_h^{k+1}+(1-\theta)\delta f_h^k}_{L^2(\Omega_h)}^2 +\\
+(\delta t)^{2/\theta} \left( \int_I \norm{f^{(1/\theta)}_h}_{-1,h}^2+\int_I\norm{ g_{N}^{(1/\theta)}}_{H^{2}(\Gamma_{N})}^2 + \int_I\norm{g_D^{(1/\theta+1)}}_{H^{3/2}(\Gamma_D)}^2 + \norm{\delta_{h}(0)^{(1/\theta)}}_{L^2(\Omega_h)}^2\right)
+\end{align*}
+
+\end{mproof}
+
+\begin{thm}[Fully discrete estimates]
+\label{thm:fully_discr_est_par}
+With the hypothesis and notation of \cref{thm:semidiscrete_error_bound}, \cref{prop:d_vd_sd}, \cref{cor:L2_deriv_est}, \cref{cor:deriv_est_semid}, there holds:
+
+\begin{align*}
+	\norm{u(t^k)-(u_h^k)^l}_{L^2(\Omega)}\lesssim  h^2 A  + D +  (\delta t)^{1/\theta}C\\
+	\sqrt{\delta t \sum_{k=0}^{K-1} \norm{\theta(u(t^{k+1}) - (u_h^{k+1})^l) + (1-\theta)(u(t^{k}) - (u_h^{k})^l)}_{H^1(\Omega)}^2} \lesssim hB + D + (\delta t)^{1/\theta} C\\
+	\left | \int_I (\partial_t u , w_K)_{L^2(\Omega)}-\delta t \sum_{k=0}^{K-1}\left ( \frac{(u^{k+1}_h)^l - (u_h^k)^l}{\delta t} , w_{K,k}\right )_{L^2(\Omega)} \right |\lesssim \left ( h^2A + D + (\delta t)^{1/\theta} C\right ) \norm{w_K}_{L^2(I,H^1_{0,D}(\Omega))}
+\end{align*}
+
+where $D^2:= \ds {\delta t\sum_{k=0}^{n-1} \norm{\theta \delta f_h^{k+1}+(1-\theta)\delta f_h^k}_{L^2(\Omega_h)}^2}$. Here $w_K$ is assumed to be piecewise constant on the time discretization, and with values $w_{K,k}$, on $[t^k,t^{k+1}]$, that belong to $H^1_{0,D}(\Omega)$. \textcolor{red}{If we put $w \in H^(I,H^1_{0,D)}$ this probably still works, by choosing to evaluate the sum on the right on the local averages of $w$, and employing dual estimates for such projection}.
+\end{thm}
+
+\begin{mproof}
+
+\underline{$L^2$ norm}
+
+By \cref{thm:semidiscrete_error_bound}, $\norm{u(t)-u_h^l(t)}_{L^2(\Omega)}^2 \lesssim	 h^4A^2$. Combining this with the $L^2$ estimates proved in \cref{prop:d_vd_sd} we see, thanks to \cref{prop:lift}:
+
+\begin{align*}
+	\norm{u(t^k)-(u_h^k)^l}_{L^2(\Omega)}\lesssim \\ \norm{u(t^k)-u_h^l(t^k)}_{L^2(\Omega)}+ \norm{u_h(t^k)-u_h^k}_{L^2(\Omega)}\lesssim \\A h^2 + \sqrt{\delta t\sum_{k=0}^{n-1} \norm{\theta \delta f_h^{k+1}+(1-\theta)\delta f_h^k}_{L^2(\Omega_h)}^2} + C (\delta t)^{1/\theta} 
+\end{align*}
+
+\underline{$H^1$ norm}
+
+%If we employed \cref{cor:L2_deriv_est}, which yields $\norm{u(t)-u_h^l(t)}_{H^1(\Omega)} \lesssim Bh$, we would obtain a suboptimal estimate in space. We do otherwise: c
+
+Using \cref{prop:d_vd_sd} and \cref{prop:lift}:
+
+\begin{align*}
+	\delta t \sum_{k=0}^{K-1} \norm{\theta(u(t^{k+1}) - u_h^{k+1})^l) + (1-\theta)(u(t^{k}) - u_h^{k})^l)}_{H^1(\Omega)}^2 \lesssim \\
+	\delta t \sum_{k=0}^{K-1} \norm{\theta(u(t^{k+1}) - u_h(t^{k+1})^l) + (1-\theta)(u(t^{k}) -u_h(t^{k})^l)}_{H^1(\Omega)}^2 + \delta t \sum_{k=0}^{K-1} \norm{\theta e_h^{k+1} + (1-\theta)e_h^k}_{H^1(\Omega)}^2 
+\end{align*}
+
+For the case $\theta = 1/2$ one could argue by noticing that $ \ds \frac{e_h(t^k)+e_h(t^{k+1})}{2} = \frac{1}{\delta t}\int_{t^k}^{t^{k+1}}\Pi e_h(s) ds$, bounding the first sum by $\norm{\Pi u - u}_{L^2(I,H^1(\Omega))}^2 + \norm{\Pi u_h^l - u_h^l}_{L^2(I,H^1(\Omega))}^2 + \norm{e_h}_{L^2(I,H^1(\Omega))}^2$,  $\Pi e_h$ being the Lagrangian linear interpolator of $e_h:=u-u_h^l$, and then using the $O(\delta t^2)$ approximation power of $\Pi$, thus obtaining s bound that is  $O(\delta t^4 + h^2)$.
+
+But by employing \cref{cor:L2_deriv_est} the proof simplifies and is fine for both values of $\theta$. In fact: 
+
+\begin{align*}
+	\delta t \sum_{k=0}^{K-1} \norm{\theta(u(t^{k+1}) - u_h(t^{k+1})^l) + (1-\theta)(u(t^{k}) -u_h(t^{k})^l)}_{H^1(\Omega)}^2 \leq \\
+	2\delta t \sum_{k=0}^{K} \norm{u(t^{k}) -u_h(t^{k})^l}_{H^1(\Omega)}^2 \lesssim \\
+	2 \delta t K h^2 B^2
+\end{align*}
+
+%\lesssim\\
+%	\delta t \sum_{k=0}^{K-1} B^2 h^2 + \delta t\sum_{k=0}^{n-1} \norm{\theta \delta f_h^{k+1}+(1-\theta)\delta f_h^k}_{L^2(\Omega_h)}^2 + (\delta t)^{2/\theta} C^2 \lesssim\\
+%	B^2h^2 + \delta t\sum_{k=0}^{n-1} \norm{\theta \delta f_h^{k+1}+(1-\theta)\delta f_h^k}_{L^2(\Omega_h)}^2 + C^2(\delta t)^{2/\theta}
+
+\underline{Estimate for the derivative}
+
+Let $w \in L^2(I,H^1_{0,D}(\Omega))$ be piecewise constant in time, with values $w_k$ on $[t^k,t^{k+1}]$. We can then write:
+
+\begin{align*}
+	\int_I (\partial_t u , w)_{L^2(\Omega)}-\delta t \sum_{k=0}^{K-1}\left ( \frac{(u^{k+1}_h)^l - (u_h^k)^l}{\delta t} , w_k\right )_{L^2(\Omega)} = \\
+	\int_I (\partial_t (u-u_h^l) , w)_{L^2(\Omega)} + \sum_{k=0}^{K-1} \left (\int_{[t^k,t^{k+1}]} \partial_t u_h^l , w_k\right )_{L^2(\Omega)} -\delta t \sum_{k=0}^{K-1}\left ( \frac{(u^{k+1}_h)^l - (u_h^k)^l}{\delta t} , w_k\right )_{L^2(\Omega)} = \\
+	\int_I (\partial_t (u-u_h^l) , w)_{L^2(\Omega)} + \delta t \sum_{k=0}^{K-1}\left ( \frac{(e^{k+1}_h)^l - (e_h^k)^l}{\delta t} , w_k\right )_{L^2(\Omega)}
+\end{align*}
+
+For the first term we can use \cref{cor:deriv_est_semid}. For the second one we can write, thanks to \cref{prop:lift} \textcolor{red}{(one is not a FEM function, are we sure this holds? Also, is $w^{-l}$ of zero value???????????)}:
+
+\begin{align*}
+	\left | \delta t \sum_{k=0}^{K-1}\left ( \frac{(e^{k+1}_h)^l - (e_h^k)^l}{\delta t} , w_k\right )_{L^2(\Omega)}\right | \lesssim \\
+	\delta t h \sum_{k=0}^{K-1}\norm{ \frac{e^{k+1}_h - e_h^k}{\delta t}}_{L^2(\Omega_h)} \norm{w_k}_{H^1(\Omega)} + \delta t \sum_{k=0}^{K-1}\norm{ \frac{e^{k+1}_h - e_h^k}{\delta t}}_{-1,h} \norm{w_k}_{H^1(\Omega)} \leq \\
+	\left ( h\sqrt{\delta t \sum_{k=0}^{K-1}  \norm{ \frac{e^{k+1}_h - e_h^k}{\delta t}}_{L^2(\Omega_h)}^2}  + \sqrt{ \sum_{k=0}^{K-1}\norm{ \frac{e^{k+1}_h - e_h^k}{\delta t}}_{-1,h}^2}\right ) \norm{w}_{L^2(I,H^1(\Omega))}
+\end{align*}
+
+If we can control $\ds \delta t \sum_{k=0}^{K-1} \norm{ \frac{e^{k+1}_h - e_h^k}{\delta t}}_{L^2(\Omega_h)}^2$ we are done, also by the estimates in \cref{prop:d_vd_sd}. 
+
+%On this matter, we can adopt inverse inequalities to get, for $h$ small enough:
+%
+%\begin{align*}
+%	\delta t \sum_{k=0}^{K-1} h^2 \norm{ \frac{e^{k+1}_h - e_h^k}{\delta t}}_{H^1(\Omega_h)}^2 \lesssim \delta t \sum_{k=0}^{K-1} \norm{ \frac{e^{k+1}_h - e_h^k}{\delta t}}_{L^2(\Omega_h)}^2
+%\end{align*}
+
+We now test \cref{eqn:discr_err} by $\ds \frac{e^{k+1}_h - e_h^k}{\delta t}$. Then:
+
+\begin{align*}
+\norm{ \frac{e_{h}^{k+1}-e_h^k}{\delta t}}_{L^2(\Omega_h)}^2 + a_h\left (\theta e_h^{k+1}+(1-\theta)e^k_h, \frac{e^{k+1}_h - e_h^k}{\delta t}\right ) = \left (\theta \delta f_h^{k+1}+(1-\theta)\delta f_h^k + Q_h^k, \frac{e^{k+1}_h - e_h^k}{\delta t} \right )_{L^2(\Omega_h)}
+\end{align*}
+
+Applying an additional Young's inequality in the case $\theta =  1$ this reads: 
+
+\begin{align*}
+\norm{ \frac{e_{h}^{k+1}-e_h^k}{\delta t}}_{L^2(\Omega_h)}^2 + \frac{\norm{\nabla e_h^{k+1}}_{L^2(\Omega_h)}^2}{2\delta t}-  \frac{\norm{\nabla e_h^{k}}_{L^2(\Omega_h)}^2}{2\delta t}\leq  \left (\norm{\theta \delta f_h^{k+1}+(1-\theta)\delta f_h^k}_{L^2(\Omega_h)} + \norm{Q_h^k}_{-1,h} \right )\norm{\frac{e^{k+1}_h - e_h^k}{\delta t}}_{H^1(\Omega_h)}
+\end{align*}
+
+or also, as $e^0_h=0$:
+
+\begin{align*}
+\delta t \sum_{k=0}^{K-1}\norm{ \frac{e_{h}^{k+1}-e_h^k}{\delta t}}_{L^2(\Omega_h)}^2 \leq  \left (\sqrt{\delta t \sum_{k=0}^{K-1}\norm{\theta \delta f_h^{k+1}+(1-\theta)\delta f_h^k}_{L^2(\Omega_h)}^2} +\sqrt{\delta t \sum_{k=0}^{K-1}\norm{Q_h^k}_{-1,h}^2} \right )\sqrt{\delta t \sum_{k=0}^{K-1}\norm{\frac{e^{k+1}_h - e_h^k}{\delta t}}_{H^1(\Omega_h)}^2}
+\end{align*}
+
+
+Applying inverse inequalities and by the proof of \cref{prop:d_vd_sd}, for $h$ small:
+
+\begin{align*}
+h\sqrt{\delta t\sum_{k=0}^{K-1}\norm{ \frac{e_{h}^{k+1}-e_h^k}{\delta t}}_{L^2(\Omega_h)}^2 }\leq  \sqrt{\delta t \sum_{k=0}^{K-1}\norm{\theta \delta f_h^{k+1}+(1-\theta)\delta f_h^k}_{L^2(\Omega_h)}^2} + (\delta t)^{1/\theta} C
+\end{align*}
+
+\end{mproof}
+
+
+\begin{cor}[Further estimates for $A,B,C,D$]
+\label{cor:actual_par_est}
+Assume that $f_h^k$ and $f_h$ are the, respectively, fully discrete and semidiscrete solutions (see \cref{pb:num_scheme} and  \cref{pb:inh_parabolic_discr}) of \cref{pb:inh_parabolic}, for which all the assumptions of \cref{thm:fully_discr_est_par} hold (in particular, all the continuous and discrete compatibility conditions).
+
+We assume for simplicity, for the right hand side of the equation of $f$, call it $F$, that $F \in H^{1/\theta}(I,H^2(\Omega))$ and we take $F_h = \Pi_h F$ and $F_h^k=F_h(t^k)$.
+
+We can therefore say that:
+
+\begin{align*}
+	\norm{u(t^k)-(u_h^k)^l}_{L^2(\Omega)}\lesssim  h^2 + (\delta t)^{1/\theta}\\
+	\sqrt{\delta t \sum_{k=0}^{K-1} \norm{\theta(u(t^{k+1}) - u_h^{k+1})^l) + (1-\theta)(u(t^{k}) - u_h^{k})^l)}_{H^1(\Omega)}^2} \lesssim h + (\delta t)^{1/\theta}\\
+	\left | \int_I (\partial_t u , w_K)_{L^2(\Omega)}-\delta t \sum_{k=0}^{K-1}\left ( \frac{(u^{k+1}_h)^l - (u_h^k)^l}{\delta t} , w_{K,k}\right )_{L^2(\Omega)} \right |\lesssim \left ( h^2 + (\delta t)^{1/\theta} \right ) \norm{w_K}_{L^2(I,H^1_{0,D}(\Omega))}
+\end{align*}
+
+and $w_K$ is as in \cref{thm:fully_discr_est_par}.
+
+Note, the Dirichlet and Neumann boundaries need not to be the same for $f$, $u$.
+
+\end{cor}
+
+
+\begin{mproof}
+
+We start to establish semidiscrete and fully discrete estimates for $f$.
+
+We assume the following notation for its problem, see \cref{pb:inh_parabolic}:
+
+$$
+\left\{\begin{matrix}
+\partial_t f-\Delta f = F & \text{ on } \Omega \times I \\ 
+f = \gamma_D & \text{ on } \Gamma_D' \times I\\ 
+\partial_\nu f = \gamma_N & \text{ on } \Gamma_N' \times I \\
+f(0) =  f_0
+\end{matrix}\right.
+$$
+
+By our hypothesis, we can apply \cref{thm:fully_discr_est_par} to $f$ and obtain error bounds with constants $A(f), B(f), C(f), D(f)$ which we now show to be bounded, uniformly with respect to $h, \delta t$.
+
+In particular, by the choice of $F_h^k$, we see that $D(f)=0$.
+
+For $C(f)$, the requirement of compatibilty leaves only one last bound to be made, that on $\ds \int_I\norm{F_h^{(1/\theta)}}_{-1,h}^2$. This one is surely bounded with $h$, by the choice of $F_h=\Pi_h F$, the time smoothness of $F$, and \cref{prop:interp_curv}.
+
+For $A(f), B(f)$ we only need to estimate $\ds \int_I C_F^2$ and $\ds \int_I \norm{F_h}_{H^1(\Omega_h)}^2$. The latter term is done as above. Morevoer, by \cref{prop:interp_curv}, $C_F$ is just $\norm{F}_{H^2(\Omega)}$, whose integral in time is bounded by assumption.
+
+Therefore, \cref{prop:d_vd_sd} yields the estimate:
+
+\begin{align*}
+	D^2 = \delta t \sum_{k=0}^{K-1} \norm{\theta(f_h(t^{k+1}) - f_h^{k+1}) + (1-\theta)(f_h(t^{k}) - f_h^{k})}_{H^1(\Omega)}^2 \lesssim (\delta t)^{2/\theta}
+\end{align*}
+
+and $C_f = A_f$ by \cref{thm:semidiscrete_error_bound}.
+
+There remains to check that $A, B, C$ are also bounded with $h, \delta t$.
+
+For $C$, the assumed compatibility requirements leave us only the estimation of $\ds\int_I\norm{f_h^{(1/\theta)}}_{-1,h}^2$. To avoid complications with the fact that  this dual norm $\{-1,h\}$ might not actually be the same dual norm of the problem of $f$ (in fact, the Dirichlet and Neumann boundaries may not be the same between $f$ and $u$), we proceed to estimate the stronger $L^2(\Omega_h)$ norm. This can be done as above \cref{eqn:dd_est}. The bound uniform on $h$ is again a consequence of the assumed compatibility conditions, and the fact that $\norm{F_h^{(2/\theta)}}_{L^2(I,L^2(\Omega_h))} $ is bounded, by the requirements on $F$.
+
+There remains to bound $A, B$. Our smoothness assumptions allow us to only check $A$, where we see that we need to bound $\ds \int C_f^2$ (already done, by above $C_f=A_f$) and $\ds \int_I \norm{F_h}_{H^1(\Omega_h)}^2$. This term is bounded by basic energy estimates on $f_h$.
+
+This concludes the proof.
+
+\end{mproof}
+
 \textcolor{red}{Make a comment on why imposing BCs with interpolation of nodal values exactly on the boundary, is the right thing to do, in shape optimization... for instance, when the boundary moves, a projected bc would also move and we would need to know the exact transformation etc}
+
+\textcolor{red}{One could be extraprecise and track the dependence on $\Omega$ too, this is very difficult though}
 
 \printbibliography[title={Bibliography}]
 
