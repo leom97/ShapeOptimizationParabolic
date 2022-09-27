@@ -461,7 +461,7 @@ class ShapeOptimizationProblem:
         # print(td['R2']['Rate'])
         # print(td['R2'])
 
-        # PDEs definition
+        # PDEs definitions
         u0 = Function(self.V_vol)  # zero initial condition
         u_D_inner = Constant(0.0)  # zero inner BC
 
