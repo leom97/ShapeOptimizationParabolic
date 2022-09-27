@@ -31,6 +31,7 @@ class HeatEquation:
         self.solution_list = []
         self.implemented_time_schemes = ["implicit_euler", "crank_nicolson", "crank_nicolson_midpoint",
                                          "implicit_explicit_euler"]
+        self.interpolate_data = False   # if true, we use interpolated data and not the actual data with quadrature
         self.verbose = False
 
         self.efficient = efficient
@@ -198,14 +199,22 @@ class HeatEquation:
                         # If so
                         f_N_real = Function(self.S1h)
                         f_N_real.vector()[:] = self.pre_assembled_BCs[marker]["data"].interpolated_BC[time_index-1].vector()[:]
-                        L += dt * f_N_real * v * ds(self.mesh)
+
+                        if self.interpolate_data:
+                            L += dt * interpolate(f_N_real, self.S1h) * v * ds(self.mesh)
+                        else:
+                            L += dt * f_N_real * v * ds(self.mesh)
                     else:
                         raise Exception("Wrong type of boundary condition")
 
                 else:
                     if hasattr(f_N, 't'):
                         f_N.t = t
-                    L += dt * f_N * v * ds(self.mesh)
+
+                    if self.interpolate_data:
+                        L += dt * interpolate(f_N, self.S1h) * v * ds(self.mesh)
+                    else:
+                        L += dt * f_N * v * ds(self.mesh)
 
         return L
 
@@ -221,7 +230,11 @@ class HeatEquation:
         if self.f is not None:
             if hasattr(self.f, 't'):
                 self.f.t = t
-            L += dt * self.f * v * dx
+
+            if self.interpolate_data:
+                L += dt * interpolate(self.f, self.S1h) * v * dx
+            else:
+                L += dt * self.f * v * dx
 
         return L
 
@@ -379,6 +392,13 @@ class HeatEquation:
         if err_mode == "l2":
             error = errornorm(self.exact_solution, current_solution)
             return error
+        elif err_mode == "h1":
+            error = errornorm(self.exact_solution, current_solution, norm_type="h1")
+            return error
+        elif err_mode == "l2_and_h1":
+            error_l2 = errornorm(self.exact_solution, current_solution, norm_type="l2")
+            error_h1 = errornorm(self.exact_solution, current_solution, norm_type="h1")
+            return [error_l2, error_h1]
         elif err_mode == "linf":
             u_ex_interp = project(self.exact_solution, self.S1h)
             error = np.max(np.abs(u_ex_interp.vector()[:] - current_solution.vector()[:]))
