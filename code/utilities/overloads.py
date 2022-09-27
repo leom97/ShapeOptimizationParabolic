@@ -210,6 +210,7 @@ class RadialDisplacementBlock(Block):
 
         self.M2 = M2  # matrix bringing us from g.function_space() to VD
         self.VD = VD  # the volumetric function space, vector fields version
+        self.VD_dim = VD.dim()  # the volumetric function space, vector fields version
         self.V_sph_dim = g.function_space().dim()
 
     def __str__(self):
@@ -233,6 +234,18 @@ class RadialDisplacementBlock(Block):
         output[:] = adj_action
 
         return output
+
+    def evaluate_tlm_component(self, inputs, tlm_inputs, block_variable, idx, prepared=None):
+        # see http://www.dolfin-adjoint.org/en/latest/documentation/pyadjoint_docs.html
+
+        return self.recompute_component(tlm_inputs, block_variable, idx, prepared)
+
+    def evaluate_hessian_component(self, inputs, hessian_inputs, adj_inputs, block_variable, idx,
+                                   relevant_dependencies, prepared=None):
+        output = Vector(MPI.comm_world, self.V_sph_dim)
+        output[:] = 0
+        return output
+
 
 
 # transfer_from_sphere = overload_function(backend_transfer_from_sphere, TranferFromSphereBlock)
