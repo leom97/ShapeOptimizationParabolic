@@ -152,6 +152,7 @@ class ShapeOptimizationProblem:
             V_vol = FunctionSpace(self.exact_domain.mesh, L1_vol)
             L1_sph = FiniteElement("Lagrange", self.exact_sphere.mesh.ufl_cell(), 1)
             V_sph = FunctionSpace(self.exact_sphere.mesh, L1_sph)
+            self.V_sph_ex = V_sph
             VD = VectorFunctionSpace(self.exact_domain.mesh, "Lagrange", 1)
 
             self.q_ex = Function(V_sph)
@@ -172,6 +173,9 @@ class ShapeOptimizationProblem:
                 self.W_ex.vector()[:] = reusables_dict["W_ex"]
 
             ALE.move(self.exact_domain.mesh, self.W_ex)  # note, id(domain) = id(self.domain), so, both are moved
+
+            if reusables_dict is None:
+                return M2
 
     def save_firedrake_files(self, path):
         """
@@ -372,21 +376,21 @@ class ShapeOptimizationProblem:
             self.create_optimal_geometry(exact_geometry_dict)
             self.simulate_exact_pde(exact_pde_dict)
         else:
-            # try:
-            logging.info("Opening reusables pickle")
-            with open(path + "reusables" + '.pickle', 'rb') as handle:
-                reusables_dict = pickle.load(handle)
+            try:
+                logging.info("Opening reusables pickle")
+                with open(path + "reusables" + '.pickle', 'rb') as handle:
+                    reusables_dict = pickle.load(handle)
 
-            # create_optimal_geometry
-            self.create_optimal_geometry(exact_geometry_dict, reusables_dict)
-            # simulate_exact_pde
-            self.simulate_exact_pde(exact_pde_dict, reusables_dict)
-            # except:
-            #     logging.warning("Could not load exact data from files, regenerating")
-            #     simulated_geometry_dict["additional_domain_data"]["reload_xdmf"] = False
-            #     exact_geometry_dict["domain"]["reload_xdmf"] = False
-            #     self.create_optimal_geometry(exact_geometry_dict)
-            #     self.simulate_exact_pde(exact_pde_dict)
+                # create_optimal_geometry
+                self.create_optimal_geometry(exact_geometry_dict, reusables_dict)
+                # simulate_exact_pde
+                self.simulate_exact_pde(exact_pde_dict, reusables_dict)
+            except:
+                raise Exception("Could not load exact data from files")
+                # simulated_geometry_dict["additional_domain_data"]["reload_xdmf"] = False
+                # exact_geometry_dict["domain"]["reload_xdmf"] = False
+                # self.create_optimal_geometry(exact_geometry_dict)
+                # self.simulate_exact_pde(exact_pde_dict)
 
         self.initialize_optimization_domain(simulated_geometry_dict)
         self.initialize_pde_simulation(simulated_pde_dict)
@@ -435,6 +439,27 @@ class ShapeOptimizationProblem:
                 self.q_opt = Function(self.V_sph)  # null displacement (but doesn't need to be so)
             W = radial_displacement(self.q_opt, M2, self.V_def)
             ALE.move(self.optimization_domain.mesh, W)
+
+        # V = FunctionSpace(self.optimization_domain.mesh, "CG", 1)
+        # u = Function(V)
+        #
+        # w = TrialFunction(V)
+        # v = TestFunction(V)
+        # bcs = DirichletBC(V, 0, "on_boundary")
+        #
+        # DX = Measure("dx", domain=self.optimization_domain.mesh)
+        #
+        # solve(inner(grad(w), grad(v)) * DX == v * DX, u, bcs)
+        #
+        # J = assemble(sin(u) * DX)
+        #
+        # Jhat = ReducedFunctional(J, [Control(self.q_opt)])
+        # d = Function(self.V_sph)
+        # d.vector()[:] = (np.random.rand(len(d.vector())) - .5) * 1e-5
+        # td = taylor_to_dict(Jhat, self.q_opt, d)
+        #
+        # print(td['R2']['Rate'])
+        # print(td['R2'])
 
         # PDEs definition
         u0 = Function(self.V_vol)  # zero initial condition
@@ -517,7 +542,7 @@ class ShapeOptimizationProblem:
             raise Exception("No reduced cost functional is available")
         h = Function(self.V_sph)
         h.vector()[:] = .1
-        taylor_test(self.j, self.q_opt, h)
+        logging.info(taylor_to_dict(self.j, self.q_opt, h))
 
     def solve(self):
 
@@ -533,20 +558,28 @@ class ShapeOptimizationProblem:
         import time
         duration = -time.time()
 
-        if self.optimization_dict["solver"] == "scipy":
+        if self.optimization_dict["solver"] == "scipy_BFGS":
             logging.warning("Optimization in the L2 scalar product")
             # the scipy way
             bounds = None
             self.q_opt, self.opt_results = minimize(self.j, tol=1e-6, options=self.optimization_dict["options"],
                                                     bounds=bounds,
                                                     callback=callback)
-        elif self.optimization_dict["solver"] == "moola":
+        elif self.optimization_dict["solver"] == "moola_BFGS":
             # the moola way
             # Set up moola problem and solve optimisation
             problem_moola = MoolaOptimizationProblem(self.j)
 
             m_moola = moola.DolfinPrimalVector(self.q_opt, inner_product=self.optimization_dict["inner_product"])
             solver = moola.BFGS(problem_moola, m_moola, options=self.optimization_dict["options"])
+
+            self.q_opt, self.opt_results = solver.solve(callback=callback)
+
+        elif self.optimization_dict["solver"] == "moola_newton":
+            problem_moola = MoolaOptimizationProblem(self.j)
+
+            m_moola = moola.DolfinPrimalVector(self.q_opt, inner_product=self.optimization_dict["inner_product"])
+            solver = moola.NewtonCG(problem_moola, m_moola, options=self.optimization_dict["options"])
 
             self.q_opt, self.opt_results = solver.solve(callback=callback)
         else:
