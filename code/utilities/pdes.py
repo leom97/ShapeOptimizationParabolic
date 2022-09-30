@@ -54,6 +54,8 @@ class HeatEquation:
         if ode_scheme not in self.implemented_time_schemes:
             raise Exception("Unrecognized time stepping")
         self.ode_scheme = ode_scheme
+        if ode_scheme=="implicit_euler":
+            logging.warning("A strange error is raised if I don't include a minuscule term to the right hand side of the instant variational formulation")
 
     def set_time_discretization(self, final_time, N_steps=None, custom_times_array=None, relevant_mesh_size=None):
         '''
@@ -289,6 +291,7 @@ class HeatEquation:
             t_source = t
 
             a += dt * inner(grad(u), grad(v)) * dx
+            L += 1e-200 * inner(grad(last_solution), grad(v)) * dx
 
         elif ode_scheme_index == 1:  # CN (standard)
             t = self.times[time_index]
