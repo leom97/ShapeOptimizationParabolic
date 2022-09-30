@@ -77,6 +77,50 @@ def compute_spherical_transfer_matrix(V_vol, V_sph, p=None):
             M[i, j] = basis_sph(j, vol_points_sphere_dof[i, :])
 
     return M
+def compute_CG1_to_CG2_transfer_matrix(V1, V2):
+    """
+    From the nodal values of u \in V1 we return the nodal values of interpolate(u, V2)
+    """
+
+    # tree_V1 = V1.mesh().bounding_box_tree()
+    #
+    # def basis_sph(j, x):
+    #     # here, i is dof order
+    #     cell_index = tree_V1.compute_closest_entity(Point(*x))[0]
+    #     while cell_index > V1.dim():  # seems cannot be avoided, this is a bug: https://fenicsproject.discourse.group/t/out-of-range-while-using-compute-closest-entity/8796/2
+    #         x += (np.random.rand() - .5) * 1e-8
+    #         cell_index = tree_V1.compute_closest_entity(Point(*x))[0]
+    #     cell_global_dofs = V1.dofmap().cell_dofs(cell_index)
+    #     for local_dof in range(0, len(cell_global_dofs)):
+    #         if (j == cell_global_dofs[local_dof]):
+    #             cell = Cell(V1.mesh(), cell_index)
+    #             return V1.element().evaluate_basis(local_dof, x,
+    #                                                   cell.get_vertex_coordinates(),
+    #                                                   cell.orientation())
+    #     # If none of this cell's shape functions map to the i-th basis function,
+    #     # then the i-th basis function is zero at x.
+    #     return np.array([0.0])
+    #
+    # # Building the matrix
+    #
+    # # NB: dofs = #mesh_points only for order one FEM!
+    V1_dim = V1.dim()
+    V2_dim = V2.dim()
+    V1_dofs = range(V1_dim)
+    V2_dofs = range(V2_dim)
+    #
+    M = np.zeros((V2_dim, V1_dim))  # operator from sphere to volume
+    #
+    # vol_points_sphere_dof = vol_points_sphere[dof_to_vertex_map(V_vol),
+    #                         :]
+
+    logging.info(f"Assembling transfer matrix from CG1 to CG2")
+    for j in tqdm(V1_dofs):
+        phi = Function(V1)
+        phi.vector()[j] = 1
+        M[:,j] = interpolate(phi, V2).vector()[:]
+
+    return M
 
 
 # def backend_transfer_from_sphere(g, M, V_vol):
@@ -242,9 +286,7 @@ class RadialDisplacementBlock(Block):
 
     def evaluate_hessian_component(self, inputs, hessian_inputs, adj_inputs, block_variable, idx,
                                    relevant_dependencies, prepared=None):
-        output = Vector(MPI.comm_world, self.V_sph_dim)
-        output[:] = 0
-        return output
+        return self.evaluate_adj_component(inputs, hessian_inputs, block_variable, idx, prepared)
 
 
 
