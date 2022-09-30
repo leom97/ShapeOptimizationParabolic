@@ -25,6 +25,8 @@ logging.basicConfig(level=logging.INFO,
                     datefmt='%H:%M')
 
 set_log_level(LogLevel.ERROR)
+logging.getLogger('FFC').setLevel(logging.ERROR)
+logging.getLogger('UFL').setLevel(logging.ERROR)
 
 
 # %% Class definitions
@@ -542,7 +544,12 @@ class ShapeOptimizationProblem:
             raise Exception("No reduced cost functional is available")
         h = Function(self.V_sph)
         h.vector()[:] = .1
-        logging.info(taylor_to_dict(self.j, self.q_opt, h))
+        td = taylor_to_dict(self.j, self.q_opt, h)
+
+        logging.info("Results of Taylor tests: rates and residuals")
+        for i in range(3):
+            logging.info(td["R" + str(i)]["Rate"])
+            logging.info(td["R" + str(i)]["Residual"])
 
     def solve(self):
 
@@ -579,7 +586,7 @@ class ShapeOptimizationProblem:
             problem_moola = MoolaOptimizationProblem(self.j)
 
             m_moola = moola.DolfinPrimalVector(self.q_opt, inner_product=self.optimization_dict["inner_product"])
-            solver = moola.NewtonCG(problem_moola, m_moola, options=self.optimization_dict["options"])
+            solver = moola.RegularizedNewton(problem_moola, m_moola, options=self.optimization_dict["options"])
 
             self.q_opt, self.opt_results = solver.solve(callback=callback)
         else:
