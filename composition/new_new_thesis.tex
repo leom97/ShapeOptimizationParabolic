@@ -122,12 +122,12 @@
 \vspace*{3cm}
 {\Large Master's Thesis}\linebreak \\
 {\Large von}\linebreak \\
-{\Large [First Name Last Name]}\\
+{\Large Leonardo Mutti}\\
 \vspace*{3cm}
 {\Large 
 \begin{tabular}{ll}
-Supervisor: & Prof. Dr. [First Name Last Name]\\
-Advisor: & [First Name Last Name]\\
+Supervisor: & Prof. Dr. Michel Ulbrich\\
+Advisor: & Michel Ulbrich\\
 Submission Date: & [Day. Month. Year]
 \end{tabular}
 }
@@ -363,7 +363,7 @@ To do so, perturb $\phi$ by $\delta \phi$ and expanding the square:
 
 Now, $\ds \int_I \int_{T(U_r)}|\delta v_0-\delta w|^2|\det(DT_k)|\leq C(T_k)\norm{\delta v_0-\delta w}_{L^2(I,H_T)}^2\leq C(T_k)\norm{\phi}_E^2$, so that this term is of higher term.
 
-And $\int_I \int_{T(U_r)}(v_0+\bar{u}_T - w)(\delta v_0-\delta w)|\det(DT_k)|$ is linear and bounded by reasonings similar to the former ones.
+And $\ds \int_I \int_{T(U_r)}(v_0+\bar{u}_T - w)(\delta v_0-\delta w)|\det(DT_k)|$ is linear and bounded by reasonings similar to the former ones.
 
 \underline{Proof of 6}
 
@@ -1083,11 +1083,13 @@ Modifying the final-time behaviour of the energy might have detrimental effects 
 
 We now discretize states and adjoints using the scheme \cref{pb:num_scheme} (the adjoint equation can be cast into a standard heat equation by time reversal). If one chose an optimize-then-discretize approach this would be satisfactory (at least with regards to the numerical approximation of states and adjoints). However we will conduct experiments in a discretize-then-optimize setting, so that the upcoming results are only partially satisfactory \textcolor{red}{add something on commutation}.
 
+Note, the next assumption is given as if $U$, $U_h$ were given, i.e. they are not deformations of initial reference domains. This will be remarked later on, too.
+
 \begin{ass}[Hypothesis for the numerical discretization of \cref{pb:uni_state_adj} ]
 \label{ass:num_discr_shopt}
 \textcolor{white}{ }
 \begin{enumerate}
-	\item $\partial U \in C^2$ (for instance, the star shaped functions must be of class $C^2$), $\partial U_h$ interpolates $\partial U$ (it is polyhedral and what not and \textcolor{red}{all the hypothesis on quasi uniformity}
+	\item $\partial U \in C^2$ (for instance, the star shaped functions must be of class $C^2$), $U_h$ is polygonal/polyhedrak and $\partial U_h$ interpolates $\partial U$. The mesh family of $U_h$ must also be quasi-uniform \textcolor{red}{be precise}
 	\item $u_D \in H^1(I, H^{2}(\Gamma_D)) \cap H^{1/\theta+1}(I,H^{3/2}(\Gamma_D))$, $u_N \in H^2(I,L^2(\Gamma_N)) \cap H^{1/\theta}(I, H^2(\Gamma_D))$
 	\item $g_D(0)=0$ and $g_N^{(k)}(0), g_D^{(k+1)}(0)  = 0$ for $k=0,..., 1/\theta$
 	\item $\eta^{(k)}(T)  = 0$ for $k=0,..., 1/\theta-1$, $\eta \geq 0$ and $\eta \in C^{\infty}([0,T];\mR)$
@@ -1165,11 +1167,13 @@ To bound $A(a)$ (equivalently $B(a)$), we need to check the boundedness of $\ds 
 
 \section{Approximation of discretized shape gradient with the implicit Euler method}
 
-In the numerical experiments we adopt a discretize-then-optimize approach. When employing the implicit Euler method in time, we can see that optimization and discretization commute, in a suitable sense, as explained below. We are moreover able to quantify the error committed when substituting the continuous with the discretized shape gradient. 
+\textcolor{red}{Also do a semidiscrete approximation?}
+
+In the numerical experiments we adopt a discretize-then-optimize approach. When employing the implicit Euler method in time, we can see that optimization and discretization commute, in a suitable sense, as explained below. We are moreover able to quantify the error generated when substituting the continuous with the fully discretized shape gradient. 
 
 A future line of research could be to extend such conclusions to the case of the Crank-Nicolson method, so as to fully justify the adopted algorithms in the numerical experiments we conducted. A promising direction would be to adapt the arguments of \cite{flaig}, at least to show commutativity of optimization and discretization. But for now, we assume $\theta = 1$ throughout.
 
-At this level, for simplicity but also for the sake of generality, we work with again with arbitrary vector fields in place of radial fields.
+At this level, for simplicity, but also for the sake of generality, we work with again with arbitrary vector fields in place of radial fields.
 
 \begin{prop}[Discrete shape gradient]
 \label{prop:discrete_shape_gradient}
@@ -1195,12 +1199,12 @@ We dropped the dependence of $v,w$ on $\tau_h$, for simplicity. Here, the discre
 and 
 
 \begin{align*}
-	\left ( \frac{q_h^{k-1}-q_h^k}{\delta t}, v_h\right )_{L^2(\tau_h(U_{r,h}))} - (\nabla p_h^{k-1}, \nabla v_h )_{L^2(\tau_h(U_{r,h}))} + \eta(t^k)(v_h^k-w_h^k,v_h)_{L^2(\tau_h(U_{r,h}))} = 0, \quad 1\leq k \leq K\\
+	\left ( \frac{q_h^{k-1}-q_h^k}{\delta t}, v_h\right )_{L^2(\tau_h(U_{r,h}))} + (\nabla q_h^{k-1}, \nabla v_h )_{L^2(\tau_h(U_{r,h}))} - \eta(t^k)(v_h^k-w_h^k,v_h)_{L^2(\tau_h(U_{r,h}))} = 0, \quad 1\leq k \leq K\\
 	q_h^k = 0 \text{ on } \tau_h (\Gamma_{D,h,r}), \quad 1\leq k \leq K\\
 	q_h^K=0 
 \end{align*}
 
-The test functions are zero on the entire boundary for the equation of $p_{hk}$, and only on the moving boundary for $q_h^k$.
+The test functions are zero on the entire boundary for the equation of $p_{h}^k$, and only on the moving boundary for $q_h^k$.
 
 \end{pb}
 
@@ -1210,9 +1214,9 @@ We employ a continuous and piecewise linear transformation $\tau_h$, that thus p
 
 \begin{mproof}[Sketch of proof]
 
-We give a sketch of a proof, only to justify the time indices that appear in the expression. For a rigorous proof one could adopt the same techniques employed in the continuous case. Here we decide to make use of the method proposed in and \cite{lindemann2}, section 4 (or more generally, \cite{lindemann}), to which we refer, for additional details. 
+We give a sketch of a proof, only to justify the time indices that appear in the expressions of the adjoint equations. For a rigorous proof one could adopt the same techniques employed in the continuous case. For simplicity we decide here to make use of the method proposed in and \cite{lindemann2}, section 4 (or more generally, \cite{lindemann}), to which we refer, for additional details: it is worth noting that such method can be fully justified, and that we numerically verified the correctness of such derivation.
 
-To this end, we form a discretized Lagrangian, were integrals are replaced by Riemann sums (evaluated at the end of the time sub-intervals), and derivatives by difference quotients.
+To this end, we form a discretized Lagrangian just like in \cref{prop:lagr}, were integrals are replaced by Riemann sums (evaluated at the end of the time sub-intervals), and derivatives by difference quotients.
 
 Since we have $v_h^0=w_h^0=0$ we can slighlty simplify the procedure to obtain the discretized adjoints (that are exact on a discrete level): we only need to differentiate such Lagrangian by $v_h^k, w_h^k$, $k=1,...,K$. 
 
@@ -1224,7 +1228,9 @@ In doing so, we obtain the following scheme, for e.g. $p_h^k$:
 	p_h^K=0 
 \end{align*}
 
-where we test by $v_h \in S^1_{h,0}$. For now, the time indices are only suggestive notation. However, note that by applying time reversal and a relabeling of the indices, this is exactly the \cref{pb:num_scheme} applied to the equation of $p$, modulo a time shift in the right hand side: we thus obtain an implicit method, with an "explicit" right hand side $\eta(t^k)(v_h^k-w_h^k)$. Therefore $p_h^k$ is an approximation of  $p(t^k)$, and we will later quantify this assertion.
+where we test by $v_h \in S^1_{h,0}$. For now, the time indices are only suggestive notation. However, note that by applying implicit Euler to the time reversed $p$, this is exactly the \cref{pb:num_scheme} applied to the equation of $p$, modulo a time shift in the right hand side: we thus obtain an implicit method, with an "explicit" right hand side $\eta(t^k)(v_h^k-w_h^k)$.
+
+Therefore $p_h^k$ is an approximation of  $p(t^k)$, and we will later quantify this assertion.
 
 Also note, it is important that $\tau_h$ is piecewise linear on the discretization, and continous, so that finite element functions remain finite element functions after an application of $\tau_h$, and the geometry remains of polygonal/polyhedral nature. See again \cite{lindemann2} for further details on this matter.
 
@@ -1235,9 +1241,9 @@ Also note, it is important that $\tau_h$ is piecewise linear on the discretizati
 Throughout the rest of the section, we won't try to take into account the fact that the reference domains $U_r$ and and $U_{r,h}$ are changing under the actions of $\tau$ and $\tau_h$. It means that the estimates are $\tau, \tau_h$ dependent. Therefore we will fix $U = \tau(U_r)$ and $U_h=\tau_h(U_{r,h})$ once and for all. 
 
 
-Remember that \cref{ass:num_discr_shopt} must hold, which implies a specific on $\tau_h$, i.e. that it must interpolate $\tau$. To be fully rigorous, one should estimate additional quantities arising from the fact that $\tau_h \neq I_h\tau$. We refrain from doing this.
+Remember that \cref{ass:num_discr_shopt} must hold, which implies a specific form of $\tau_h$, i.e. that it must interpolate $\tau$. We refrain from generalizing the estimate to more arbitrary $\tau_h$, and we note that our result may be a first step of a more general argument (just like in finite element error estimates, the error between exact and discretized solution is decomposed into two parts by the introduction of a suitable interpolant).
 
-\textcolor{red}{But nobody did this in much detail, so I am justified, add this}
+\textcolor{red}{This is already better than the literature. But nobody did this in much detail, so I am justified, add this}
 \end{obs}
 
 We now give a quantitative estimate on the approximation power of the discrete adjoints we just obtained. This is needed, because the scheme they satisfy is not exactly the implicit Euler treated in \cref{prop:o-t-d}.
@@ -1254,27 +1260,30 @@ We see that we only need to show a bound of  $\delta t \sum_{k=1}^{K}\norm{\eta(
 
 Applying the triangle inequality and using again the proof of \cref{prop:o-t-d}, we see that we actually only need to bound the term:
 
-$$\delta t \sum_{k=1}^{K}\norm{\eta(t^{k-1})u_h(t^{k-1})-\eta(t^k)u_h(t^{k})}^2_{L^2(U_h)}$$
-
-which can be split into the sum of $\ds \delta t \sum_{k=1}^{K}\norm{\eta(t^{k-1})(u_h(t^{k-1})-u_h(t^{k}))}^2_{L^2(U_h)}$ and $\ds  \delta t \sum_{k=1}^{K}\norm{(\eta(t^{k-1})-\eta(t^k))u_h(t^{k})}^2_{L^2(U_h)}$.
-
-There holds $\ds  \delta t \sum_{k=1}^{K}\norm{(\eta(t^{k-1})-\eta(t^k))u_h(t^{k})}^2_{L^2(U_h)} \leq \norm{\eta'}_\infty^2 \delta t^3 \sum_{k=1}^{K}\norm{u_h(t^{k})}^2_{L^2(U_h)}$. Call $\pi u_h := u_h(t^{k})$ for $t \in (t^k, t^{k+1})$. By \cref{lemma:pw_constant_appr} we see that, for $\delta t $ small enough, one has $\norm{\pi u_h}_{L^2(I, L^2(U_h))} \lesssim \delta t \norm{u_h'}_{L^2(I,L^2(U_h))}$. This yields:
-
 \begin{align*}
-	 \ds  \delta t \sum_{k=1}^{K}\norm{(\eta(t^{k-1})-\eta(t^k))u_h(t^{k})}^2_{L^2(U_h)}\leq \norm{\eta'}_\infty^2 \delta t^3 \sum_{k=1}^{K}\norm{u_h(t^{k})}^2_{L^2(U_h)}  = \norm{\eta'}_\infty^2 \delta t^2 \int_I \norm{\pi_h u_h}^2_{L^2(U_h)}\\\lesssim \delta t^3 \norm{u_h'}_{L^2(I,L^2(U_h))}^2 \norm{\eta'}_\infty ^2
+\delta t \sum_{k=1}^{K}\norm{\eta(t^{k-1})u_h(t^{k-1})-\eta(t^k)u_h^k}^2_{L^2(U_h)}\lesssim\\
+\underbrace{\delta t \sum_{k=1}^{K}\norm{\eta(t^{k-1})(u_h(t^{k-1})-u_h(t^{k}))}^2_{L^2(U_h)}}_{\circled{1}}+\\
+\underbrace{\delta t \sum_{k=1}^{K}\norm{(\eta(t^{k-1})-\eta(t^k))u_h(t^{k})}^2_{L^2(U_h)}}_{\circled{2}}+\\
+\underbrace{\delta t \sum_{k=1}^{K}\norm{\eta(t^k)(u_h^k-u_h(t^k)))}^2_{L^2(U_h)}}_{\circled{3}}
 \end{align*}
 
-On the other hand,  $\ds \delta t \sum_{k=1}^{K}\norm{\eta(t^{k-1})(u_h(t^{k-1})-u_h(t^{k}))}^2_{L^2(U_h)} \leq \norm{\eta}_\infty^2 \delta t \sum_{k=1}^{K}\norm{u_h(t^{k-1})-u_h(t^{k})}^2_{L^2(U_h)}$.
-
-With a similar reasoning as in the proof of \cref{lemma:pw_constant_appr}, we conclude:
+There holds $\ds  \circled{2} \leq \norm{\eta'}_\infty^2 \delta t^3 \sum_{k=1}^{K}\norm{u_h(t^{k})}^2_{L^2(U_h)}$. Call $\pi u_h := u_h(t^{k})$ for $t \in (t^k, t^{k+1})$. By \cref{lemma:pw_constant_appr} we see that, for $\delta t $ small enough, one has $\norm{\pi u_h}_{L^2(I, L^2(U_h))} \lesssim \delta t \norm{u_h'}_{L^2(I,L^2(U_h))}$. This yields:
 
 \begin{align*}
-\delta t \sum_{k=1}^{K}\norm{\eta(t^{k-1})(u_h(t^{k-1})-u_h(t^{k}))}^2_{L^2(U_h)} \leq \norm{\eta}_\infty^2 \delta t \sum_{k=1}^{K} \delta t \int_{I_k}\norm{u_h'}_{L^2(I_k , L^2(U_h))}^2 
+	 \ds  \circled{2}\leq \norm{\eta'}_\infty^2 \delta t^3 \sum_{k=1}^{K}\norm{u_h(t^{k})}^2_{L^2(U_h)}  = \norm{\eta'}_\infty^2 \delta t^2 \int_I \norm{\pi_h u_h}^2_{L^2(U_h)}\\\lesssim \delta t^3 \norm{u_h'}_{L^2(I,L^2(U_h))}^2 \norm{\eta'}_\infty ^2
+\end{align*}
+
+On the other hand,  $\ds  \circled{1} \leq \norm{\eta}_\infty^2 \delta t \sum_{k=1}^{K}\norm{u_h(t^{k-1})-u_h(t^{k})}^2_{L^2(U_h)}$, and with a similar reasoning as in the proof of \cref{lemma:pw_constant_appr}, we conclude:
+
+\begin{align*}
+ \circled{1} \leq \norm{\eta}_\infty^2 \delta t \sum_{k=1}^{K} \delta t \int_{I_k}\norm{u_h'}_{L^2(I_k , L^2(U_h))}^2 
 \end{align*}
 
 In both cases, $\norm{u_h'}_{L^2(I,L^2(U_h))}^2$ can be bounded uniformly with respect to $h$ (and $\delta t$), by energy estimates (see e.g. \cref{cor:L2_deriv_est}).
 
 Note, it is clear from this estimate that a very steep $\eta$ will yield higher discretization errors.
+
+Finally, by \cref{prop:d_vd_sd} (which we can apply by \cref{ass:num_discr_shopt}), we obtain $\ds \circled{3} \lesssim (h^2+\delta t)\norm{\eta}_\infty^2 $.
 
 %This $O(\delta t^{2/\theta})$ by \cref{prop:d_vd_sd} and the above reasonings ($D=D(u)=0$, $C=C(u)$ is bounded uniformly).
 
@@ -1295,7 +1304,7 @@ There holds, under \cref{ass:num_discr_shopt}, the following error estimates:
 \end{prop}
 
 \begin{mproof}
-We again apply a separation into semidiscretization in space, and then full discretization, and adopt the notation $u$ to represent one of the two state variables.
+We again apply a separation into semidiscretization in space, and then full discretization, and adopt the notation $u$ to represent either one of the two state variables.
 
 \underline{Estimating $Q_h^k$ in the $L^2$ norm}
 
@@ -1356,16 +1365,16 @@ by \cref{cor:L2_deriv_est} and \cref{ass:num_discr_shopt}.
 
 \end{mproof}
 
-\begin{thm}[Discretization error of shape gradients]
-
-Let \ref{ass:num_discr_shopt} hold. Let $\delta \te \in W^{1,\infty}(U)$ and $\delta \te_h$ be a vector valued finite element function of $S^1_h=S^1_h(U_h)$. There exists a constant $\gamma$ that depends on $U$ and $U_h$ such that, for $h,\delta t$ small enough, we have:
+\begin{thm}[Fully discrete estimate for shape gradients, implicit Euler case]
+\label{thm:ie_shape_grad_est}
+Let  $U$ be fixed and $U_h$ as in \cref{ass:num_discr_shopt}. The same assumption must hold. Let $\delta \te \in W^{1,\infty}(U)$ and $\delta \te_h$ be a vector valued finite element function of $S^1_h=S^1_h(U_h)$. There exists a constant $\gamma$ that depends on $U$, the shape regularity and quasi-uniformity of the meshes, independent of $h, \delta t$, such that, for $h,\delta t$ small enough, we have:
 
 \begin{align*}
 |dJ(	U)[\delta \te]-dJ_{h,\delta t}(U_h)[\delta \te_h]|\leq \gamma\left [ (h+\delta t)(\norm{\delta \te}_{W^{1,\infty}(U)}+\norm{\delta \te_h}_{W^{1,\infty}(U_h)}) + \norm{\delta \te - \delta \te_h^l}_{W^{1,\infty}(U)}\right ]
 \end{align*}
 
 where the notation $dJ(U)[\delta \te]:=dJ(\tau)[\delta \te\circ \tau]$, if $U=\tau(U_r)$, is to emphasize that the dependence on $\tau$ is not tracked.
-Analogously $dJ_{h,\delta t}(U_h)[\delta \te]:=dJ_{h,\delta t}(\tau_h)[\delta \te_h\circ \tau]$, with $U_h = \tau_h(U_{r,h})$. We remark that we are assuming that $\tau_h$ (linearly) interpolates $\tau$ on the spatial discretization nodes.
+Analogously $dJ_{h,\delta t}(U_h)[\delta \te]:=dJ_{h,\delta t}(\tau_h)[\delta \te_h\circ \tau]$, with $U_h = \tau_h(U_{r,h})$ and a suitable $\tau_h$ that(linearly) interpolates $\tau$ on the spatial discretization nodes.
 
 \end{thm}
 \begin{mproof}
@@ -1575,8 +1584,110 @@ This concludes the proof.
 
 \end{mproof}
 
-
 \textcolor{red}{Make a comment on duality techniques and what not and compare with Paganini}
+
+
+\section{A superconvergence result for the spatial semidiscretization}
+
+We now show that for smooth displacement fields $\delta \te$ that vanish in a neighbourhood of the fixed boundary, a superconvergence result for the shape gradient is available, in the spirit of \cite{paganini}. The "compact support" assumption is not very strong in our setting: admissible displacements must already be zero at the fixed boundary, to generate a transformation that preserves $\Gamma_f$.
+
+This result, in turn, is shown only for the spatial semidiscretization, which however suggests that such a result may be available also in the fully discrete case. The implicit Euler case was already treated above, so that this becomes a hint especially for the case in which the Crank-Nicolson method is adopted.
+
+The difference with the estimates of \cite{paganini} lies in the fact that we are explicitly taking into account the geometry discrepancy $U \neq U_h$ (in the special case that $U_h$ interpolates $U$), apart from the time dependent setting we are in.
+
+Such estimates, as noted in \cite{paganini}, don't seem to be so easily obtainable for displacements $\delta \te \in W^{1,\infty}$ only.
+
+\textcolor{red}{Introduce and derive semidiscrete shape gradient}
+
+\begin{thm}[Superconvergence result for shape gradients, spatially semidiscrete case]
+Let $U$ be fixed and $U_h$ as in \cref{ass:num_discr_shopt}. Let \cref{ass:num_discr_shopt} itself hold, $\delta \te \in W^{2,\infty}(U)$, with $D\delta \te=0$ on the fixed boundary $\Gamma_f$. There exists a constant $\gamma$ tht depends on $U$, the shape regularity and quasi-uniformity of the meshes, but independent of $h$, such that, for $h$ small enough, we have:
+
+\begin{align*}
+	\left |dJ(U)[\delta \te] - dJ_h(U_h)[\delta \te^{-l}] \right|\leq \gamma  h^2 \norm{\delta \te}_{W^{2,\infty}(U)}
+\end{align*}
+
+where the notation for the shape gradients is analogous to that in \cref{thm:ie_shape_grad_est}.
+
+\end{thm}
+
+\begin{mproof}
+The proof is similar to that of \cref{thm:ie_shape_grad_est}: we compare "derivative" terms, "gradient" terms and "cost function" terms, and use \cref{prop:lin_appr}, apart from the semidiscretization error estimates for the partial differential equations, to obtain an overall $O(h^2)$ term. We indicate $\delta \te^{-l}=:\delta \te_h$.
+
+\underline{Derivatives}
+
+We recover the notation $u\rightarrow$ generic state ($v$ or $w$), $a\rightarrow$ adjoint state of $u$.
+
+We have:
+
+\begin{align*}
+	\int_I(u',a\dive(\delta \te))_{L^2(U)}-\int_I (u_h',a_h\dive(\delta \te_h))_{L^2(U_h)}=\\
+	\underbrace{\int_I((u-u_h^l)',a\dive(\delta \te))_{L^2(U)}}_{\circled{1}}+\\
+	\underbrace{\int_I((u_h')^l, (a-a_h^l)\dive(\delta \te))_{L^2(U)}}_{\circled{2}}+\\
+	\underbrace{\int_I((u_h')^l, a_h^l\dive(\delta \te))_{L^2(U)}-\int_I (u_h',a_h\dive(\delta \te_h))_{L^2(U_h)}}_{\circled{3}}
+\end{align*}
+
+We apply \cref{cor:L2_deriv_est} to $\circled{1}$, a thing which we can do, as \cref{ass:num_discr_shopt} and by the reasonings of \cref{prop:o-t-d}, to obtain:
+
+\begin{align*}
+	\left | \circled{1} \right | \lesssim h^2\norm{\dive{\delta \theta}}_{L^\infty(U)}
+\end{align*}
+
+It is crucial here that $\te$ has two weak derivatives, so that $a\te$ is a test function, as required by \cref{cor:L2_deriv_est}. 
+
+On the other hand, employing \cref{thm:semidiscrete_error_bound}, \cref{prop:lift} and suitable energy estimates to $u_h'$ (which are avaliable by \cref{ass:full_discr_smoothness}), we come as well to:
+
+\begin{align*}
+	\left | \circled{2} \right | \lesssim h^2\norm{\dive{\delta \theta}}_{L^\infty(U)}
+\end{align*}
+
+Employing \cref{prop:lin_appr}, and \cref{prop:lift}, we find:
+
+\begin{align*}
+	\left | \circled{3} \right |\lesssim  h^2 \norm{u_h'}_{L^2(I,H^1(U_h))}\norm{a_h}_{L^2(I,H^1(U_h))}\norm{\delta \te}_{W^{1,\infty}(U)} \lesssim  h^2 \norm{\delta \te}_{W^{1,\infty}(U)}
+\end{align*}
+
+\underline{Gradients}
+
+We perform a suitable splitting:
+
+\begin{align*}
+	\int_I (A'(\delta\te )\nabla u, \nabla a)_{L^2(U)}-\int_I (A'(\delta\te_h )\nabla u_h, \nabla a_h)_{L^2(U_h)} = \\
+	\underbrace{\int_I (A'(\delta\te )\nabla u, \nabla a)_{L^2(U)} - \int_I (A'(\delta\te_h )\nabla u^{-l}, \nabla a^{-l})_{L^2(U_h)}}_{\circled{4}}+\\
+	\underbrace{\int_I (A'(\delta\te )\nabla (u_h^l-u), \nabla a_h^l)_{L^2(U)} - \int_I (A'(\delta\te_h )\nabla (u_h - u^{-l}), \nabla a_h)_{L^2(U_h)}}_{\circled{5}}+\\
+	\underbrace{\int_I (A'(\delta\te )\nabla u, \nabla (a_h^l-a))_{L^2(U)} - \int_I (A'(\delta\te_h )\nabla u^{-l}, \nabla (a_h-a^{-l}))_{L^2(U_h)}}_{\circled{6}}+\\
+	- \underbrace{\int_I (A'(\delta\te )\nabla (u_h^l-u), \nabla (a_h^l-a))_{L^2(U)}}_{\circled{7}}+\\
+	- \underbrace{\int_I (A'(\delta\te )\nabla u, \nabla (a_h^l-a))_{L^2(U)}}_{\circled{8}}+\\
+	- \underbrace{\int_I (A'(\delta\te )\nabla (u_h^l-u), \nabla a)_{L^2(U)}}_{\circled{9}}
+\end{align*}
+
+We refer directly to \cref{prop:lin_appr} to show that $\ds |\circled{4}|\lesssim h^2\norm{\delta \te}_{W^{1,\infty}(U)}$. We also obtain, by additionally invoking \cref{prop:lift} and suitable energy estimates:
+
+\begin{align*}
+	\left | \circled{5} \right |, \left | \circled{6} \right |\lesssim h \norm{\delta \te}_{W^{1,\infty}(U)} \norm{u_h^l-u}_{L^2(I,H^1(U))},  h \norm{\delta \te}_{W^{1,\infty}(U)} \norm{a_h^l-a}_{L^2(I,H^1(U))}\lesssim h^2 \norm{\delta \te}_{W^{1,\infty}(U)}
+\end{align*}
+
+having used \cref{thm:semidiscrete_error_bound} in the last step. The same \cref{thm:semidiscrete_error_bound} is sufficient to conclude the bound $\ds \left | \circled{7} \right | \lesssim h^2 \norm{\delta \te}_{W^{1,\infty}(U)}$. The remaining terms are treated in the same way, we thus focus on $\circled{9}$. Using integration by parts \cref{thm:ibp}, the assumption on $D\delta \te$ and the fact that $u, u^l_h=0$ on the moving boundary $\Gamma_m$ \textcolor{red}{make the notation uniform!}, we obtain:
+
+\begin{align*}
+	\left |\circled{9} \right |= \left |\int_I(\dive(A'(\delta \te)\nabla a), u_h^l-u)_{L^2(U)}\right |\lesssim h^2 \norm{\delta \te}_{W^{2,\infty}(U)}
+\end{align*}
+
+where we used again \cref{thm:semidiscrete_error_bound}.
+
+\underline{Cost function}
+
+There holds:
+
+\begin{align*}
+	\int_I \int_U \eta |v-w|^2 \dive(\delta \te) - \int_I \int_{U_h} \eta |v_h-w_h|^2\dive(\delta \te_h)=\\
+	\int_I\int_U\eta((v-v_h^l)-(w-w_h^l))((v+v_h^l)-(w+w_h^l))\dive(\delta \te) + \int_I\int_U\eta(v_h^l-w_h^l)^2\dive(\delta \te)-\int_I\int_{U_h}\eta (v_h-w_h)^2\dive(\delta \te_h)
+\end{align*}
+
+The first term is $\lesssim h^2\norm{\delta \te}_{W^{1,\infty}(U)}$ thanks to the Cauchy-Schwarz inequality and \cref{thm:semidiscrete_error_bound}, the second one because of \cref{prop:lin_appr}. This concludes the proof.
+
+\end{mproof}
+
+\textcolor{red}{Clarify $\lesssim$ here}
 
 \appendix
 
@@ -4006,7 +4117,7 @@ See Proposition 5.4 of \cite{elliott}.
 
 \begin{prop}[Approximation of linear and bilinear forms]
 \label{prop:lin_appr}
-Let $v_h, w_h \in S^1_h$, $v,w \in H^2(\Omega)$ and $\delta \te_h \in (S^1_h)^d$ ($d$ is the dimension of $\Omega$). Then:
+Let $v_h, w_h \in S^1_h$, $v,w \in H^2(\Omega)$, $\delta \te_h \in (S^1_h)^d$ ($d$ is the dimension of $\Omega$), $\delta \te \in W^{1,\infty}(\Omega;\mR^d)$. Then:
 
 \begin{enumerate}
 	\item $\ds \left | \int_\Omega v_h^lw_h^l - \int_{\Omega_h}v_hw_h\right |\lesssim h \norm{v_h}_{L^2(\Omega_h)}\norm{w_h}_{L^2(\Omega_h)}$
@@ -4016,13 +4127,14 @@ Let $v_h, w_h \in S^1_h$, $v,w \in H^2(\Omega)$ and $\delta \te_h \in (S^1_h)^d$
 	\item $\ds \left | \int_\Omega \nabla v\nabla w - \int_{\Omega_h}\nabla v^{-l}\nabla w^{-l}\right |\lesssim h^2 \norm{v}_{H^2(\Omega)}\norm{w}_{H^2(\Omega)}$
 	\item $\ds \left | \int_\Omega v_h^lw_h^l \dive(\delta  \te_h^l) - \int_{\Omega_h}v_h w_h \dive(\delta \te_h)\right |\lesssim h \norm{v_h}_{L^2(\Omega_h)}\norm{w_h}_{L^2(\Omega_h)} \norm{\dive(\delta \te_h)}_{L^\infty(\Omega_h)}$
 	\item $\ds \left | \int_\Omega (A'(\delta	\te_h^l)\nabla v_h^l)\nabla w_h^l - \int_{\Omega_h}(A'(\delta	\te_h)\nabla v_h)\nabla w_h\right |\lesssim h \norm{v_h}_{H^1(\Omega_h)}\norm{w_h}_{H^1(\Omega_h)}\norm{D\delta \te_h}_{L^\infty(\Omega_h)}$
+	\item $\ds \left | \int_\Omega v_h^l w_h^l \dive(\delta  \te_h^l) - \int_{\Omega_h}v_h w_h \dive(\delta \te_h)\right |\lesssim h^2 \norm{v_h}_{H^1(\Omega_h)}\norm{w_h}_{H^1(\Omega_h)} \norm{\dive(\delta \te_h)}_{L^\infty(\Omega_h)}$
 \end{enumerate}
 \end{prop}
 
 \begin{mproof}
 See \cite{edelmann}, and in particular, for the third point, Lemma 5.6 of \cite{kovacs}. Only the last two points are not already present in the literature.
 
-\underline{Proof of $6$}
+\underline{Proof of $6, 8$}
 
 We can reason as in Section 6 of \cite{elliott}. To this end, we perform integration by parts:
 
@@ -4035,7 +4147,9 @@ We can reason as in Section 6 of \cite{elliott}. To this end, we perform integra
 
 The conclusion now follows from \cref{prop:G_h} and the fact that, for square matrices $A,B$, we have $|\tr(AB)|\leq \norm{A}_F\norm{B}_F$, and $\norm{\cdot }_F$ is the Frobenius norm.
 
-\underline{Proof of $7$}
+By noting that the first and second integrals are zero on the interior elements, and upon using the "narrow band" inequality Lemma 6.3, \cite{elliott}, as suggested in  Lemma 6.4 of \cite{elliott}, we are able to also conclude that $8$ must hold.
+
+\underline{Proof of $7, 9$}
 
 It is very similar to the previous ones. The only peculiarity is the appearance of a term like $A'(\delta \te_h)\circ G_h^{-1} - A'(\delta \te_h^l)$. This is estimated, in the $L^\infty$ norm, as follows:
 
@@ -4905,6 +5019,8 @@ We further assume:
 
 \end{ass}
 
+We consider $f_h^k$ to be a suitable approximation of $f_h(t^k)$, i.e. $f_h^k \simeq f_h(t^k)$.
+
 \begin{pb}[Numerical scheme]
 \label{pb:num_scheme}
 Under \cref{ass:full_discr_smoothness}, it is:
@@ -4921,7 +5037,7 @@ u_h^0=u_{0h}
 \label{prop:d_vd_sd}
 We are working under \cref{{ass:full_discr_smoothness}}.
 
-Call $e_h^k:=u_h^k-u_h(t^k)$ and $\delta f_h^k:=f_h^k-f_h(t^k)$. Then, for $\theta=1, 1/2$, we have $u_h \in H^{1/\theta+1}(I, S^1_h)$ and:
+Call $e_h^k:=u_h^k-u_h(t^k)$ and $\delta f_h^k:=f_h^k-f_h(t^k)$. Then, for $\theta=1, 1/2$, we have $u_h \in H^{1/\theta+1}(I, S^1_h)$ and, for $1\leq n \leq K$:
 
 \begin{align*}
 \delta t \sum_{k=0}^{n-1} \norm{ \frac{e_{h}^{k+1}-e_h^k}{\delta t}}_{(H^1_{0,Dh}(\Omega_h))^*}^2 + \norm{e_{h}^{n}}_{L^2(\Omega_h)}^2 + \delta t \sum_{k=0}^{n-1}\norm{\theta e_h^{k+1}+(1-\theta)e^k_h}_{H^1(\Omega_h)}^2 \lesssim \\
@@ -4930,7 +5046,7 @@ D^2 + (\delta t)^{2/\theta} C^2
 
 where $C^2:=\ds \int_I \norm{f^{(1/\theta)}_h}_{-1,h}^2+\int_I\norm{ g_{N}^{(1/\theta)}}_{H^{2}(\Gamma_{N})}^2 + \int_I\norm{g_D^{(1/\theta+1)}}_{H^{3/2}(\Gamma_D)}^2 + \norm{\delta_{h}(0)^{(1/\theta)}}_{L^2(\Omega_h)}^2$.
 
-Moreover, $\ds D^2:= \ds {\delta t\sum_{k=0}^{n-1} \norm{\theta \delta f_h^{k+1}+(1-\theta)\delta f_h^k}_{L^2(\Omega_h)}^2}$.
+Moreover, $\ds D_n^2:= \ds {\delta t\sum_{k=0}^{n-1} \norm{\theta \delta f_h^{k+1}+(1-\theta)\delta f_h^k}_{L^2(\Omega_h)}^2}$.
 
 We refer to the proof of \cref{prop:wp_discr_par} for the definition and properties of $\delta_h$.
 
@@ -4950,7 +5066,7 @@ For the $L^2$ estimate we closely follow \cite{quarteroni} here, page 385 and fo
 
 \underline{Error equation}
 
-We note that the sole smoothness assumptions allow us to conclude that $u_h \in H^2(I, S^1_h)$, so that $\partial_t u_h$ admits pointwise values. Then we have:
+We note that the sole smoothness assumptions allow us to conclude that $u_h \in H^2(I, S^1_h)$, so that $\partial_t u_h$ admits pointwise values. Then we have: \textcolor{red}{A $\theta$ is probably missing from $\partial_t$}
 
 \begin{align*}
 \left ( \frac{u_{h}(t^{k+1})-u_h(t^k)}{\delta t}, v_h\right)_{L^2(\Omega_h)} + a_h(\theta u_h(t^{k+1}) + (1-\theta) u_h(t^{k}), v_h) =\\ \left ( \frac{u_{h}(t^{k+1})-u_h(t^k)}{\delta t} - \partial_t u_h(t^{k+1}) - (1-\theta)\partial_t u_h(t^k), v_h\right)_{L^2(\Omega_h)} +\\ (\theta f_h(t^{k+1})+(1-\theta)f_h(t^{k}), v_h)_{L^2(\Omega_h)} + (\theta g_{N,h}(t^{k+1})+(1-\theta)g_{N,h}(t^{k}), v_h)_{L^2(\Gamma_{N,h})}
@@ -5110,7 +5226,7 @@ With the hypothesis and notation of \cref{thm:semidiscrete_error_bound}, \cref{p
 	\left | \int_I (\partial_t u , w_K)_{L^2(\Omega)}-\delta t \sum_{k=0}^{K-1}\left ( \frac{(u^{k+1}_h)^l - (u_h^k)^l}{\delta t} , w_{K,k}\right )_{L^2(\Omega)} \right |\lesssim \left ( h^2A + D + (\delta t)^{1/\theta} C\right ) \norm{w_K}_{L^2(I,H^1_{0,D}(\Omega))}
 \end{align*}
 
-where $D^2:= \ds {\delta t\sum_{k=0}^{n-1} \norm{\theta \delta f_h^{k+1}+(1-\theta)\delta f_h^k}_{L^2(\Omega_h)}^2}$. Here $w_K$ is assumed to be piecewise constant on the time discretization, and with values $w_{K,k}$, on $[t^k,t^{k+1}]$, that belong to $H^1_{0,D}(\Omega)$. \textcolor{red}{If we put $w \in H^(I,H^1_{0,D)}$ this probably still works, by choosing to evaluate the sum on the right on the local averages of $w$, and employing dual estimates for such projection}.
+where $D^2:= \ds {\delta t\sum_{k=0}^{K-1} \norm{\theta \delta f_h^{k+1}+(1-\theta)\delta f_h^k}_{L^2(\Omega_h)}^2}$. Here $w_K$ is assumed to be piecewise constant on the time discretization, and with values $w_{K,k}$, on $[t^k,t^{k+1}]$, that belong to $H^1_{0,D}(\Omega)$. \textcolor{red}{If we put $w \in H^(I,H^1_{0,D)}$ this probably still works, by choosing to evaluate the sum on the right on the local averages of $w$, and employing dual estimates for such projection}.
 \end{thm}
 
 \begin{mproof}
@@ -5260,7 +5376,7 @@ For $C$, the assumed compatibility requirements leave us only the estimation of 
 
 There remains to bound $A, B$. Our smoothness assumptions allow us to only check $A$, where we see that we need to bound $\ds \int C_f^2$ (already done, by above $C_f=A_f$) and $\ds \int_I \norm{F_h}_{H^1(\Omega_h)}^2$. This term is bounded by basic energy estimates on $f_h$.
 
-This concludes the proof.
+This concludes the proof of $7$, that of $9$ follows just like $6$ implied $8$, see above.
 
 \end{mproof}
 
