@@ -474,16 +474,16 @@ class SmoothedSquareAnnulusMesh(AbstractMesh):
         # The smoothed corners (start, center, end)
 
         self.arc_points = [
-            (c[0] - L / 2, c[1] - H / 2 + R, 0),# bottom-left
+            (c[0] - L / 2, c[1] - H / 2 + R, 0),  # bottom-left
             (c[0] - L / 2 + R, c[1] - H / 2 + R, 0),
             (c[0] - L / 2 + R, c[1] - H / 2, 0),
-            (c[0] + L / 2 - R, c[1] - H / 2, 0),# bottom-right
+            (c[0] + L / 2 - R, c[1] - H / 2, 0),  # bottom-right
             (c[0] + L / 2 - R, c[1] - H / 2 + R, 0),
             (c[0] + L / 2, c[1] - H / 2 + R, 0),
-            (c[0] + L / 2, c[1] + H / 2 - R, 0),# top-right
+            (c[0] + L / 2, c[1] + H / 2 - R, 0),  # top-right
             (c[0] + L / 2 - R, c[1] + H / 2 - R, 0),
             (c[0] + L / 2 - R, c[1] + H / 2, 0),
-            (c[0] - L / 2 + R, c[1] + H / 2, 0), # top-left
+            (c[0] - L / 2 + R, c[1] + H / 2, 0),  # top-left
             (c[0] - L / 2 + R, c[1] + H / 2 - R, 0),
             (c[0] - L / 2, c[1] + H / 2 - R, 0)
         ]
@@ -495,8 +495,10 @@ class SmoothedSquareAnnulusMesh(AbstractMesh):
         self.limit_angles = [self.angle_from_point(np.array(list(pair))[0:2]) for pair in self.arc_points]
 
         # Add lines between all points creating the rectangle
-        channel_lines = [[model.add_line(points_corners[3*i-1], points_corners[3*i]), model.add_circle_arc(points_corners[3*i],points_corners[3*i+1],points_corners[3*i+2])]
-                         for i in [0,1,2,3]]
+        channel_lines = [[model.add_line(points_corners[3 * i - 1], points_corners[3 * i]),
+                          model.add_circle_arc(points_corners[3 * i], points_corners[3 * i + 1],
+                                               points_corners[3 * i + 2])]
+                         for i in [0, 1, 2, 3]]
 
         channel_lines = [item for sublist in channel_lines for item in sublist]
 
@@ -554,7 +556,7 @@ class SmoothedSquareAnnulusMesh(AbstractMesh):
         return mesh, mf
 
     def angle_from_point(self, x):
-        return np.remainder(np.arctan2(x[...,1], x[...,0]), 2 * np.pi)
+        return np.remainder(np.arctan2(x[..., 1], x[..., 0]), 2 * np.pi)
 
     def rotate(self, p, origin=(0, 0), degrees=0):
         """
@@ -580,32 +582,31 @@ class SmoothedSquareAnnulusMesh(AbstractMesh):
 
         # Radial coordinates
         r = np.linalg.norm(x, axis=1)
-        t = self.angle_from_point(x)   #/np.pi * 180
+        t = self.angle_from_point(x)  # /np.pi * 180
 
         # Technique: rotate so e.g. top-right smoothed corner, apply just one transformation, apply back
 
-        angles = np.inf*np.ones_like(t)
+        angles = np.inf * np.ones_like(t)
         angles[np.logical_and(self.limit_angles[0] <= t, t <= self.limit_angles[2])] = 180
         angles[np.logical_and(self.limit_angles[3] <= t, t <= self.limit_angles[5])] = 90
         angles[np.logical_and(self.limit_angles[6] <= t, t <= self.limit_angles[8])] = 0
         angles[np.logical_and(self.limit_angles[9] <= t, t <= self.limit_angles[11])] = -90
 
         for th in [180, 90, 0, -90]:
-            x[angles==th] = self.rotate(x[angles==th], degrees=th)
+            x[angles == th] = self.rotate(x[angles == th], degrees=th)
 
         p7 = np.array(self.arc_points[7])[0:2]
 
-        xh = x[angles<np.inf]/r[angles<np.inf][:,None]
-        f_corners = np.dot(xh, p7) + np.sqrt(np.dot(xh, p7)**2 - np.linalg.norm(p7)**2 + self.smoothing_radius**2)
-        f_square = radial_function_to_square(x[angles==np.inf], self.side_length)
+        xh = x[angles < np.inf] / r[angles < np.inf][:, None]
+        f_corners = np.dot(xh, p7) + np.sqrt(np.dot(xh, p7) ** 2 - np.linalg.norm(p7) ** 2 + self.smoothing_radius ** 2)
+        f_square = radial_function_to_square(x[angles == np.inf], self.side_length)
 
         f = np.zeros_like(angles)
 
-        f[angles<np.inf] = f_corners
-        f[angles==np.inf] = f_square
+        f[angles < np.inf] = f_corners
+        f[angles == np.inf] = f_square
 
         return f
-
 
 
 class CircleMesh(AbstractMesh):
@@ -679,8 +680,9 @@ class CircleMesh(AbstractMesh):
             raise Exception("The query point must be a numpy array")
         return np.ones(x.shape[0])
 
+
 # Some boundaries
 
-def sea_urchin(x):  # displacement vector field
+def sea_urchin(x, omega=12, amplitude=.2, shift=.3):  # displacement vector field
     th = np.remainder(np.arctan2(x[..., 1], x[..., 0]), 2 * np.pi)
-    return .3 + .2 * np.cos(12*th)
+    return shift + amplitude * np.cos(omega * th)
