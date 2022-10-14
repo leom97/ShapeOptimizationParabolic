@@ -1374,3 +1374,17 @@ class PreAssembledBC():
                 bc.assign(interpolate(self.expression, self.V))
                 bc.vector()[:] += self.noise_level * (np.random.rand(len(bc.vector())) * .5 - 1)
                 self.interpolated_BC.append(bc)
+    def perturb(self, noise_level):
+        sh = self.interpolated_BC[0].vector()[:].shape
+        self.interpolated_BC_original = []
+
+        linf_norm = 0
+        for u in self.interpolated_BC:
+            m = np.abs(u.vector()[:]).max()
+            if m > linf_norm:
+                linf_norm = np.abs(u.vector()[:]).max()
+        for (u, t) in zip(self.interpolated_BC, self.times):
+            u_ori = Function(u.function_space())
+            u_ori.assign(u)
+            self.interpolated_BC_original.append(u_ori)
+            u.vector()[:] += (np.random.rand(*sh) - .5) * noise_level * linf_norm
