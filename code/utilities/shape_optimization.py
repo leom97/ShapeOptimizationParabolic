@@ -7,7 +7,8 @@ import matplotlib.pyplot as plt
 import moola
 from tqdm import tqdm
 
-from utilities.meshing import AnnulusMesh, CircleMesh, SquareAnnulusMesh, EfficientAnnulusMesh, SmoothedSquareAnnulusMesh, sea_urchin
+from utilities.meshing import AnnulusMesh, CircleMesh, SquareAnnulusMesh, EfficientAnnulusMesh, \
+    SmoothedSquareAnnulusMesh, sea_urchin
 from utilities.pdes import HeatEquation, TimeExpressionFromList, PreAssembledBC
 from utilities.overloads import compute_spherical_transfer_matrix, \
     compute_radial_displacement_matrix, radial_displacement, radial_function_to_square
@@ -114,14 +115,14 @@ class ShapeOptimizationProblem:
                                           )
         elif domain_dict["type"] == "smoothed_square_annulus":
             domain = SmoothedSquareAnnulusMesh(resolution=domain_dict["resolution"],
-                                       path=self.problem_folder + subfolder,
-                                       inner_radius=domain_dict["inner_radius"],
-                                       side_length=domain_dict["side_length"],
-                                       int_refinement=domain_dict["int_refinement"],
-                                       ext_refinement=domain_dict["ext_refinement"],
-                                       xdmf_path=xdmf_path,
-                                       smoothing_radius=domain_dict["smoothing_radius"]
-                                       )
+                                               path=self.problem_folder + subfolder,
+                                               inner_radius=domain_dict["inner_radius"],
+                                               side_length=domain_dict["side_length"],
+                                               int_refinement=domain_dict["int_refinement"],
+                                               ext_refinement=domain_dict["ext_refinement"],
+                                               xdmf_path=xdmf_path,
+                                               smoothing_radius=domain_dict["smoothing_radius"]
+                                               )
         else:
             raise ValueError("Domain unsupported")
         return domain
@@ -193,8 +194,6 @@ class ShapeOptimizationProblem:
         with open(path + "firedrake_data" + '.pickle', 'wb') as handle:
             pickle.dump(firedrake_dict, handle)
 
-
-
     def simulate_exact_pde(self, exact_pde_dict, reusables_dict=None):
         if self.exact_domain is None:
             raise Exception("Call first create_optimal_geometry")
@@ -247,7 +246,6 @@ class ShapeOptimizationProblem:
                     u.vector()[:] = v
                     heq.solution_list.append(u)
 
-            logging.warning("A perturbation on the boundary data will yield a pertubation on the exact solution")
             self.u_ex = TimeExpressionFromList(0.0, heq.times, heq.solution_list)
             if self.exact_exterior_BC == "N":
                 self.u_D = self.u_ex
@@ -286,18 +284,18 @@ class ShapeOptimizationProblem:
         if simulated_pde_dict["N_steps"] is not None:
             self.optimization_pde_dict["N_steps"] = simulated_pde_dict["N_steps"]
 
-        logging.fatal("Remove perturbation from here, put it elsewhere")
-        if self.exact_exterior_BC == "N":
-            self.u_D.perturb(simulated_pde_dict["noise_level_on_exact_BC"])
-        elif self.exact_exterior_BC == "D":
-            self.u_N.perturb(simulated_pde_dict["noise_level_on_exact_BC"])
+        # logging.fatal("Remove perturbation from here, put it elsewhere")
+        # if self.exact_exterior_BC == "N":
+        #     self.u_D.perturb(simulated_pde_dict["noise_level_on_exact_BC"])
+        # elif self.exact_exterior_BC == "D":
+        #     self.u_N.perturb(simulated_pde_dict["noise_level_on_exact_BC"])
 
         # Generic set-up
         L1_vol = FiniteElement("Lagrange", self.optimization_domain.mesh.ufl_cell(), 1)
         self.V_vol = FunctionSpace(self.optimization_domain.mesh, L1_vol)
 
         self.v_equation = HeatEquation(efficient=True)
-        self.w_equation = HeatEquation(efficient=False)
+        self.w_equation = HeatEquation(efficient=True)
 
         self.v_equation.set_ODE_scheme(self.optimization_pde_dict["ode_scheme"])
         self.v_equation.verbose = True
@@ -322,6 +320,10 @@ class ShapeOptimizationProblem:
         logging.info("Pre-assembling the boundary conditions")
         external_DBC = PreAssembledBC(self.u_ex, self.v_equation.times[1:], self.V_vol)
         external_NBC = PreAssembledBC(self.u_N, times, self.V_vol)
+
+        external_NBC.perturb(simulated_pde_dict["noise_level_on_exact_BC"])
+        external_DBC.perturb(simulated_pde_dict["noise_level_on_exact_BC"])
+
         self.pre_assembled_BCs = {"ext_neumann": external_NBC, "ext_dirichlet": external_DBC}
 
     # def save_problem_data(self, path):
@@ -471,14 +473,16 @@ class ShapeOptimizationProblem:
             "Working under the assumptions that the marker 2 is for the outer boundary, and 3 for the inner one")
 
         # Dirichlet state
-        self.v_equation.set_mesh(self.optimization_domain.mesh, self.optimization_domain.facet_function, self.V_vol, order=1)
+        self.v_equation.set_mesh(self.optimization_domain.mesh, self.optimization_domain.facet_function, self.V_vol,
+                                 order=1)
         self.v_equation.set_PDE_data(u0, marker_dirichlet=[2, 3],
                                      dirichlet_BC=[self.u_D, u_D_inner],
                                      pre_assembled_BCs={2: {"type": "dirichlet", "marker": 2,
                                                             "data": self.pre_assembled_BCs["ext_dirichlet"]}})
 
         # Dirichlet-Neumann state
-        self.w_equation.set_mesh(self.optimization_domain.mesh, self.optimization_domain.facet_function, self.V_vol, order=1)
+        self.w_equation.set_mesh(self.optimization_domain.mesh, self.optimization_domain.facet_function, self.V_vol,
+                                 order=1)
         self.w_equation.set_PDE_data(u0, marker_dirichlet=[3], marker_neumann=[2],
                                      dirichlet_BC=[u_D_inner],
                                      neumann_BC=[self.u_N],
@@ -525,7 +529,6 @@ class ShapeOptimizationProblem:
                     J += assemble(.25 * dt * fs * (v - w) ** 2 * dx)
                 else:
                     J += assemble(.5 * dt * fs * (v - w) ** 2 * dx)
-
 
         if "H1_smoothing" in self.cost_functional_dict:
             if disable_radial_parametrization:
@@ -615,20 +618,84 @@ class ShapeOptimizationProblem:
         plt.title("Logarithm of cost function value")
         plt.show()
 
-    def save_results_to_file(self, path):
+    def plot_boundary(self, path):
 
-        plot(self.exact_domain.mesh)
-        plt.savefig(path + "exact_domain.png", bbox_inches="tight", pad_inches=0)
+        lw = 1
+        b = (0, 219/255, 1)
+        r = (.89, 0, 0)
+
+        self.j(self.q_opt)
+        u = Function(self.V_vol)
+
+        dbc_int = DirichletBC(self.V_vol, 1, self.optimization_domain.facet_function, 3)
+        dbc_int.apply(u.vector())
+
+        int_dofs = u.vector()[:] > .5
+
+        dbc_ext = DirichletBC(self.V_vol, -1, self.optimization_domain.facet_function, 2)
+        dbc_ext.apply(u.vector())
+
+        ext_dofs = u.vector()[:] < -.5
+
+        mesh_coords_dofs = self.optimization_domain.mesh.coordinates()[dof_to_vertex_map(self.V_vol),...]
+
+        Bxytmp = mesh_coords_dofs[int_dofs]
+        Btheta = np.arctan2(Bxytmp[:, 1], Bxytmp[:, 0])
+        Binds = np.argsort(Btheta)
+        Bxy = np.vstack((Bxytmp[Binds, :], Bxytmp[Binds[0], :]))
+        fig, ax = plt.subplots(1, 1)
+        ax.set_aspect("equal", "box")
+        ax.plot(Bxy[:, 0], Bxy[:, 1], '-', color=r, linewidth=lw)
+
+        Bxytmp = mesh_coords_dofs[ext_dofs]
+        Btheta = np.arctan2(Bxytmp[:, 1], Bxytmp[:, 0])
+        Binds = np.argsort(Btheta)
+        Bxy = np.vstack((Bxytmp[Binds, :], Bxytmp[Binds[0], :]))
+        ax.plot(Bxy[:, 0], Bxy[:, 1], '-', color=b, linewidth=lw)
+
+        self.j(interpolate(self.q_ex, self.V_sph))
+
+        mesh_coords_dofs = self.optimization_domain.mesh.coordinates()[dof_to_vertex_map(self.V_vol),...]
+        u = Function(self.V_vol)
+
+        dbc_int = DirichletBC(self.V_vol, 1, self.optimization_domain.facet_function, 3)
+        dbc_int.apply(u.vector())
+
+        int_dofs = u.vector()[:] > .5
+
+        Bxytmp = mesh_coords_dofs[int_dofs]
+        Btheta = np.arctan2(Bxytmp[:, 1], Bxytmp[:, 0])
+        Binds = np.argsort(Btheta)
+        Bxy = np.vstack((Bxytmp[Binds, :], Bxytmp[Binds[0], :]))
+        ax.plot(Bxy[:, 0], Bxy[:, 1], '-', color=b, linewidth=lw)
+
+        plt.savefig(path + "comparison.pdf", bbox_inches="tight", pad_inches=0, transparent=True)
+
+        self.j(self.q_opt)
+
+    def save_results_to_file(self, path):
+        lw = 1
+        b = (0, 219 / 255, 1)
+        r = (.89, 0, 0)
+        self.j(self.q_opt)
+        plot(self.exact_domain.mesh, linewidth=lw, color=b)
+        plt.savefig(path + "exact_domain.pdf", bbox_inches="tight", pad_inches=0)
         plt.clf()
-        plot(self.optimization_domain.mesh)
-        plt.savefig(path + "estimated_domain.svg", bbox_inches="tight", pad_inches=0)
+        plot(self.optimization_domain.mesh, linewidth=lw, color=r)
+        plt.savefig(path + "estimated_domain.pdf", bbox_inches="tight", pad_inches=0)
         plt.clf()
-        plt.plot(np.log(np.array(self.opt_results.gradient_infty_hist)))
-        plt.savefig(path + "gradient_infty_norm.svg", bbox_inches="tight", pad_inches=0)
+        plt.plot(np.log(np.array(self.opt_results.gradient_infty_hist)),color=b)
+        plt.savefig(path + "gradient_infty_norm.pdf", bbox_inches="tight", pad_inches=0)
         plt.clf()
-        plt.plot(np.log(np.array(self.opt_results.energy_hist)))
-        plt.savefig(path + "cost_function.svg", bbox_inches="tight", pad_inches=0)
+        plt.plot(np.log(np.array(self.opt_results.energy_hist)), color=b)
+        plt.savefig(path + "cost_function.pdf", bbox_inches="tight", pad_inches=0)
         plt.clf()
+        self.j(Function(self.V_sph))
+        plot(self.optimization_domain.mesh, linewidth=lw, color=r)
+        plt.savefig(path + "initial_domain.pdf", bbox_inches="tight", pad_inches=0)
+        plt.clf()
+
+        self.plot_boundary(path)
 
         zero_function = Function(self.V_vol)  # for mesh visualization
         mesh_file = File(path + "final_mesh.pvd")
