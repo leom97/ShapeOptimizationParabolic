@@ -110,8 +110,8 @@
 
 % Titelseite
 \pagestyle{empty}       % keine Seitennummer
-  \parbox{1.5cm}{\resizebox*{110pt}{!}{\includegraphics{Logos/blau/2015_Logo_TUM_CMYK.pdf}}}\hspace{310pt}%
-  \parbox{1.5cm}{\resizebox*{90pt}{!}{\includegraphics{Logos/08_Mathematik/MA_blau/FAK_MA_CMYK.pdf}}}%
+%  \parbox{1.5cm}{\resizebox*{110pt}{!}{\includegraphics{Logos/blau/2015_Logo_TUM_CMYK.pdf}}}\hspace{310pt}%
+%  \parbox{1.5cm}{\resizebox*{90pt}{!}{\includegraphics{Logos/08_Mathematik/MA_blau/FAK_MA_CMYK.pdf}}}%
 \vspace*{1.5cm}
 \begin{center}
 {\Huge Technical University of Munich}
@@ -1161,6 +1161,10 @@ Examining the proofs of the inverse and implicit function theorems as given e.g.
 
 \end{mproof}
 
+\section{Hilbertian regularization framework}
+
+\tred{todo}
+
 \chapter{Discretization}
 
 In this chapter we focus on giving justification to the numerical observations contained in \cref{chap:num_exp}. Linear finite elements are used to discretize the partial differential equations in space, whereas the implicit Euler or the Crank-Nicolson methods are used for advancing in time.
@@ -1272,13 +1276,15 @@ The spatial discretization is done on a polygonal approxumation of $U$. We expli
 
 Throughout, set $\theta=1$ to obtain the implicit Euler method, $\theta=1/2$ for the Crank-Nicolson method.
 
+\tred{Check $g_N(0)=0$, wtf}
+
 \begin{ass}[Hypothesis for the numerical discretization of \cref{pb:uni_state_adj} ]
 \label{ass:num_discr_shopt}
 \textcolor{white}{ }
 \begin{enumerate}
 	\item $\partial U \in C^2$ (for instance, the star shaped functions must be of class $C^2$), $U_h$ is polygonal/polyhedrak and $\partial U_h$ interpolates $\partial U$. The mesh family of $U_h$ must also be quasi-uniform \textcolor{red}{be precise}
 	\item $u_D \in H^1(I, H^{2}(\Gamma_D)) \cap H^{1/\theta+1}(I,H^{3/2}(\Gamma_D))$, $u_N \in H^2(I,L^2(\Gamma_N)) \cap H^{1/\theta}(I, H^2(\Gamma_D))$
-	\item $g_D(0)=0$ and $g_N^{(k)}(0), g_D^{(k+1)}(0)  = 0$ for $k=0,..., 1/\theta$
+	\item $g_D(0)=0$ and $g_N^{(k)}(0), g_D^{(k+1)}(0)  = 0$ for $k=0,..., 1/\theta-1$
 	\item $\eta^{(k)}(T)  = 0$ for $k=0,..., 1/\theta-1$, $\eta \geq 0$ and $\eta \in C^{\infty}([0,T];\mR)$
 \end{enumerate}
 
@@ -2063,7 +2069,7 @@ Using the same discretization parameters to generate the synthetic data, and the
 
 We are adopting, as already mentioned, linear finite elements, for simplicity, but also computational efficiency. The framework of \cref{chap:inh_fem} can be however potentially adapted to accommodate isoparametric elements, see the works of e.g. \cite{edelmann}, \cite{elliott}, \cite{ranner}. Isoparametric elements elements are necessary, when adopting higher order basis functions, in order to preserve optimal accuracy (see section 4.4 of \cite{strang} for a discussion on this). The version of FEniCS we are using (2019.1) doesn't provide support for curved geometries, and the latest release FEniCSx is not yet interfaced with dolfin-adjoint. Alternatively, Firedrake could be employed, which has compatibility with dolfin-adjoint, although we felt it to be not flexible enough with the transfering of functions between non conforming meshes, something we needed to at several places throughout our code.
 
-This in constrast to \cite{harbrecht}, where the authors employ order $2$ isoparametric elements (in the context of the boundary element method). This is a major difference with \cite{harbrecht}, quadratic boundary elements opposed to linear finite elements, in out case.
+This in constrast to \cite{harbrecht}, where the authors employ order $2$ isoparametric elements (in the context of the boundary element method).
 
 The motivation for this is that the analysis of \cite{paganini}, which we partially repeated in our setting, suggests that the volume form of the shape gradient is more accurate a boundary form. 
 
@@ -2075,7 +2081,7 @@ As previously mentioned, we make use of the package Moola. This is because of it
 
 We mostly experimented with an L-BFGS algorithm, and with a modified Newton's method. We implemented the latter following the observations contained in \cite{eppler}, a work centered around a very similar shape optimization problem to ours, in an attempt to alleviate some spurious artifacts we observed, and attributed to the ill-posedness of the shape identification problem. We will soon discuss these in \cref{sec:experiments}.
 
-With regards to the temporal weight (see \cref{sec:o-t-d} for details), we chose $\eta(t) = \exp\{-a/(t-T)^2\}$, with a suitable $a>0$ ($a=0.05$ in our runs). $\eta$ roughly looks like this:
+With regards to the temporal weight (see \cref{sec:o-t-d} for details), we chose $\eta(t) = \exp\{-a/(t-T)^2\}$, with a suitable $a>0$ ($a=0.005$ in our runs). $\eta$ roughly looks like this:
 
 \begin{figure}[H]
 \centering
@@ -2083,16 +2089,181 @@ With regards to the temporal weight (see \cref{sec:o-t-d} for details), we chose
 \caption{The temporal weight $\eta$}\label{fig:eta}
 \end{figure}
 
+\underline{Scalar product}
+\tred{say something about this, please}
+
 \section{Experiments}
 \label{sec:experiments}
 
+All the experiments are run on a laptop's Intel i7-6700HQ CPU at 2.60GHz, and 16 GB of RAM.
+
+For simplicity we work in two dimensions and with $D:=B_2(0)$, $\Omega_r := B_{1}(0)$, so that $U_r$ is an annulus centered at the origin. 
+
 \subsection{Shape optimization results}
 
-For simplicity we work in two dimensions and with $D:=B_1(0)$, $\Omega_r = B_{0.5}(0)$, so that $U_r$ is an annulus centered at the origin.
+We have $T=2$ throughout, and the reference mesh looks as follows. Note that in the following plots, the "exact" domain is always interpolated into the finite element space of the control $\tilde{q}_h$, to emphasize what is the best possible result that can be attained by the optimization routine.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.3\columnwidth]{Images/hourglass_constant/initial_domain.pdf}
+\caption{Initial guess for the shape optimization process}\label{fig:initial_domain}
+\end{figure}
+
+\underline{Some exploratory runs}
+
+Let us illustrate a few runs, performed with different Neumann data $g$ and with an hourglass-shaped inclusion. The challenge of this example is to correctly resolve the "corners" in the middle of the hourglass, which have a strong derivative (in the sense of radial functions), are far away from the external boundary (so that the influence on the boundary data of the heat equations may become weak), and where the mesh becomes very distorted, which worsens the quality of the mesh and thus, possibly, of the finite element solution.
+
+To avoid the inverse crime, the Dirichlet data is generated on a mesh that is twice as fine as the to-be-optimized one, and with $120$ steps of the Crank-Nicolson method, whereas $60$ are used in the simulation. The parameter $\tilde{h}$ is set to $0.03$ during synthesis, and to $0.15$ during inversion. Such configuration will be referred to as "standard configuration".
+
+We show the results of six runs performed with three different Neumann sources, having a common behaviour in time: $g_1 = t^2$, $g_2 = x_1g_1$, $g_3=x_2g_2, g_4 = t^2\sin(4t), g_5 = t, g_6 = 1$. The examples took $25, 20, 20, 25, 25, 25$ L-BFGS iterations to converge, amounting to around $4$ minutes for each run.
+
+$g_2, g_3, g_4$ represent various complications of the base example $g_1$. 
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.3\columnwidth]{Images/hourglass_oscillating/comparison.pdf}
+\includegraphics[width=0.3\columnwidth]{Images/hourglass_linear/comparison.pdf}
+\includegraphics[width=0.3\columnwidth]{Images/hourglass_quadratic/comparison.pdf}
+\caption{Exact and simulated inclusion (in red) for the runs with $g_2,g_3$ adn $g_4$, in order from left to right}\label{fig:comparison_neumann}
+\end{figure}
+
+On the other hand, $g_5,g_6$ lack, respectively, one and two orders of compatibility, that were required in \cref{ass:num_discr_shopt}. We can see a better result in $g_1$, then in $g_5$ and lastly in $g_6$:
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.2\columnwidth]{Images/hourglass_constant_1_2_cropped.pdf}
+\caption{From the outside to the inside: run with $g_6, g_5, g_1$ and exact solution in blue}\label{fig:comparison_compatibility}
+\end{figure}
+
+
+For completeness, we report a picture of the final deformed mesh corresponding to the $g_1$ run:
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.3\columnwidth]{Images/hourglass_constant/estimated_domain.pdf}
+\caption{Estimated domain in the $g_1$ run}\label{fig:estimated_domain}
+\end{figure}
+
+and of the history of the cost function and the gradient $l^\infty$ norm:
+
+\begin{figure}[H]
+\centering
+\includegraphics[height=0.25\columnwidth]{Images/hourglass_constant/comparison.pdf}
+\includegraphics[height=0.25\columnwidth]{Images/hourglass_constant/cost_function.pdf}
+\includegraphics[height=0.25\columnwidth]{Images/hourglass_constant/gradient_infty_norm.pdf}
+\caption{Reconstruction, cost function (logarithm) and gradient history (logarithm) for the $g_1$ run and $25$ iterations}\label{fig:hourglass_constant}
+\end{figure}
+
+\underline{The effect of $\eta$}
+
+We now show a visual comparison of the same example $g_1$, run with three different values $a$ for $\eta(t) = \exp\{-a/(t-T)^2\}$, which are $a=0.005, a = 0.05$ and $a=0$.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.2\columnwidth]{Images/hourglass_constant_no_eta_more_eta_cropped.pdf}
+\caption{From outside to inside: run with $g_1$ and $a=0$, $a = 0.05$, $a=0.005$ and exact solution in blue}\label{fig:eta_run}
+\end{figure}
+
+Some very small differences can be noticed: it seems that small values of $a$ yield an improvement over a $0$ value of $a$. Our hypothesis for this is in accordance with the behaviour of \cref{fig:comparison_compatibility}: $a=0$ means losing some compatibility. A too large value of $a$, on the other hand, perturbs the problem too much (so that the plot corresponding to $a=0.005$ is yields the best result here). From here, we conjecture that $a$ should be chosen small enough, but positive.
+
+
+\underline{Inner product}
+
+We found it beneficial to work with smooth descent directions by making use of the $H^1$ inner product during optimization, instead of the $L^2$ one. This is natively handled by Moola. Doing so we obtain smoother boundaries, and more admissible ones: note in fact that we are working in an unconstrained setting for simplicity, whereas the optimization variable $\tilde{q}_h$ should be positive and small enough for the computational domain to be contained in $B_{2}(0)$. With the $L^2$ scalar product we found that iterates were sometimes assuming negative values.
+
+\begin{figure}[H]
+\centering
+\includegraphics[height=0.3\columnwidth]{Images/hourglass_constant_l2/comparison.pdf}
+\caption{Reconstruction for the run $g_1$ and the $L^2$ inner product}\label{fig:l2}
+\end{figure}
+
+
+\underline{Ill-posedness}
+
+\textit{Degeneration of the boundary}
+
+It has already been noted in \cite{harbrecht} that \cref{pb:shid} is "severely ill-posed". The ill-posedness of the inverse problem is mirrored in the ill-posedness of the shape optimization problem \cref{pb:shopt}, where the responsible for such ill-posedness is the compactness of the continuous shape Hessian at the optimal domain: this phenomenon has been exhaustively analyzed in \cite{eppler} in an "elliptic" version of \cref{pb:shid}, but we expect their conclusions to be applicable also to our case.
+
+We computed the shape Hessian at the optimal domain with the help of dolfin-adjoint and observed indeed large condition numbers, as expected (with values $\simeq 10^5$).
+
+This means that small changes in the problem data might yield large changes in the reconstruction, and instabilities in the reconstruction process. In fact, as is commonplace in solving ill-posed inverse problems, proceeding further with the iterations of the solution algorithm will only at first improve the reconstruction, but later result in a degradation of the result (see e.g. \cite{kirsch}, section 2.1). As a remedy, one should impose prior knowledge on the reconstruction through regularization, and/or adopt some form of early stopping.
+
+We did experience these phenomena: up to a certain number of L-BFGS iterations, we obtained acceptable results, the ones we showed above. Proceeding further led to a degradation of the inner boundary. The run with $g_1$ and stopping at $75$ iterations instead $25$, produced:
+
+\begin{figure}[H]
+\centering
+\includegraphics[height=0.25\columnwidth]{Images/hourglass_constant_degenerate/comparison.pdf}
+\includegraphics[height=0.25\columnwidth]{Images/hourglass_constant_degenerate/cost_function.pdf}
+\includegraphics[height=0.25\columnwidth]{Images/hourglass_constant_degenerate/gradient_infty_norm.pdf}
+\caption{Reconstruction, cost function (logarithm) and gradient history (logarithm) for the $g_1$ run and $75$ iterations}\label{fig:degenerate}
+\end{figure}
+
+The solution obtained at around $25$ iterations remains unchanged and stable until about iteration $35$, then the cost function is further reduced, along some spurious descent direction.
+
+This degeneration is even more evident and quicker, in case the implicit Euler method is used during optimization, in place of the Crank-Nicolson one, all the other parameters being unchanged (so that the exact data is still generated with the Crank-Nicolson method). This is one of the reasons for adopting the Crank-Nicolson method: the implicit Euler method yields a faster, worse degeneration of the boundary, and a less accurate one, when early stopping is applied. We show again reconstruction, cost function and gradient history.
+
+\begin{figure}[H]
+\centering
+\includegraphics[height=0.25\columnwidth]{Images/comparison_25_45_euler.pdf}
+\includegraphics[height=0.25\columnwidth]{Images/hourglass_constant_euler/cost_function_45.pdf}
+\includegraphics[height=0.25\columnwidth]{Images/hourglass_constant_euler/gradient_infty_norm_45.pdf}
+\caption{Reconstruction, cost function (logarithm) and gradient history (logarithm) for the $g_1$ run. The black boundary corresponds to $45$ iterations, the blue one to $25$. The presence of the lateral lobes in the black reconstruction indicates a negative radial function.}\label{fig:degenerate_euler}
+\end{figure}
+
+\textit{About the inverse crime}
+
+Let us avoid the inverse crime in a different way, through application of noise to the problem data $f,g$. We therefore set the discretization parameters for the synthetization, equal to those used for the inversion. The noise level is $1$\%, with respect to the $L^\infty(I,L^\infty)$ norm of the data, and the perturbation is random uniform. 
+
+We noticed that the optimization process is much more stable with the number of iterations, than when different discretizations are adopted, for inversion and synthesis. The reconstructed boundary is very similar as in the above runs, but it starts to present spurious oscillations  very late (only after iteration $80$, in the case of the $g_1$ run). The discrepancy between exact data, and data avalailable during optimization, is randomly distributed and of zero mean in the second approach, whereas we noted that it presents a "trend" given by the chosen PDEs discretization algorithm in the first one. This seems to be key to the degeneration behaviour that we observed. 
+
+We did most of the experiments with different discretizations between inversion and synthesis, because this approach highlited better the ill-posedness of the problem. Moreover, in a real-world situation, the data can be interpreted to be sampled from a solution with discretization parameters tend to zero, hence another reason to proceed as we did.
+
+\textit{Second order information}
+
+The shape optimization problem is ill-posed, which is reflected in an ill-conditioned Hessian, at the optimal domain. This can cause undesired oscillations when employing first order optimization methods, a possible way out being the usage of additional second order information, like the shape Hessian.
+
+We thus experimented with a regularized Newton method, following the observations of \cite{eppler} (to which we refer the reader for further details about the method), and found out that, indeed, spurious oscillations don't seem to happen: using $g_1$ as Neumann data, we find that it takes about $20$ iterations for the shape to stabilize. However, the runtime increases to about $2.75$ minutes per iteration, the shape Hessian being automatically computed by dolfin-adjoint. On top of this, the reconstruction seems to be less precise than when employing the L-BFGS method, with early stopping. This convinced us to stick with the L-BFGS method. 
+
+\begin{figure}[H]
+\centering
+\includegraphics[height=0.25\columnwidth]{Images/hourglass_constant_newton/comparison.pdf}
+\includegraphics[height=0.25\columnwidth]{Images/hourglass_constant_newton/cost_function.pdf}
+\includegraphics[height=0.25\columnwidth]{Images/hourglass_constant_newton/gradient_infty_norm.pdf}
+\caption{Reconstruction, cost function (logarithm) and gradient history (logarithm) for the $g_1$ run, and the regularized Newton method from \cite{eppler}. The reconstructions after $20$ and $70$ shape are visually indistinguishable.}\label{fig:newton}
+\end{figure}
+
+\underline{Sea urchin}
+
+Lastly, we show the reconstruction of a 2D version of the more complicated "sea urchin" inclusion of \cite{harbrecht}. The discretization configuration is the standard one. The reconstruction ran for $30$ iterations. This time, for completeness, we also applied $1$\% noise to the data.
+
+\begin{figure}[H]
+\centering
+\includegraphics[height=0.3\columnwidth]{Images/sea_urchin/exact_domain.pdf}
+\includegraphics[height=0.3\columnwidth]{Images/sea_urchin/estimated_domain.pdf}
+\includegraphics[height=0.3\columnwidth]{Images/sea_urchin/comparison.pdf}
+\caption{"Exact" domain, reconstruction, and comparison between reconstruction and the exact domain, interpolated to the optimization finite element space.}\label{fig:sea_urchin}
+\end{figure}
+
+
+
+\tred{regularization doesn't really work, mention Github, time of simulation}
+%\tred{hessian in L-BFGS}
+
+\tred{mention in the theory that we are using H1 scalar products... cite allaire}
+
 
 \subsection{Estimates for the shape gradients}
 
-\tred{hessian in L-BFGS}
+We go on to present some numerical evidence of the estimates shown in \cref{sec:d-t-o_IE} and \cref{sec:superconv}. Throughout, $U_h$ will be approximating $U = B_2(0)\setminus \overline{B_1(0)}$.
+
+For $\theta=1$ (implicit Euler) or $\theta=1/2$ (Crank-Nicolson), we set $\delta t = h^{2\theta}$. We choose a number of spikes $s$ from $0$ to $9$, an amplitude among $0.1$ and $0.2$ and we consider the resulting sinusoidal radial function $q(t) = A \cos(st)$, interpolated on a spherical mesh of constant size $\tilde{h} = 0.5$. This mesh size stays fixed across all the runs. Note, this yields a very coarse mesh: the rationale is to have the resulting displacement field approximating a vector field that is in $W^{1,\infty}$ but not $W^{2,\infty}$. Doing so, we obtain $20$ different displacement fields $\delta \te_{h,\tilde{h}}^i$, with which we test the shape gradients.  
+
+
+Not being able to represent non-discretized shape gradients, we content ourselves to analyzing the quantity:
+
+$$\max_{i=1,...,20}\frac{|dJ_{h_f,\delta t_f}(U_{h_f})[\delta \te_{h_f,\tilde{h}}^i]-dJ_{h,\delta t}(U_h)[\delta \te_{h,\tilde{h}}^i]|}{\norm{\delta \te_{h,\tilde{h}}^i}_{W^{1,\infty}(U_{h_f})}}$$
+
+where $h_f \ll h$, $\delta t_f \ll \delta t$.
 
 \chapter{Conclusion}
 
