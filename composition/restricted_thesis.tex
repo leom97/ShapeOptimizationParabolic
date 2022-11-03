@@ -24,6 +24,8 @@
 \usepackage{mathtools}
 \usepackage{array}
 \usepackage{wrapfig}
+\usepackage{makecell}
+\usepackage{longtable}
 \usepackage{geometry}	% remove me in case
  \geometry{
  a4paper,
@@ -128,7 +130,7 @@
 
 % Titelseite
 \pagestyle{empty}       % keine Seitennummer
-
+\addcontentsline{toc}{chapter}{Frontpage}
 \pagenumbering{roman} 
 
 %  \parbox{1.5cm}{\resizebox*{110pt}{!}{\includegraphics{Logos/blau/2015_Logo_TUM_CMYK.pdf}}}\hspace{310pt}%
@@ -177,22 +179,23 @@ Place, Date\\
 original, hand-written signature
 \newpage
 
-% vertikaler Leerraum
-\chapter*{Acknowledgements}
-
-First and foremost, I would like to express my gratitude to my supervisor. Apart from suggesting this fascinating topic and providing his advice, he was encouraging and never pressuring, which helped me to get in the right mindset.
-
-My path to the end this project was challenging, everybody who took me here must feel proud for this success. To my parents, family, friends, and to Anna: thank you.
-
-%Because parents and family play a substantial role in one's development, they must share the biggest part of my success today: they too should be proud of themselves. 
+%% vertikaler Leerraum
+%\chapter*{Acknowledgements}
 %
-%To my friends and to Anna, one way or another you helped shaping me into the person who made it to here: thank you.  
+%First and foremost, I would like to express my gratitude to my supervisor. Apart from suggesting this fascinating topic and providing his advice, he was encouraging and never pressuring, which helped me to get in the right mindset.
+%
+%My path to the end this project was challenging, everybody who took me here must feel proud for this success. To my parents, family, friends, and to Anna: thank you.
+%
+%%Because parents and family play a substantial role in one's development, they must share the biggest part of my success today: they too should be proud of themselves. 
+%%
+%%To my friends and to Anna, one way or another you helped shaping me into the person who made it to here: thank you.  
 
 
 
 % Seite 3
 \newpage
 \section*{Abstract}
+\addcontentsline{toc}{chapter}{Abstract}
 In the context of elliptic, PDE-constrained shape optimization, it has already been noted that a distributed expression for the shape gradient is more accurate than its boundary counterpart, when finite elements are employed to discretize the arising PDEs. 
 
 We further explore these observations in two directions: first, we work in a parabolic setting and second, we explicitly address the fact that finite element solutions live on polygons/polyhedra, but they approximate functions defined on smooth domains. We therefore prove, and numerically verify, semidiscrete estimates for the shape gradients in spatially semidiscrete, as well as in fully discrete cases. The implicit Euler or Crank-Nicolson methods are adopted for the time discretization.
@@ -215,14 +218,163 @@ Our analysis is based on a model shape optimization problem for the heat equatio
 
 \newpage
 \tableofcontents  
+\addcontentsline{toc}{chapter}{Table of contents}
 
+\chapter*{Notation, basic definitions}
+\addcontentsline{toc}{chapter}{Notation, basic definitions}
+\begin{longtable}{|l|l|}
+%\centering
+%\begin{tabular}{|l|l|} 
+\hline
+
+\multicolumn{2}{|l|}{\textbf{Linear algebra}}    \\ 
+\hline
+$M^t$ & transpose of the matrix $M$                \\ 
+\hline
+$\tr M $ & trace of the matrix $M$                \\ 
+\hline
+$\det M $ & determinant of the matrix $M$                \\ 
+\hline
+$(u,v)$ & $u^tv$, the standard euclidean product of the column vectors $u,v$                       \\ 
+\hline 
+$I$ & identity matrix                       \\ 
+\hline 
+
+\multicolumn{2}{|l|}{\textbf{Domains}}    \\ 
+\hline
+$\text{Int}A$ & the topological interior of the set $A$                \\ 
+\hline
+bounded Lipschitz domain & definition 1.2.1.1 of \cite{grisvard}                     \\ 
+\hline
+$D$ & a ``hold-all" bounded Lipschitz domain in $\mR^n$ \\ 
+\hline
+$\cc$ & $A\cc B$ if $\overline{A} \subseteq B$ (compactly contained)                       \\ 
+\hline
+$\Omega$ & another bounded Lipschitz domain, $\Omega \cc D$                \\ 
+\hline
+$U$ & $D\setminus \overline{\Omega}$                \\ 
+\hline
+$U_r$ & reference domain                \\ 
+\hline
+$\Gamma_f$ & the fixed boundary $\partial D$                \\ 
+\hline
+$\Gamma_m$ & the moving boundary $\partial \Omega$                \\ 
+\hline
+$\Gamma_D$ & a generic Dirichlet boundary (where Dirichlet boundary conditions are imposed)                \\
+\hline
+$\Gamma_N$ & a generic Neumann boundary                \\  
+\hline
+$T$ & final time $T>0$                \\  
+\hline
+$I$ & $(0,T)$                \\  
+\hline
+$\Sigma_m, \Sigma_D, \Sigma_f$ & $I\times \Gamma_m$, $I\times \Gamma_D$, $I\times \Gamma_f$                \\  
+\hline
+$B_R(p)$ & open ball of center $p$ and radius $R$                \\  
+\hline
+$\mS$ & unit sphere in $\mR^n$                \\  
+\hline
+
+
+\multicolumn{2}{|l|}{\textbf{Basic calculus}}    \\ 
+\hline
+$\partial_i, \partial_{x_i}, \frac{d}{dx_i}, \frac{\partial}{\partial x_i}$ & partial derivative in space with respect to the variable $x_i$                      \\ 
+\hline
+$\partial_t, \frac{d}{dt}, (\cdot)'$ & time derivative                       \\ 
+\hline
+$\partial_{t^k}, \frac{d^k}{dt^{k}}, (\cdot)^{(k)}$ & $k-$th time derivative                       \\ 
+\hline
+$Df$ & jacobian of $f$                       \\
+\hline
+$\nabla f$ & $(DF)^t$, the transposed jacobian                       \\  
+\hline
+$\Delta f$ & $\sum_{i=0}^n \partial_i\partial_i f$, for $f:\mR^n \rightarrow\mR$ \\ 
+\hline
+$\dive(\delta \te)$ & $\sum_{i=0}^n \partial_i\delta \te_i$, for $\delta \te:\mR^n \rightarrow\mR^n$ \\ 
+\hline
+$A'(\delta \te)$ & $\dive(\delta \te)I -D\delta \te -(D\delta \te)^t$, for $\delta \te:\mR^n \rightarrow\mR^n$ \\ 
+\hline
+$C^k(\Omega), k=1,...,\infty$ & functions $\Omega \rightarrow \mR$ that are $k$ times continuously differentiable                       \\ 
+\hline
+$C^k(\overline{\Omega}), k=1,...,\infty$ & \makecell[l]{functions $\Omega \rightarrow \mR$ that are $k$ times continuously differentiable, with derivatives that extend with\\ continuity to $\overline{\Omega}$ } \\ 
+\hline
+$C(A), k=1,...,\infty$ & \makecell[l]{functions $A \rightarrow \mR$ that are continuous. $A$ is a set in $\mR^n$ with the standard euclidean topology} \\ 
+\hline
+
+\multicolumn{2}{|l|}{\textbf{Functional analysis}}    \\ 
+\hline
+$(f,g)_X$ & inner product of $f,g\in X$, a Hilbert space                       \\ 
+\hline
+$X\emb Y$ & \makecell[l]{$X \subseteq Y$ are two normed spaces, and the canonical injection $i(x)=x, x \in X$, is bounded}             \\ 
+\hline
+$X\emb \emb Y$ & $X\emb Y$ and the canonical injection is compact                       \\ 
+\hline
+$W^{k,p}(U;\mR^n), W^{k,p}(U)$ & usual Sobolev spacex of e.g. definition $11.4$ fo \cite{leoni}. $W^{k,p}(U)=W^{k,p}(U;\mR)$                     \\ 
+\hline
+$H^{k}(U;\mR^n)$ & $W^{k,2}(U;\mR^n)$                    \\ 
+\hline
+$L^{p}(U;\mR^n)$ & $W^{0,p}(U;\mR^n)$                    \\ 
+\hline
+$W^{k,p}(I,X)$ & \makecell[l]{Bochner space of $X-$valued, $k$ times differentiable functions in time, with $p-$integrable derivatives.\\ $X$ is separable and Banach, see e.g. section $4$ of \cite{kreuter}}                  \\ 
+\hline
+$H^k(I,X)$ & $W^{k,2}(I,X)$ \\ 
+\hline
+$L^p(I,X)$ & $W^{0,p}(I,X)$ \\ 
+\hline
+$H^1_0(U)$ & $H^1(U)$ functions on the bounded Lipschitz domain $U$, with zero trace \\ 
+\hline
+$H^1_{0,m}(U), H^1_{0,m}(U), H^1_{0,D}(U)$ & $H^1(U)$ functions with zero trace on, respectively, $\Gamma_m, \Gamma_f, \Gamma_D$\\ 
+\hline
+$H,V$ & \makecell[l]{two real, separable Hilbert spaces with dense embedding $V\emb H$, thus forming a Gelfand triple\\ (see page 147 of \cite{trol}). If not written otherwise, $H=L^2(U)$, $V = H^1_{0,D}(U)$} \\ 
+\hline
+$W(I,V)$ & $L^2(I,V)\cap H^1(I,V^*)$, in the sense of \cite{trol}, page 146 	\\ 
+\hline
+$W_0(I,V), W^0(I,V)$ & $W(I,V)$ functions with null initial or final value 	\\ 
+\hline
+$Q(I,V)$ & $L^2(I,V)\cap H^1(I,H)$ 	\\ 
+\hline
+$Q_0(I,V), Q^0(I,V)$ & $Q(I,V)$ functions with null initial or final value	\\ 
+\hline
+$J'(\tau)[\delta \te]$ & \makecell[l]{Gateaux differential of $J: O\subseteq X \rightarrow Y$ evaluated at $\tau \in O$, in direction $\delta \te \in X$.\\ Here, $O$ is open in $X$ normed, $Y$ is normed too} \\ 
+\hline
+
+\multicolumn{2}{|l|}{\textbf{Domains deformations}}    \\ 
+\hline
+$\cT^1$ & $\{\tau: \mR^n\rightarrow\mR^n \text{ bi-Lipschitz}\}$                  \\ 
+\hline
+$\id$ & $\id(x)=x$, $\id:\mR^n\rightarrow\mR^n$                  \\ 
+\hline
+$\cT$ & $\{\tau \in \cT^1 \text{ with } \tau|_{D^c}=\id\}$                  \\ 
+\hline
+$H_\tau, V_\tau$ & spaces defined on $\tau(U_r)$, e.g. $H_\tau = L^2(\tau(U_r))$                       \\ 
+\hline
+$\Te$ & $\{\delta \te \in W^{1,\infty}(\mR^n;\mR^n) \text{ with } \delta \te|_{D^c}=0\}$                       \\ 
+\hline
+
+\multicolumn{2}{|l|}{\textbf{Discretization}}    \\ 
+\hline
+$U_h$ & a polyhedral/polygonal domain, with boundary nodes on $\partial U$                  \\ 
+\hline
+$h$ & maximum element size of $U_h$                  \\ 
+\hline
+$\delta t, K$      & $\delta t = T/K$            \\ 
+\hline
+$\lesssim$ & $A\lesssim B$ means $A\leq CB$ with $C$ independent of $h, \delta t$ but possibly dependent on $U$                       \\ 
+\hline
+$O(h^p)$ & $A=O(h^p)$ if $A\lesssim h^p$ \\ 
+\hline
+$(\cdot)^l$ & if $f:U_h\rightarrow\mR^n$, then $f^l$ is its lift to $f^l: U \rightarrow \mR^n$, see \cref{prop:lift} \\ 
+\hline
+
+%\end{tabular}
+\end{longtable}
 
 \chapter{Introduction}  \setcounter{page}{1}   % setzt Seitenzaehlung auf 1
 \pagenumbering{arabic}  % Nummerierung der Seiten in 'arabisch' % neues Kapitel mit Namen "Introduction"
 
-To approximately solve PDE-constrained shape optimization problems, a discretization of several "continuous" quantities has to be performed. In particular, suitable numerical methods for the involved partial differential equations must be adopted, and then, an optimization routine has to be implemented, so as to obtain a hopefully reasonable estimate of the sought analytical solution.
+To approximately solve PDE-constrained shape optimization problems, a discretization of several ``continuous" quantities has to be performed. In particular, suitable numerical methods for the involved partial differential equations must be adopted, and then, an optimization routine has to be implemented, so as to obtain a hopefully reasonable estimate of the sought analytical solution.
 
-The accuracy of the optimization procedure is influenced by many factors. In particular, when using gradient based optimization, one would like the discretized shape gradient to be the best possible approximation of the continuous counterpart. For the accuracy in this quantity there is a major design choice, which is whether a boundary or distributed/volumetric approach is taken: when sufficient smoothness is available, the boundary and distributed expressions of the shape gradient are equivalent, on the continous level, and this is the content of the so-called "structure theorem" (see theorem 1.4 of \cite{avg_adj}). This equivalence, however, often breaks down on the discrete level, and one has to decide the form with which to work. There are of course advantages and disadvantages to both views (see e.g. \cite{avg_adj}), but there seems to be numerical evidence for a superior accuracy of the distributed approach over the boundary one, at least when the finite element method is adopted to the arising PDEs (it is general, popular and flexible for different engineering applications, making it a natural choice). Theoretical analysis backing up this observation was presented in the work \cite{paganini}. They analyzed a model elliptic problem, and showed that the discretized shape gradient can be expected to be a second order approximation to the continuous one in the volumetric case, and often only a first order one otherwise. 
+The accuracy of the optimization procedure is influenced by many factors. In particular, when using gradient based optimization, one would like the discretized shape gradient to be the best possible approximation of the continuous counterpart. For the accuracy in this quantity there is a major design choice, which is whether a boundary or distributed/volumetric approach is taken: when sufficient smoothness is available, the boundary and distributed expressions of the shape gradient are equivalent, on the continous level, and this is the content of the so-called ``structure theorem" (see theorem 1.4 of \cite{avg_adj}). This equivalence, however, often breaks down on the discrete level, and one has to decide the form with which to work. There are of course advantages and disadvantages to both views (see e.g. \cite{avg_adj}), but there seems to be numerical evidence for a superior accuracy of the distributed approach over the boundary one, at least when the finite element method is adopted to the arising PDEs (it is general, popular and flexible for different engineering applications, making it a natural choice). Theoretical analysis backing up this observation was presented in the work \cite{paganini}. They analyzed a model elliptic problem, and showed that the discretized shape gradient can be expected to be a second order approximation to the continuous one in the volumetric case, and often only a first order one otherwise. 
 
 Such conclusions are however only drawn in an elliptic setting, but parabolic shape optimization has important applications too (see e.g. \cite{lindemann2}, \cite{harbrecht} to mention a few), and deserves further analysis. With this in mind, we try to extend the observations of \cite{paganini} in two ways: 
 
@@ -331,7 +483,7 @@ So, the thesis revolves around the following problem.
 We aim at finding $\Omega$ such that $u$, defined in \cref{pb:pdes}, exists, i.e. such that $v=w$.
 \end{pb}
 
-This same problem was addressed in \cite{harbrecht} using a slightly different approach than ours, involving boundary integral equations, boundary element methods and non-standard time stepping schemes. On the other hand our focus has a rather "volumetric" flavour, as we will make clear in the following chapters, and we make use of the well known implicit Euler or Crank-Nicolson algorithms.
+This same problem was addressed in \cite{harbrecht} using a slightly different approach than ours, involving boundary integral equations, boundary element methods and non-standard time stepping schemes. On the other hand our focus has a rather ``volumetric" flavour, as we will make clear in the following chapters, and we make use of the well known implicit Euler or Crank-Nicolson algorithms.
 
 As already mentioned, some uniqueness results for \cref{pb:shid} are already available. We are not concerned with the issue of the existence of $\Omega$, likewise this aspect is not addressed in the aforementioned work \cite{harbrecht}. Some advances in this direction were made in the case where $\Omega$ is allowed to evolve with time, see \cite{brugger}.
 
@@ -342,15 +494,16 @@ In the following we will formalize assumptions, setting and notation, and we wil
 
 \begin{ass}[Geometry assumptions for the shape optimization problem]
 \label{ass:geo_sh}
-Let $D\subseteq \mR^n$, $\Omega_r \cc D$ be bounded Lipschitz domains, in the sense of \cite{grisvard}, definition 1.2.1.1. Define $U_r:=D\setminus \overline{\Omega_r}$, the so-called "reference domain", which is also bounded and Lipschitz.
+Let $D\subseteq \mR^n$, $\Omega_r \cc D$ be simply connected bounded Lipschitz domains, in the sense of \cite{grisvard}, definition 1.2.1.1. Define $U_r:=D\setminus \overline{\Omega_r}$, the so-called ``reference domain", which is also bounded and Lipschitz.
 \end{ass}
+
+Let us describe the set of admissible domains where $\Omega$ is a-priori searched. We follow the ``perturbation of identity" ansatz from \cite{murat}.
 
 \begin{defn}[Admissible transformations]
 \label{def:adm_transf}
-Given $D$, we consider the set $\cT:=\{\tau:\mR^n\rightarrow\mR^n, \tau \text{ bi-Lipschitz}, \tau|_{D^c} = \id\}$, endowed with the "perturbation space" $\Te:=\{ \delta \te \in W^{1,\infty}(\mR^n;\mR^n), \delta \te|_{D^c}=0\}$, see also \cref{def:adm}.
+Given $D$, we consider the set $\cT:=\{\tau:\mR^n\rightarrow\mR^n, \tau \text{ bi-Lipschitz}, \tau|_{D^c} = \id\}$, endowed with the ``perturbation space" $\Te:=\{ \delta \te \in W^{1,\infty}(\mR^n;\mR^n), \delta \te|_{D^c}=0\}$, see also \cref{def:adm}.
 
 We will consider transformations of $U_r$ that belong to $\cT_a:=\cT \cap \{ \tau \in W^{1,\infty}(\mR^n, \mR^n), \norm{\tau - \id}_{W^{1,\infty}(\mR^n, \mR^n)}<C(U_r)\}$, where the presence of the bound by $C(U_r)$ is to ensure that $\tau(U_r)\cc D$ is also bounded Lipschitz, and the existence of such constant is guaranteed by \cref{thm:ptb_id_lip}.
-
 
 \end{defn}
 
@@ -378,7 +531,7 @@ Therefore, we are now concerned with finding a function $\tau$, instead of a gen
 
 \begin{obs}[Tracking type cost functional]
 \mbox{}\\
-We have chosen the distributed $L^2(I,L^2)$ norm to measure the discrepancy $v^\tau\simeq w^\tau$ on the whole $\tau(U_r)$. Apart from having favourable functional analytic properties (Fréchet differentiability, to mention one), such cost functional will also allow us to obtain "better behaved" adjoint states. In fact, contrary to \cite{harbrecht}, the heat equations for the adjoint states (see \cref{prop:gateaux_diff}) will have better compatibility between initial condition and boundary conditions. This potentially simplifies the numerical analysis of such equations, as we will make clearer later on.
+We have chosen the distributed $L^2(I,L^2)$ norm to measure the discrepancy $v^\tau\simeq w^\tau$ on the whole $\tau(U_r)$. Apart from having favourable functional analytic properties (Fréchet differentiability, to mention one), such cost functional will also allow us to obtain ``better behaved" adjoint states. In fact, contrary to \cite{harbrecht}, the heat equations for the adjoint states (see \cref{prop:gateaux_diff}) will have better compatibility between initial condition and boundary conditions. This potentially simplifies the numerical analysis of such equations, as we will make clearer later on.
 \end{obs}
 
 
@@ -395,7 +548,7 @@ Note, also thanks to \cref{prop:ptb_id}, that a small $\delta \te \in \Te$ pertu
 
 \begin{obs}
 \mbox{}\\
-To carry out all the reasonings with such a general form of tranformation $\tau$, an assumption of "smallness" (such as the one involving $C(U_r)$) was necessary, to keep $\tau(U_r)$ Lipschitz. A more transparent way of ensuring that $\tau(U_r)\cc D$ is Lipschitz, can be found in \cref{sec:star}.
+To carry out all the reasonings with such a general form of tranformation $\tau$, an assumption of ``smallness" (such as the one involving $C(U_r)$) was necessary, to keep $\tau(U_r)$ Lipschitz. A more transparent way of ensuring that $\tau(U_r)\cc D$ is Lipschitz, can be found in \cref{sec:star}.
 \mbox{}\\
 Also note, that $\tau$ has a Lipschitz inverse yields $\tau(U_r)\cc D$: for $x \in D$, we have in fact $0<\delta = \inf_{d \in \partial D}|x-d|\leq \norm{\tau^{-1}}_{W^{1,\infty}(\mR^n,\mR^n)}\inf_{d \in \partial D}|\tau(x)-d|$.
 \end{obs}
@@ -408,7 +561,7 @@ $$\lim_{k}\frac{|J((\id+\delta\te_k \circ \tau^{-1})\circ \tau)-J(\tau)-J'(\tau)
 
 %This amounts to setting the reference domain to $\tau(U_r)$ instead of $U_r$ and perturbing the former, at least for the sake of computing derivatives.
 
-We now introduce a "Lagrangian" functional in order to derive the expression of the shape gradient $J'$ of $J$. There are several ways about this task in the literature (see e.g. \cite{avg_adj}, \cite{cea} or \cite{lindemann}), and we will adopt that contained in \cite{avg_adj}. It requires the PDEs corresponding to $\tau + \delta \te_k$ to be all reformulated on the domain $\tau(U_r)$, where $\tau$ is exactly the evaluation point of $J'$. To find a transported formulation of our PDEs to a different domain, we need to consider the variational formulations of $v^{\tau + \delta \te_k}$ and $w^{\tau+\delta \te_k}$ and then apply a change of variables to the appearing integrals. This is precisely addressed \cref{thm:eq_pde} (whose applicability is ensured by \cref{ass:basic_par_mix} and by \cref{ass:pull}, which holds by \cref{ass:geo_sh}).
+We now introduce a ``Lagrangian" functional in order to derive the expression of the shape gradient $J'$ of $J$. There are several ways about this task in the literature (see e.g. \cite{avg_adj}, \cite{cea} or \cite{lindemann}), and we will adopt that contained in \cite{avg_adj}. It requires the PDEs corresponding to $\tau + \delta \te_k$ to be all reformulated on the domain $\tau(U_r)$, where $\tau$ is exactly the evaluation point of $J'$. To find a transported formulation of our PDEs to a different domain, we need to consider the variational formulations of $v^{\tau + \delta \te_k}$ and $w^{\tau+\delta \te_k}$ and then apply a change of variables to the appearing integrals. This is precisely addressed \cref{thm:eq_pde} (whose applicability is ensured by \cref{ass:basic_par_mix} and by \cref{ass:pull}, which holds by \cref{ass:geo_sh}).
 
 For $k$ large, i.e. $k\geq K(\tau)$, we have $\zeta_k:=\id+\delta\te_k \circ \tau^{-1} \in \cT_a$, as seen above, and  having \cref{thm:eq_pde} in mind we can set:
 
@@ -852,7 +1005,7 @@ which is satisfied also by $q^0$, therefore $q^? = q^0$ and we have weak converg
 \label{sec:star}
 %\textcolor{red}{You can add a generalization to a different star shaped reparametrization, if need be}
 
-Here we reparametrize the shape optimization problem assuming the domains $D, \Omega=\tau(\Omega_r)$ to be star-shaped with respect to the origin. We do this to justify our computer implementation. In particular, we define and analyze certain maps that convert functions defined on spheres to "radial" deformation fields defined on $D\setminus \overline{\Omega}$ (see below for details), and based on those, detail the expression of the shape gradient of \cref{prop:gateaux_diff}. This will be the result of \cref{prop:star_shaped_gradient}. Essentially, this section is concerned with connecting the analysis previously done with general tranformations $\tau$, to more special radial transformations, employing and adapting the framework of \cite{deckelnick}. We start by recalling the definition of star-shaped domain.
+Here we reparametrize the shape optimization problem assuming the domains $D, \Omega=\tau(\Omega_r)$ to be star-shaped with respect to the origin. We do this to justify our computer implementation. In particular, we define and analyze certain maps that convert functions defined on spheres to ``radial" deformation fields defined on $D\setminus \overline{\Omega}$ (see below for details), and based on those, detail the expression of the shape gradient of \cref{prop:gateaux_diff}. This will be the result of \cref{prop:star_shaped_gradient}. Essentially, this section is concerned with connecting the analysis previously done with general tranformations $\tau$, to more special radial transformations, employing and adapting the framework of \cite{deckelnick}. We start by recalling the definition of star-shaped domain.
 
 
 \begin{prop}[Star-shaped domains]
@@ -860,7 +1013,7 @@ Let $f \in C(\mS)$, $f>0$. Define $\Omega_f:=\{x, |x|<f(\xh)\}\cup\{0\}$, where 
 \begin{itemize}
 \item $\Omega_f$ is open
 \item $\Omega_f$ has boundary $\{x, |x|=f(\xh)\}$
-\item $\Omega_f$ is a bounded Lipschitz domain if $f \in W^{1,\infty}(\mS)$
+\item $\Omega_f$ is a simply connected bounded Lipschitz domain if $f \in W^{1,\infty}(\mS)$
 \end{itemize}
 \end{prop}
 %
@@ -1106,7 +1259,7 @@ So, let $x\in \partial \Omega$. We obtain $A\ni x, B$ open, and $\eta: A\rightar
 Applying the implicit function theorem in a suitable way (e.g. through minor reworkings of the proofs at page 310, 311 of \cite{gilardi2}), we obtain:
 
 \begin{itemize}
-	\item a "square" and an interval $V', I$ with $V'\times I \ni x$
+	\item a ``square" and an interval $V', I$ with $V'\times I \ni x$
 	\item $\phi: V'\rightarrow I$, Lipschitz, of class $C^o$
 	\item $\phi(V') \cc J \cc I$
 	\item $z \in V'\times I, z_n<\phi(z) \iff z \in (V'\times I)\cap \Omega$
@@ -1130,9 +1283,9 @@ To approximate a solution of \cref{pb:shopt} one must apply a discretization str
 
 %It is important at this stage to preserve the properties of the continuos problem when developing a discretization strategy. 
 
-In shape optimization, however, one works with spaces which are not Hilbert, e.g. $W^{1,\infty}$, so scalar products are not available. A way around this is illustrated in \cite{deckelnick}, where descent directions are directly searched in $W^{1,\infty}$ without relying on the Riesz theorem. Another possibility is to look for descent directions in a larger, Hilbert space $\pazocal{H}\supset W^{1,\infty}$, provided that $j'$ extends to this space, where we can use the representation theorem. This "Hilbert space" approach was of easier implementation for us, and we decided to stick with it.  Moreover, it is a standard trick in the shape optimization literature (see \cite{allaire}, section 5.2) and it can usually yield good results.
+In shape optimization, however, one works with spaces which are not Hilbert, e.g. $W^{1,\infty}$, so scalar products are not available. A way around this is illustrated in \cite{deckelnick}, where descent directions are directly searched in $W^{1,\infty}$ without relying on the Riesz theorem. Another possibility is to look for descent directions in a larger, Hilbert space $\pazocal{H}\supset W^{1,\infty}$, provided that $j'$ extends to this space, where we can use the representation theorem. This ``Hilbert space" approach was of easier implementation for us, and we decided to stick with it.  Moreover, it is a standard trick in the shape optimization literature (see \cite{allaire}, section 5.2) and it can usually yield good results.
 
-Nonetheless, this approach is not completely rigorous (because we want controls in $W^{1,\infty}$, at least, by perturbing them by $\pazocal{H}$ descent directions), and also, it is not immediate which $\pazocal{H}$, hence, which scalar product, one should use. Unfortunately, choosing the "wrong" one can yield descent directions that are too "squiggly" (see \cref{sec:experiments} for an example, in particulare \cref{fig:l2}), or mesh-dependence effects, where finer and finer meshes require more and more optimization iterations to converge (see \cite{mesh_dependence}).
+Nonetheless, this approach is not completely rigorous (because we want controls in $W^{1,\infty}$, at least, by perturbing them by $\pazocal{H}$ descent directions), and also, it is not immediate which $\pazocal{H}$, hence, which scalar product, one should use. Unfortunately, choosing the ``wrong" one can yield descent directions that are too ``squiggly" (see \cref{sec:experiments} for an example, in particulare \cref{fig:l2}), or mesh-dependence effects, where finer and finer meshes require more and more optimization iterations to converge (see \cite{mesh_dependence}).
 
 Through experimentations, see \cref{chap:num_exp} and specifically \cref{sec:implementation} we observed decent results when using the $H^1$ scalar product, as opposed to when the $L^2$ product is used instead. On a continuous level, and in the star-shaped setting we described previously, this means finding descent directions $h \in H^1(\mS)$ from the equation:
 
@@ -1142,7 +1295,7 @@ where $r(\sigma)$ represents, via the Riesz representation theorem, the function
 
 % The reason for this is again to be able to find good enough (in the sense of smoothness) descent directions and to avoid mesh-dependence, as opposed to when the $L^2$ product is used instead. Despite not being a fully rigorous procedure, it is standard trick in shape optimization, and it worked well for us (see  \cref{chap:num_exp}). It is not rigorous because we pretend to simultaneously have $q$ smooth ($q \in H^2(\mS)$, for instance) while $r(q) \in H^1(\mS)$: $q-\alpha r(q)$ need not to be smooth too!
 
-For further details regarding this so-called "Hilbertian regularization" procedure, we again refer to \cite{allaire}.
+For further details regarding this so-called ``Hilbertian regularization" procedure, we again refer to \cite{allaire}.
 We limit ourselves to sketching a proof of the fact that $j'(\sigma)$ can act on the larger space $H^1(\mS)$ and that it is continuous in the $H^1$ topology, thus making the operation of taking its Riesz representative well defined.
 
 At first we remark that $h\mapsto V_h$ maps $H^1(\mS)$ functions into $H^1(\mR^n;\mR^n)$ functions. To see this, note that $h$ can be approximated by smooth functions $h_k$, in the $H^1$ norm (see definition 2.3 of \cite{aubin}). For the generic term of the approximating sequence we can employ integration in spherical coordinates and use the fact that $h_k$ is Cauchy, to get that $V_{h_k}$ is Cauchy in $H^1(\mR^n;\mR^n)$, and that it converges to $V_h$. This procedure also yields a bound on the norm of $H^1(\mS)\rightarrow H^1(\mR^n;\mR^n): h \mapsto V_h$.
@@ -1182,7 +1335,7 @@ As a summary of the discretization approach:
 We chose the latter methods because of their simplicity, overall low regularity requirements (compared to more sofisticated e.g. Runge-Kutta methods), and the fact that they are unconditionally stable, i.e. no restriction on the time step size must be made, relative to the mesh width, to obtain convergence. 
 We can reach the required smoothness in time for the state equations, by requiring smooth data, and certain compatibility relations between them (see e.g. chapter 2 of \cite{lions} and \cref{ass:time_reg_mix}). Smoothness of the data alone is not enough: a regular solution can be obtained, but only away from the starting time, where a singularity can develop (see e.g. the discussion in \cite{harbrecht}). For the state equations we can reach any compatibility order, provided we make suitable assumptions on the boundary data, but the adjoint equations are, in a certain sense, fixed by the particular cost functional we chose, and the state equations themselves: unfortunately, for our adjoints, we cannot tweak the problem data to obtain any level of compatibility.
 
-In \cite{harbrecht}, the authors work in fact with adjoint equations that have "fully" incompatible boundary data, and devise a non-standard time stepping scheme to deal with this. On the other hand, our choice of cost functional makes it possible to obtain compatibility of "order zero". This would be enough for a low order space-time method without time quadrature (see e.g. \cite{vexler}), but not for the chosen fully discrete schemes. To obtain more compatibility we need to modify the data that enters the adjoint equations, and since we cannot modify the structure of the PDEs solved by the states $w,v$, we can only modify the cost functional. This is what we will do, with the introduction of a suitable temporal weight in the cost functional of \cref{pb:shopt}. Such operation will yield compatibility of arbitrary order for the adjoints, at the price of partially modifying the nature of the shape optimization problem. See \cref{sec:o-t-d} for a more thorough discussion.
+In \cite{harbrecht}, the authors work in fact with adjoint equations that have ``fully" incompatible boundary data, and devise a non-standard time stepping scheme to deal with this. On the other hand, our choice of cost functional makes it possible to obtain compatibility of ``order zero". This would be enough for a low order space-time method without time quadrature (see e.g. \cite{vexler}), but not for the chosen fully discrete schemes. To obtain more compatibility we need to modify the data that enters the adjoint equations, and since we cannot modify the structure of the PDEs solved by the states $w,v$, we can only modify the cost functional. This is what we will do, with the introduction of a suitable temporal weight in the cost functional of \cref{pb:shopt}. Such operation will yield compatibility of arbitrary order for the adjoints, at the price of partially modifying the nature of the shape optimization problem. See \cref{sec:o-t-d} for a more thorough discussion.
 
 An in-depth presentation and analysis of the discretization algorithms for states and adjoints is discussed in \cref{chap:inh_fem}. In what follows we will build on the results therein.
 
@@ -1273,7 +1426,7 @@ Its presence in the right hand side of the adjoint equations can be justified by
 
 $$J_\eta(\tau) = \frac{1}{2} \int_I \eta \norm{v^\tau - w^\tau}_{H_\tau}^2$$
 
-The proof of \ref{prop:gateaux_diff} works almost unchanged to derive the PDEs for the adjoints of \cref{pb:uni_state_adj}, and the shape gradient, where we only have to make the change:
+The proof of \cref{prop:gateaux_diff} works almost unchanged to derive the PDEs for the adjoints of \cref{pb:uni_state_adj}, and the shape gradient, where we only have to make the change:
 
 \begin{align*}
 \frac{1}{2}\int_I\int_{\tau(U_r)}|v^\tau-w^\tau|^2\dive(\delta \te\circ  \tau^{-1}) \rightarrow \frac{1}{2}\int_I\int_{\tau(U_r)}\eta|v^\tau-w^\tau|^2\dive(\delta \te\circ  \tau^{-1})
@@ -1281,7 +1434,7 @@ The proof of \ref{prop:gateaux_diff} works almost unchanged to derive the PDEs f
 
 
 
-The main purpose of this modification is to facilitate the analysis of the numerical discretization. In particular, we choose $\eta$ to be a smooth cut-off function that is positive in $(0,T)$ and $0$ in $[T, +\infty]$. Note that in case a solution to the "classical" problem exists, then it is also a solution to this new  perturbed problem, and viceversa. In fact, $J_\eta(\tau)=0 \implies \eta \norm{v_\tau - w_\tau}_{H_\tau}^2=0 \implies v_\tau = w_\tau$. This equality holds on all $I=[0,T]$ by the time continuity of the states.
+The main purpose of this modification is to facilitate the analysis of the numerical discretization. In particular, we choose $\eta$ to be a smooth cut-off function that is positive in $(0,T)$ and $0$ in $[T, +\infty]$. Note that in case a solution to the ``classical" problem exists, then it is also a solution to this new  perturbed problem, and viceversa. In fact, $J_\eta(\tau)=0 \implies \eta \norm{v_\tau - w_\tau}_{H_\tau}^2=0 \implies v_\tau = w_\tau$. This equality holds on all $I=[0,T]$ by the time continuity of the states.
 
 Modifying the final-time behaviour of the energy might of course have detrimental effects if the boundary data exhibits strong variations close to final time. However, for boundary conditions that e.g. stabilyze over time, then a heat equation will also produce a solution tending to a steady state, so that the presence of $\eta$ shouldn't play a significant role. In any case, the shape of $\eta$ can be adjusted according to the user's needs.
 %, but this is physically implausible if the boundary conditions don't exhibi, given the nature of the partial differential equation. In fact, it is known that solutions to the heat equation tend to a steady state in long times (for constant boundary conditions and no source), and we are only measuring the value of one such solution on the external boundary $\partial U$: we thus expect that in practice, this boundary data will not exhibit oscillatory behaviour for large times, and that the introduction of $\eta$ will not cause issues.
@@ -1400,7 +1553,7 @@ Also note, it is important that $\tau_h$ is piecewise linear on the discretizati
 \end{mproof}
 
 
-We remark again that the continuous solution is defined on a smooth domain $U$, whereas the discretized solution on a polygonal/polyhedral approximation $U_h$. To compare e.g. $u$ and $u_h$ we must have a way of "lifting" $u_h$ to $u$ or viceversa. This procedure is possible and we denote its action by $(\cdot)^l$: we thus compare $u: U\times I \rightarrow \mR$ and $u_h^l:U\times\{0,...,K\}\rightarrow \mR$. For details regarding the lifting action we refer to \cref{prop:lift}.
+We remark again that the continuous solution is defined on a smooth domain $U$, whereas the discretized solution on a polygonal/polyhedral approximation $U_h$. To compare e.g. $u$ and $u_h$ we must have a way of ``lifting" $u_h$ to $u$ or viceversa. This procedure is possible and we denote its action by $(\cdot)^l$: we thus compare $u: U\times I \rightarrow \mR$ and $u_h^l:U\times\{0,...,K\}\rightarrow \mR$. For details regarding the lifting action we refer to \cref{prop:lift}.
 
 \begin{figure}[H]
 \centering
@@ -1468,13 +1621,13 @@ We note at first that in the star-shaped setting, $\partial U \in C^2$ can be en
 
 Hypothesis $1$ to $3$ guarantee that $u \in H^1(I,H^2(U))$ (by \cref{thm:mix_reg}, which we apply with $k=1$). This is \cref{ass:smoothness_par_discr}. The other hypothesis follow directly from $1-3$.
 
-The constants $A,B,C,D,E$ for $u$ are also easily bounded employing $1-3$: in particular, no volumetric source terms are present, and all the compatibility "residuals" $\delta_h^{(k)}(0)$ are $0$, $k=1,...,1/\te$ (see \cref{prop:d_vd_sd} for the notation).
+The constants $A,B,C,D,E$ for $u$ are also easily bounded employing $1-3$: in particular, no volumetric source terms are present, and all the compatibility ``residuals" $\delta_h^{(k)}(0)$ are $0$, $k=1,...,1/\te$ (see \cref{prop:d_vd_sd} for the notation).
 
 \underline{Adjoints}
 
 We can re-use the reasonings done for the states. There are of course some peculiarities for the adjoints.
 
-Indeed, we also need the conditions on $\eta(T), \eta'(T)$ (point $4$) when applying \cref{thm:mix_reg} to obtain $a \in H^1(I,H^2(U))$, and also when ensuring that the compatibility "residuals" $\delta_h^{(k)}(0)$ for the adjoints, $k=1,...,1/\te$, are bounded uniformly with respect to $h$.
+Indeed, we also need the conditions on $\eta(T), \eta'(T)$ (point $4$) when applying \cref{thm:mix_reg} to obtain $a \in H^1(I,H^2(U))$, and also when ensuring that the compatibility ``residuals" $\delta_h^{(k)}(0)$ for the adjoints, $k=1,...,1/\te$, are bounded uniformly with respect to $h$.
 
 Moreover, the adjoint equations have non trivial source terms like $\eta(v-w)$, $\eta(v_h-w_h)$ and $\eta(t^k)(v_h^k-w_h^k)$. By the results that we now know hold for the states (again, \cref{prop:d_vd_sd}, \cref{thm:semidiscrete_error_bound}, \cref{cor:L2_deriv_est}, \cref{prop:another_bound}), we know that $\eta(v-w)\simeq\eta(v_h-w_h)\simeq \eta(t^k)(v_h^k-w_h^k)$, so that we can satisfy all the requirements on these right hand sides of the adjoint equations. 
 \end{mproof}
@@ -1569,7 +1722,7 @@ The discretize-then-optimize adjoints with implicit Euler from \cref{prop:discre
 \end{prop}
 
 \begin{mproof}
-The proof is exactly that of \cref{prop:o-t-d}. The only difference comes from the fact that the right hand sides of the fully discrete adjoint equations are not "correct", i.e. they are shifted by $\delta t$. But this is not an issue, as we shall now show. 
+The proof is exactly that of \cref{prop:o-t-d}. The only difference comes from the fact that the right hand sides of the fully discrete adjoint equations are not ``correct", i.e. they are shifted by $\delta t$. But this is not an issue, as we shall now show. 
 
 We see that we only need to show a bound of  $\delta t \sum_{k=1}^{K}\norm{\eta(t^{k-1})u_h(t^{k-1})-\eta(t^k)u_h^{k}}^2_{L^2(U_h)}$, where $u$ denotes the generic state corresponding state to the generic adjoint $a$ (this is the same notation as in the proof of \cref{prop:o-t-d}), and where $U_h=\tau_h(U_{r,h})$.
 
@@ -1599,7 +1752,7 @@ Finally, by \cref{prop:o-t-d}, we obtain $\ds \circled{3} \lesssim (h^2+\delta t
 
 \begin{obs}[Optimization and discretization commute]
 \mbox{}\\
-So, optimization and discretization commute, for $\theta=1$: the perturbed implicit Euler method of \cref{prop:discrete_shape_gradient}, applied to the adjoints, is a "legitimate" scheme, as we have just shown in \cref{prop:d-t-o_estimates}).
+So, optimization and discretization commute, for $\theta=1$: the perturbed implicit Euler method of \cref{prop:discrete_shape_gradient}, applied to the adjoints, is a ``legitimate" scheme, as we have just shown in \cref{prop:d-t-o_estimates}).
 With a diagram:
 
 \[\begin{tikzcd}
@@ -1892,7 +2045,7 @@ In the remaining proofs of this chapter, we apply stability estimates to bound t
 \end{obs}
 
 \begin{mproof}[Proof for $\delta \te \in W^{1,\infty}$]
-We compare "time derivative" terms, "gradient" terms and "cost function" terms in the difference $\ds J'(U)[\delta \te] - J'_h(U_h)[\delta \te^{-l}]$, terms that come from \cref{prop:sd_shopt} and \cref{prop:gateaux_diff}, and use the estimates in \cref{prop:o-t-d} and \cref{prop:lin_appr} to bound every term like $\lesssim h \norm{\delta \te}_{W^{1,\infty}(U;\mR^n)}$. 
+We compare ``time derivative" terms, ``gradient" terms and ``cost function" terms in the difference $\ds J'(U)[\delta \te] - J'_h(U_h)[\delta \te^{-l}]$, terms that come from \cref{prop:sd_shopt} and \cref{prop:gateaux_diff}, and use the estimates in \cref{prop:o-t-d} and \cref{prop:lin_appr} to bound every term like $\lesssim h \norm{\delta \te}_{W^{1,\infty}(U;\mR^n)}$. 
 
 %, and use \cref{prop:lin_appr}, apart from the semidiscretization error estimates for the partial differential equations, to obtain an overall $O(h^2)$ term, or $O(h)$ term. For the expression of the semidiscretized shape gradient we make use of \cref{prop:sd_shopt}. We also call $\delta \te_h := \delta \te^{-l}$.
 
@@ -1976,7 +2129,7 @@ There holds $\circled{7} \lesssim h^2\norm{\delta \te}_{W^{1,\infty}(U)}$ thanks
 
 \begin{mproof}[Proof for $\delta \te \in W^{2,\infty}$]
 
-We note that for the difference in the "cost function" terms, the previous proof works fine. We thus concentrate on the remaining ones. We will partly reason analogously to \cite{paganini}, although we have to take some additional steps to circumvent the unavailability of Galerkin orthogonality, due to the mismatch in geometry.
+We note that for the difference in the ``cost function" terms, the previous proof works fine. We thus concentrate on the remaining ones. We will partly reason analogously to \cite{paganini}, although we have to take some additional steps to circumvent the unavailability of Galerkin orthogonality, due to the mismatch in geometry.
 
 \underline{Duality argument and splitting}
 
@@ -2022,7 +2175,7 @@ We note that $e$ is a legitimate test function $e=\phi$ in the case $u=w$, as $w
 	 \tilde{\mG}(e, a, \delta \te) = \mE^*(z,e) + \underbrace{\left [ u=v \right ]\int_I(\partial_\nu z, e)_{L^2(\Gamma_f)}}_{\circled{6}} = \circled{6}  -\underbrace{(e(T),z(T))_{L^2(U)}+(e(0) ,z(0))_{L^2(U)}}_{\circled{7}} + \mE(e,z)
 \end{align*} 
 
-where we used at last integration by parts in time and $\mE(e,z):=\ds \int_I(e',z)_{L^2(U)} + \int_I (\nabla e, \nabla z)_{L^2(U)}$, which is the "left hand side" in the variational formulation of $u$. We further split $\mE(e,z)$, introducing at first the additionl notation $\mE_h(\phi_h,z_h):=\ds \int_I(\phi',z_h)_{L^2(U_h)} + \int_I (\nabla \phi, \nabla z_h)_{L^2(U_h)}$:
+where we used at last integration by parts in time and $\mE(e,z):=\ds \int_I(e',z)_{L^2(U)} + \int_I (\nabla e, \nabla z)_{L^2(U)}$, which is the ``left hand side" in the variational formulation of $u$. We further split $\mE(e,z)$, introducing at first the additionl notation $\mE_h(\phi_h,z_h):=\ds \int_I(\phi',z_h)_{L^2(U_h)} + \int_I (\nabla \phi, \nabla z_h)_{L^2(U_h)}$:
 
 \begin{align*}
 	\mE(e,z) =\\ \underbrace{\mE(e,z-I_c z)}_{\circled{8}} +
@@ -2079,7 +2232,7 @@ With the same assumptions and notation of \cref{thm:superconvergence_sd} and in 
 \end{align*}
 \end{cor}
 \begin{mproof}
-The overall argument amounts to "inserting $J'_h$ between $J'$ and $J'_{h,\delta t}$". Two pieces must then be estimated, and the first is exactly addressed in \cref{thm:superconvergence_sd}.
+The overall argument amounts to ``inserting $J'_h$ between $J'$ and $J'_{h,\delta t}$". Two pieces must then be estimated, and the first is exactly addressed in \cref{thm:superconvergence_sd}.
 The second one is $\ds J'_h(U)[\delta \te^{-l}] - J'_{h,\delta t}(U_h)[\delta \te^{-l}]$. Of this member, we give an appropriate splitting, where every piece is $\lesssim \delta t\norm{\delta \te}_{W^{1,\infty}(U;\mR^n)}$. This splitting is:
 
 \begin{align*}
@@ -2106,6 +2259,9 @@ The second one is $\ds J'_h(U)[\delta \te^{-l}] - J'_{h,\delta t}(U_h)[\delta \t
 \end{align*}
 
 with $\tilde{\pi}$ being defined in \cref{lemma:pw_constant_appr}. We can treat $\circled{1},\circled{4},\circled{5},\circled{8},\circled{9}$ with \cref{lemma:pw_constant_appr}, $\circled{2},\circled{6}$ necessitate \cref{prop:d-t-o_estimates} and stability estimates. For the remaining pieces  $\circled{3},\circled{7},\circled{10}$ we make use of \cref{prop:o-t-d}.
+
+In particular, for e.g. $\circled{2}$, we have $\ds\delta t \sum_{k=1}^K\norm{\frac{u_h(t^k)-u_h(t^{k-1})}{\delta t}}_{L^2(U_h)}^2 = \delta t\sum_{k=1}^K\norm{\delta t^{-1}\int_{I_k}u_h'}_{L^2(U_h)}^2\lesssim \norm{u_h'}_{L^2(I,L^2(U_h))}^2 $, where we at last applied the last point of \cref{lemma:pw_constant_appr}.
+
 \end{mproof}
 
 As previously mentioned, we couldn't prove convergence for the adjoint states obtained after discretization, with $\te = 1/2$. As a partial replacement for this, we derive a fully discrete estimate similar to the above ones, but in an optimize-them-discretize setting.
@@ -2115,71 +2271,67 @@ As previously mentioned, we couldn't prove convergence for the adjoint states ob
 With the same assumptions and notation of \cref{thm:superconvergence_sd}, and defining the optimize-then-discretize shape gradient as:
 
 \begin{align*}
-\tilde{d} J_{h,\delta t} (U_h)[\delta \te^{-l}]:=\\
-\delta t \sum_{k=0}^{K-1} \int_{U_h} \frac{w_h^{k+1}-w_h^{k}}{\delta t}\frac{q_h^k+q_h^{k+1}}{2} \dive(\delta \te^{-l})+\delta t \sum_{k=1}^K \int_{U_h} \left(A'(\delta \te^{-l})\nabla \frac{w_h^k+ w_h^{k+1}}{2} \right )\nabla \frac{q_h^{k}+q_h^{k+1}}{2}\\
-\delta t \sum_{k=0}^{K-1} \int_{U_h} \frac{v_h^{k+1}-v_h^{k}}{\delta t}\frac{p_h^k+p_h^{k+1}}{2} \dive(\delta \te^{-l})+\delta t \sum_{k=1}^K \int_{U_h} \left(A'(\delta \te^{-l})\nabla \frac{v_h^k+ v_h^{k+1}}{2} \right )\nabla \frac{p_h^{k}+p_h^{k+1}}{2}\\
+\tilde{J}'_{h,\delta t} (U_h)[\delta \te^{-l}]:=\\
+\delta t \sum_{k=0}^{K-1} \int_{U_h} \frac{w_h^{k+1}-w_h^{k}}{\delta t}\frac{q_h^k+q_h^{k+1}}{2} \dive(\delta \te^{-l})+\delta t \sum_{k=1}^K \int_{U_h} \left(A'(\delta \te^{-l})\nabla \frac{w_h^k+ w_h^{k+1}}{2} ,\nabla \frac{q_h^{k}+q_h^{k+1}}{2}\right )\\
+\delta t \sum_{k=0}^{K-1} \int_{U_h} \frac{v_h^{k+1}-v_h^{k}}{\delta t}\frac{p_h^k+p_h^{k+1}}{2} \dive(\delta \te^{-l})+\delta t \sum_{k=1}^K \int_{U_h} \left(A'(\delta \te^{-l})\nabla \frac{v_h^k+ v_h^{k+1}}{2} ,\nabla \frac{p_h^{k}+p_h^{k+1}}{2}\right )\\
 \frac{\delta t}{2} \sum_{k=0}^{K-1} \int_{U_h}\frac{\eta(t^k)(v_h^k-w_h^k)^2 + \eta(t^{k+1})(v_h^{k+1}-w_h^{k+1})^2}{2}\dive(\delta \te^{-l})
 \end{align*}
 
 we have, for $s=0,1$:
 
 \begin{align*}
-	\left |J'(U)[\delta \te] - \tilde{d}J_{h,\delta t}(U_h)[\delta \te^{-l}] \right|\leq \gamma  (h^{s+1}+ \delta t^2)\norm{\delta \te}_{W^{{s+1},\infty}(U)}
+	\left |J'(U)[\delta \te] - \tilde{J}'_{h,\delta t}(U_h)[\delta \te^{-l}] \right|\leq \gamma  (h^{s+1}+ \delta t^2)\norm{\delta \te}_{W^{{s+1},\infty}(U)}
 \end{align*}
 
 
 \end{cor}
 
 \begin{mproof}
-Also here we only need to compare the semidiscrete and the fully discrete shape gradients, and to proceed to a suitable splitting of such discrepancy. We begin by the time derivatives terms:
+Also here we only need to compare the semidiscrete and the fully discrete shape gradients, and proceed to a suitable splitting of such discrepancy, where every piece will be $\lesssim \norm{\delta \te_h}_{W^{1,\infty}(U_h;\mR^n)} \delta t^2$. In the following, $T_k f := (f(t^k)+f(t^{k+1}))/2$:
 
 \begin{align*}
 \int_I\int_{U_h}u_h'a_h\dive(\delta \te^{-l})-\delta t \sum_{k=0}^{K-1} \int_{U_h} \frac{u_h^{k+1}-u_h^{k}}{\delta t}\frac{a_h^k+a_h^{k+1}}{2} \dive(\delta \te^{-l}) =  \\
-\underbrace{\int_I\int_{U_h}(u_h-\pi_1 u_h)'a_h\dive(\delta \te^{-l})}_{\circled{12}} + \underbrace{\int_I\int_{U_h}\frac{u_h(t^{k+1})-u_h(t^{k})}{\delta t} (a_h-\pi_1 a_h)\dive(\delta \te^{-l})}_{\circled{13}} +\\
-\underbrace{\delta t \sum_{k=0}^{K-1} \int_{U_h}\left (\frac{u_h(t^{k+1})-u_h(t^{k})}{\delta t} - \frac{u_h^{k+1}-u_h^{k}}{\delta t}\right)  T_k a_h   \dive(\delta \te^{-l})}_{\circled{14}} + \underbrace{ \delta t \sum_{k=0}^{K-1} \int_{U_h}\frac{u_h^{k+1}-u_h^{k}}{\delta t} \left ( T_k a_h 
-- \frac{a_h^k+a_h^{k+1}}{2}\right )  \dive(\delta \te^{-l})}_{\circled{15}} 
+\underbrace{\int_I\int_{U_h}(u_h-\pi_1 u_h)'a_h\dive(\delta \te^{-l})}_{\circled{1}} + \underbrace{\int_I\int_{U_h}\frac{u_h(t^{k+1})-u_h(t^{k})}{\delta t} (a_h-\pi_1 a_h)\dive(\delta \te^{-l})}_{\circled{2}} +\\
+\underbrace{\delta t \sum_{k=0}^{K-1} \int_{U_h}\left (\frac{u_h(t^{k+1})-u_h(t^{k})}{\delta t} - \frac{u_h^{k+1}-u_h^{k}}{\delta t}\right)  T_k a_h   \dive(\delta \te^{-l})}_{\circled{3}} + \underbrace{ \delta t \sum_{k=0}^{K-1} \int_{U_h}\frac{u_h^{k+1}-u_h^{k}}{\delta t} \left ( T_k a_h 
+- \frac{a_h^k+a_h^{k+1}}{2}\right )  \dive(\delta \te^{-l})}_{\circled{4}} 
 \end{align*}
-
-For the gradients:
 
 \begin{align*}
-\int_I \int_{U_h} (A'(\delta \te^{-l})\nabla u_h)\nabla a_h - \delta t \sum_{k=1}^K \int_{U_h} \left(A'(\delta \te^{-l})\nabla \frac{u_h^k+ u_h^{k+1}}{2} \right )\nabla \frac{a_h^{k}+a_h^{k+1}}{2} = \\
-\underbrace{\int_I \int_{U_h} (A'(\delta \te^{-l})\nabla (u_h-\pi_1 u_h))\nabla a_h +  (A'(\delta \te^{-l})\nabla \pi_1 u_h)\nabla (a_h-\pi_1 a_h)}_{\circled{16}}+\underbrace{\int_I \int_{U_h} (A'(\delta \te^{-l})\nabla \pi_1 u_h)\nabla \pi_1 a_h- \delta t \sum_{k=0}^{K-1} (A'(\delta \te^{-l})T_k \nabla u_h)\nabla T_k a_h}_{\circled{17}} \\ 
-+\underbrace{\delta t \sum_{k=0}^{K-1} \left (A'(\delta \te^{-l})\left ( T_k \nabla u_h - \nabla \frac{u_h(t^{k})+u_h(t^{k+1})}{2}\right) \right )\nabla T_k a_h}_{\circled{18}} + \underbrace{\delta t \sum_{k=0}^{K-1} \left (A'(\delta \te^{-l})\nabla \frac{u_h(t^{k})+u_h(t^{k+1})}{2}\right )\nabla \left ( T_k a_h - \frac{a_h(t^{k})+a_h(t^{k+1})}{2} \right)}_{\circled{19}}
+\int_I \int_{U_h} (A'(\delta \te^{-l})\nabla u_h,\nabla a_h) - \delta t \sum_{k=1}^K \int_{U_h} \left(A'(\delta \te^{-l})\nabla \frac{u_h^k+ u_h^{k+1}}{2} ,\nabla \frac{a_h^{k}+a_h^{k+1}}{2}\right ) = \\
+\underbrace{\int_I \int_{U_h} (A'(\delta \te^{-l})\nabla (u_h-\pi_1 u_h),\nabla a_h) +  (A'(\delta \te^{-l})\nabla \pi_1 u_h,\nabla (a_h-\pi_1 a_h))}_{\circled{5}}+\\\underbrace{\int_I \int_{U_h} (A'(\delta \te^{-l})\nabla \pi_1 u_h,\nabla \pi_1 a_h)- \delta t \sum_{k=0}^{K-1} (A'(\delta \te^{-l})T_k \nabla u_h,\nabla T_k a_h)}_{\circled{6}} \\ 
++\underbrace{\delta t \sum_{k=0}^{K-1} \left (A'(\delta \te^{-l})\left ( T_k \nabla u_h - \nabla \frac{u_h(t^{k})+u_h(t^{k+1})}{2}\right) ,\nabla T_k a_h\right )}_{\circled{7}} +\\ \underbrace{\delta t \sum_{k=0}^{K-1} \left (A'(\delta \te^{-l})\nabla \frac{u_h(t^{k})+u_h(t^{k+1})}{2},\nabla \left ( T_k a_h - \frac{a_h(t^{k})+a_h(t^{k+1})}{2} \right)\right )}_{\circled{8}}
 \end{align*}
-
-For the cost functions:
-
 
 \begin{align*}
 \frac{1}{2} \int_I \int_{U_h} \eta |v_h-w_h|^2\dive(\delta \te^{-l}) - \frac{\delta t}{2} \sum_{k=0}^{K-1} \int_{U_h}\frac{\eta(t^k)(v_h^k-w_h^k)^2 + \eta(t^{k+1})(v_h^{k+1}-w_h^{k+1})^2}{2}\dive(\delta \te^{-l}) = \\
-\underbrace{\int_I \int_{U_h}\eta(v_h-w_h)^2\dive(\delta \te^{-l}) - \delta t \sum_{k=0}^{K-1}\int_{U_h} T_k \left [ \eta(v_h-w_h)^2 \right] \dive(\delta \te^{-l})}_{\circled{20}} +\\
-\underbrace{\frac{\delta t}{2} \sum_{k=0}^{K-1} \int_{U_h}\frac{\eta(t^k)((v_h(t^k)-w_h(t^k))^2- (v_h^k-w_h^k)^2) + \eta(t^{k+1})((v_h(t^{k+1})-w_h(t^{k+1}))^2 -(v_h^{k+1}-w_h^{k+1})^2)}{2}\dive(\delta \te^{-l})}_{\circled{21}}
+\underbrace{\int_I \int_{U_h}\eta(v_h-w_h)^2\dive(\delta \te^{-l}) - \delta t \sum_{k=0}^{K-1}\int_{U_h} T_k \left [ \eta(v_h-w_h)^2 \right] \dive(\delta \te^{-l})}_{\circled{9}} +\\
+\underbrace{\frac{\delta t}{2} \sum_{k=0}^{K-1} \int_{U_h}\frac{\eta(t^k)((v_h(t^k)-w_h(t^k))^2- (v_h^k-w_h^k)^2) + \eta(t^{k+1})((v_h(t^{k+1})-w_h(t^{k+1}))^2 -(v_h^{k+1}-w_h^{k+1})^2)}{2}\dive(\delta \te^{-l})}_{\circled{10}}
 \end{align*}
 
-Now, $\circled{12}, \circled{13}, \circled{16}$ can be treated with \cref{lemma:pw_constant_appr}, remembering that $\norm{u_h''}_{L^2(I,L^2)}$ is bounded as in the proof of \cref{prop:another_bound} for $\circled{12}$, and that the difference quotient of $\circled{13}$ can be handled as in the proof of \cref{prop:another_bound}. We obtain bounds by $ \norm{\delta \te_h}_{W^{1,\infty}(U_h;\mR^n)} \delta t^2$.
+Now, $\circled{1}, \circled{2}, \circled{5}$ can be treated with \cref{lemma:pw_constant_appr}.
+For $\circled{3}, \circled{4}, \circled{7}, \circled{8}, \circled{10}$ we must use the finite element estimates \cref{prop:o-t-d}.
 
-For $\circled{14}, \circled{15}, \circled{18}, \circled{19}, \circled{21}$ we must use the finite element estimates \ref{prop:o-t-d}, or \cref{prop:another_bound}, in the case of $\circled{14}$: we obtain bounds by $ \norm{\delta \te}_{W^{1,\infty}(U;\mR^n)} \delta t^2$.
+Consider now the function $I \ni t \mapsto \ds i(t):= \eta(t)\int_{U_h}(v_h(t)-w_h(t))^2\dive(\delta \te^{-l})$. Using basic properties of Sobolev and Bochner spaces (see at the end of the proof), it can be shown that $i \in W^{2,1}(I; \mR)$, and the same arguments as in \cite{trapezoidal} ensure that $\ds\circled{9} \leq \delta t^2 \int_I |i''|$. The latter term can be bounded as $\lesssim \norm{\delta \te_h}_{W^{1,\infty}(U_h;\mR^n)} \delta t^2$.
 
-Consider now the function $I \ni t \mapsto \ds i(t):= \eta(t)\int_{U_h}(v_h(t)-w_h(t))^2\dive(\delta \te^{-l})$, where $T_k f = (f(t^k)+f(t^{k+1})/2$. Using basic properties of Sobolev and Bochner spaces (see at the end of the proof), it can be shown that $i \in W^{2,1}(I; \mR)$, and the same arguments as in \cite{trapezoidal} ensure that $\ds\circled{20} \leq \delta t^2 \int_I |i''|$. The latter term can be bounded as $\lesssim \norm{\delta \te_h}_{W^{1,\infty}(U_h;\mR^n)} \delta t^2$, where we have to use the boundedness of $v_h'', w_h''$ in $L^2(I,L^2)$ as we saw it in the proof of \cref{prop:another_bound}.
+%, where we have to use the boundedness of $v_h, w_h$ in $H^2(I,L^2)$ as we saw it in the proof of e.g. \cref{prop:another_bound}.
 
-Let us now come to $\circled{17}$. In this case some algebraic computations show that:
+Let us now come to $\circled{6}$. In this case some algebraic computations show that:
 
 \begin{align*}
-\circled{17} = \frac{\delta t^2}{12} \delta t \sum_{k=0}^{K-1} \left ( A'(\delta \te^{-l}) \nabla \frac{u_h(t^{k+1})-u_h(t^{k})}{\delta t}, \nabla  \frac{a_h(t^{k+1})-a_h(t^{k})}{\delta t} \right )_{L^2(U_h)}
+\circled{6} = \frac{\delta t^2}{12} \delta t \sum_{k=0}^{K-1} \left ( A'(\delta \te^{-l}) \nabla \frac{u_h(t^{k+1})-u_h(t^{k})}{\delta t}, \nabla  \frac{a_h(t^{k+1})-a_h(t^{k})}{\delta t} \right )_{L^2(U_h)}
 \end{align*}
 
 Let us call $\overline{u'}_h$ the function that on each $I_k$ is $\delta t^{-1}\ds \int_{I_k} u_h' = \frac{u_h(t^{k+1})-u_h(t^{k})}{\delta t}$. We immediately get:
 
 \begin{align*}
-\left | \circled{17} \right | \lesssim \delta t^2 \ds \norm{\delta \te}_{W^{1,\infty}(U;\mR^n)}\sqrt{\delta t \sum_{k=0}^{K-1} \norm{{\overline{u'}_h}|_{I_k}}_{H^1(U_h)}^2}\sqrt{\delta t \sum_{k=0}^{K-1} \norm{{\overline{a'}_h}|_{I_k}}_{H^1(U_h)}^2}
+\left | \circled{6} \right | \lesssim \delta t^2 \ds \norm{\delta \te}_{W^{1,\infty}(U;\mR^n)}\sqrt{\delta t \sum_{k=0}^{K-1} \norm{{\overline{u'}_h}|_{I_k}}_{H^1(U_h)}^2}\sqrt{\delta t \sum_{k=0}^{K-1} \norm{{\overline{a'}_h}|_{I_k}}_{H^1(U_h)}^2}
 \end{align*}
 
-A minor reworking of lemma 3.2 of \cite{lshou} gives $\left | \circled{17} \right | \lesssim \delta t^2\norm{\delta \te}_{W^{1,\infty}(U;\mR^n)} \norm{u_h'}_{L^2(I,H^1(U_h))}\norm{a_h'}_{L^2(I,H^1(U_h))}$. Now we only need to apply stability estimates to conclude  $\left | \circled{17} \right | \lesssim \delta t^2 \norm{\delta \te}_{W^{1,\infty}(U;\mR^n)}$.
+The last point of \cref{lemma:pw_constant_appr} gives $\left | \circled{6} \right | \lesssim \delta t^2\norm{\delta \te}_{W^{1,\infty}(U;\mR^n)} \norm{u_h'}_{L^2(I,H^1(U_h))}\norm{a_h'}_{L^2(I,H^1(U_h))}$. Now we only need to apply stability estimates to conclude  $\left | \circled{6} \right | \lesssim \delta t^2 \norm{\delta \te}_{W^{1,\infty}(U;\mR^n)}$.
 
 \underline{A technicality}
 
-Here is why $i''$ is $W^{2,1}(I;\mR)$. $\eta$ is smooth in time, so that we want $j(t): = \int_{U_h}(v_h(t)-w_h(t))^2\dive(\delta \te^{-l})$ to be $W^{2,1}(I;\mR)$. But by \cref{lemma:bochner_Hk_map} it suffices $t \mapsto (v_h(t)-w_h(t))^2\dive(\delta \te^{-l})$ to be in $W^{2,1}(I;L^1)$. First of all, the constant factor $\dive(\delta \te^{-l})$ doesn't play a role in time smoothness, so that we now only need to check that $(v_h-w_h)^2\in W^{2,1}(I;L^1)$. This will follow from repeated application of the following lemma: $u v \in W^{1,1}(I,L^1)$ if $u,v \in H^1(I,L^2)$, with $(uv)' = uv'+u'v$.
+Here is why $i''$ is $W^{2,1}(I;\mR)$. $\eta$ is smooth in time, so that we want $j(t): = \int_{U_h}(v_h(t)-w_h(t))^2\dive(\delta \te^{-l})$ to be $W^{2,1}(I;\mR)$. But by \cref{lemma:bochner_Hk_map} it suffices $t \mapsto (v_h(t)-w_h(t))^2\dive(\delta \te^{-l})$ to be in $W^{2,1}(I;L^1)$. First of all, the constant factor $\dive(\delta \te^{-l})$ doesn't play a role in time smoothness, so that we now only need to check that $t \mapsto (v_h-w_h)^2\in W^{2,1}(I;L^1)$. This will follow from repeated application of the following lemma: $u v \in W^{1,1}(I,L^1)$ if $u,v \in H^1(I,L^2)$, with $(uv)' = uv'+u'v$.
 
 The latter claim follows by density of smooth functions $C^{\infty}(\overline{I}, L^2)$ in $H^k(I,L^2)$, see \cite{kreuter}, corollary 3.12.
 
@@ -2202,9 +2354,9 @@ We anticipate that all the experiments and the code are hosted at the \href{http
 \begin{center}
 \texttt{https://github.com/leom97/Master-s-thesis.git}.
 \end{center}
-We wrote our code in Python, making substantial use of the FEniCS package (\cite{fenics}). This is the main tool to simulate the partial differential equations. One of the reasons for choosing FEniCS is the compatibility with dolfin-adjoint, an automatic differentiation toolbox that "derives the discrete adjoint and tangent linear models from a forward model written in the Python interface to FEniCS" (see \cite{dolfin-adjoint_1}, \cite{dolfin-adjoint_2} and \cite{dolfin-adjoint_3}). That is, we only needed to implement the "forward model" (cost functional and partial differential equations), whereas the shape gradients, that are exact on the discrete level, were automatically derived for us by dolfin-adjoint. Their correctness was nonetheless checked through comparisons based on \cref{prop:discrete_shape_gradient} and through Taylor tests. In addition, for the shape optimization part, we made use of Moola, "a set of optimisation algorithms specifically designed for PDE-constrained optimisation problems" (see \href{https://github.com/funsim/moola}{here}). GMSH (\cite{gmsh}) was used for the meshing.
+We wrote our code in Python, making substantial use of the FEniCS package (\cite{fenics}). This is the main tool to simulate the partial differential equations. One of the reasons for choosing FEniCS is the compatibility with dolfin-adjoint, an automatic differentiation toolbox that ``derives the discrete adjoint and tangent linear models from a forward model written in the Python interface to FEniCS" (see \cite{dolfin-adjoint_1}, \cite{dolfin-adjoint_2} and \cite{dolfin-adjoint_3}). That is, we only needed to implement the ``forward model" (cost functional and partial differential equations), whereas the shape gradients, that are exact on the discrete level, were automatically derived for us by dolfin-adjoint. Their correctness was nonetheless checked through comparisons based on \cref{prop:discrete_shape_gradient} and through Taylor tests. In addition, for the shape optimization part, we made use of Moola, ``a set of optimisation algorithms specifically designed for PDE-constrained optimisation problems" (see \href{https://github.com/funsim/moola}{here}). GMSH (\cite{gmsh}) was used for the meshing.
 
-The shape identification problem, \cref{pb:shid}, lends itself very well to debugging and numerical experimentation, as one can build "exact" solutions (on the discrete level) and then analyize whether that is recovered by the optimization process. One can for instance artificially create the "optimal" inclusion $\Omega_{e,h}$, invent Neumann measurements $g$, simulate the heat equation for $w$ (see \cref{pb:pdes}) and then obtain the correct Dirichlet data $f$. Starting then from an initial guess for the inclusion and making use of $g,f$, optimization can be started: $\Omega_e$ should be recovered.
+The shape identification problem, \cref{pb:shid}, lends itself very well to debugging and numerical experimentation, as one can build ``exact" solutions (on the discrete level) and then analyize whether that is recovered by the optimization process. One can for instance artificially create the ``optimal" inclusion $\Omega_{e,h}$, invent Neumann measurements $g$, simulate the heat equation for $w$ (see \cref{pb:pdes}) and then obtain the correct Dirichlet data $f$. Starting then from an initial guess for the inclusion and making use of $g,f$, optimization can be started: $\Omega_e$ should be recovered.
 
 Before delving into more details, here is an overview of the different components of the shape optimization code:
 \begin{enumerate}
@@ -2248,10 +2400,10 @@ We chose finite element functions on the sphere for simplicity. A downside that 
 
 \underline{Synthetic data}
 
-As previously mentioned, to obtain the needed boundary data to perform shape optimization, we simulate the heat equation for $w$ on the exact computational domain $\Omega_{e,h}$. Because we are in a "volumetric" setting, we give the Neumann data and obtain the Dirichlet nodal values, unlike in \cite{harbrecht}, where the opposite is done. In fact, in our setting, the finite element Neumann trace need not to have a boundary representation.
+As previously mentioned, to obtain the needed boundary data to perform shape optimization, we simulate the heat equation for $w$ on the exact computational domain $\Omega_{e,h}$. Because we are in a ``volumetric" setting, we give the Neumann data and obtain the Dirichlet nodal values, unlike in \cite{harbrecht}, where the opposite is done. In fact, in our setting, the finite element Neumann trace need not to have a boundary representation.
 %, plus, we found it more complicated from a code point of view, at least with the tools at our disposal, to deform the Neumann trace 
 
-Using the same discretization parameters to generate the synthetic data, and then perform shape optimization, will result in committing an "inverse crime" (see \cite{wirgin}). To avoid this, there are at least two possibilities: either some noise is added to the synthetic data, or different computational models must be employed in synthesis and inversion/optimization. We experiment with both options, and in particular, for the second, we synthethize the data with a finer discretization than during the optimization process. We mention that in \cite{harbrecht}, synthesis and inversion are performed by solving integral equations of different kinds, but on the same discretization. The authors also add noise to the synthetic data.  
+Using the same discretization parameters to generate the synthetic data, and then perform shape optimization, will result in committing an ``inverse crime" (see \cite{wirgin}). To avoid this, there are at least two possibilities: either some noise is added to the synthetic data, or different computational models must be employed in synthesis and inversion/optimization. We experiment with both options, and in particular, for the second, we synthethize the data with a finer discretization than during the optimization process. We mention that in \cite{harbrecht}, synthesis and inversion are performed by solving integral equations of different kinds, but on the same discretization. The authors also add noise to the synthetic data.  
 
 \underline{Finite elements}
 
@@ -2283,7 +2435,7 @@ For simplicity we work in two dimensions and with $D:=B_2(0)$, $\Omega_r := B_{1
 
 \subsection{Shape optimization results}
 
-We set $T=2$ throughout. Note that in the following plots, the "exact" control (yielding the exact domain $\Omega_{e,h}$ is always interpolated into the finite element space of the control $\tilde{\sigma}_h$, to emphasize what is the best possible result that can be attained by the optimization routine.
+We set $T=2$ throughout. Note that in the following plots, the ``exact" control (yielding the exact domain $\Omega_{e,h}$ is always interpolated into the finite element space of the control $\tilde{\sigma}_h$, to emphasize what is the best possible result that can be attained by the optimization routine.
 %
 %\begin{figure}[H]
 %\centering
@@ -2293,13 +2445,13 @@ We set $T=2$ throughout. Note that in the following plots, the "exact" control (
 
 \underline{Some exploratory runs}
 
-Let us illustrate a few runs, performed with different Neumann data $g$ and with an hourglass-shaped inclusion. The challenge of this example is to correctly resolve the "corners" in the middle of the hourglass, which have a strong derivative (in the sense of radial functions), are far away from the external boundary (so that the influence on the boundary data of the heat equations may be weak), and where the mesh becomes very distorted, which worsens the quality of the mesh and thus, possibly, of the finite element solution.
+Let us illustrate a few runs, performed with different Neumann data $g$ and with an hourglass-shaped inclusion. The challenge of this example is to correctly resolve the ``corners" in the middle of the hourglass, which have a strong derivative (in the sense of radial functions), are far away from the external boundary (so that the influence on the boundary data of the heat equations may be weak), and where the mesh becomes very distorted, which worsens the quality of the mesh and thus, possibly, of the finite element solution.
 
-To avoid the inverse crime, the Dirichlet data is generated on a mesh that is twice as fine as the to-be-optimized one, and with $120$ steps of the Crank-Nicolson method, whereas $60$ are used in the simulation. The sphere mesh size $\tilde{h}$ is set to $0.03$ during synthesis, and to $0.15$ during inversion. Such configuration will be referred to as "standard configuration".
+To avoid the inverse crime, the Dirichlet data is generated on a mesh that is twice as fine as the to-be-optimized one, and with $120$ steps of the Crank-Nicolson method, whereas $60$ are used in the simulation. The sphere mesh size $\tilde{h}$ is set to $0.03$ during synthesis, and to $0.15$ during inversion. Such configuration will be referred to as ``standard configuration".
 
 We show the results of six runs performed with six different Neumann sources: $g_1 = t^2$, $g_2 = x_1g_1$, $g_3=x_2g_2, g_4 = t^2\sin(4t), g_5 = t, g_6 = 1$. The examples took $25, 20, 20, 25, 25, 25$ L-BFGS iterations to converge, amounting to around $4$ minutes for each run.
 
-$g_2, g_3, g_4$ represent various complications of the base example $g_1$, and we experiment with them to point out that there doesn't seem to appear a recurring "error shape" when varying the boundary data $g$.
+$g_2, g_3, g_4$ represent various complications of the base example $g_1$, and we experiment with them to point out that there doesn't seem to appear a recurring ``error shape" when varying the boundary data $g$.
 
 \begin{figure}[H]
 \centering
@@ -2364,7 +2516,7 @@ We found it beneficial to work with smooth descent directions by making use of t
 
 \textit{Degeneration of the boundary}
 
-It has already been noted in \cite{harbrecht} that \cref{pb:shid} is "severely ill-posed". The ill-posedness of the inverse problem is mirrored in the ill-posedness of the shape optimization problem, \cref{pb:shopt}, where the responsible for such ill-posedness is the compactness of the continuous shape Hessian at the optimal domain: this phenomenon has been exhaustively analyzed in \cite{eppler} in an "elliptic" version of \cref{pb:shid}, but we expect similar conclusions to apply also to our case.
+It has already been noted in \cite{harbrecht} that \cref{pb:shid} is ``severely ill-posed". The ill-posedness of the inverse problem is mirrored in the ill-posedness of the shape optimization problem, \cref{pb:shopt}, where the responsible for such ill-posedness is the compactness of the continuous shape Hessian at the optimal domain: this phenomenon has been exhaustively analyzed in \cite{eppler} in an ``elliptic" version of \cref{pb:shid}, but we expect similar conclusions to apply also to our case.
 
 We computed the shape Hessian at the optimal domain with the help of dolfin-adjoint and observed indeed large condition numbers, as expected (with values $\simeq 10^5$).
 
@@ -2396,7 +2548,7 @@ This degeneration is even more evident and quicker, in case the implicit Euler m
 
 Let us avoid the inverse crime in a different way, through application of noise to the problem data $f,g$. We therefore set the discretization parameters for the synthetization to be equal to those used for the inversion. The noise level is $1$\%, with respect to the $L^\infty(I,L^\infty)$ norm of the data, and the perturbation is random uniform. 
 
-We noticed that the optimization process is much more stable with the number of iterations, than when different discretizations are adopted, for inversion and synthesis. The reconstructed boundary is very similar to those of the above runs, and it starts to present spurious oscillations  very late (only after iteration $80$, in the case of the $g_1$ run). The discrepancy between exact data and data available during optimization, is randomly distributed and of zero mean, whereas we noted that it presents a "trend" given by the chosen PDEs discretization algorithm, when different discretizations are employed. This seems to be a key ingredient to the degeneration behaviour that we observed. 
+We noticed that the optimization process is much more stable with the number of iterations, than when different discretizations are adopted, for inversion and synthesis. The reconstructed boundary is very similar to those of the above runs, and it starts to present spurious oscillations  very late (only after iteration $80$, in the case of the $g_1$ run). The discrepancy between exact data and data available during optimization, is randomly distributed and of zero mean, whereas we noted that it presents a ``trend" given by the chosen PDEs discretization algorithm, when different discretizations are employed. This seems to be a key ingredient to the degeneration behaviour that we observed. 
 
 We did most of the experiments with different discretizations between inversion and synthesis, because this approach better highlited the ill-posedness of the problem. Moreover, in a real-world situation, the bonudary data can be interpreted to be sampled from a solution with discretization parameters tending to zero, this is another reason to proceed as we did.
 
@@ -2416,14 +2568,14 @@ We thus experimented with a regularized Newton method, following the observation
 
 \underline{Sea urchin}
 
-Lastly, we show the reconstruction of a 2D version of the more complicated "sea urchin" inclusion of \cite{harbrecht}. The discretization configuration is the standard one. The reconstruction ran for $30$ iterations. This time, for completeness, we applied also $1$\% noise to the data, apart from employing different discretizations in inversion and synthesis.
+Lastly, we show the reconstruction of a 2D version of the more complicated ``sea urchin" inclusion of \cite{harbrecht}. The discretization configuration is the standard one. The reconstruction ran for $30$ iterations. This time, for completeness, we applied also $1$\% noise to the data, apart from employing different discretizations in inversion and synthesis.
 
 \begin{figure}[H]
 \centering
 \includegraphics[height=0.3\columnwidth]{Images/sea_urchin/exact_domain.pdf}
 \includegraphics[height=0.3\columnwidth]{Images/sea_urchin/estimated_domain.pdf}
 \includegraphics[height=0.3\columnwidth]{Images/sea_urchin/comparison.pdf}
-\caption{"Exact" domain, reconstruction, and comparison between reconstruction and the exact domain, interpolated to the optimization finite element space.}\label{fig:sea_urchin}
+\caption{``Exact" domain, reconstruction, and comparison between reconstruction and the exact domain, interpolated to the optimization finite element space.}\label{fig:sea_urchin}
 \end{figure}
 
 %\tred{hessian in L-BFGS}
@@ -2441,7 +2593,7 @@ $$Q_h:=\max_{i=1,...,20}\frac{|J'_{h_f,\delta t_f}(U_{h_f})[\delta \te_{h_f,\til
 
 where $h_f \ll h$, $\delta t_f \ll \delta t$.
 
-In particular, we set $h_f = 0.03125$, and $h = 2^l h_f$, for $l$ integer, where we refer to $2^l$ as "multiplier". We report the orders of convergence $\ds OOC =  \frac{\log Q_h-\log Q_{2h}}{\log h - \log 2h}$ in four cases, corresponding to $\theta =1, 1/2$ and $a = 0.05, 0$, where $\eta =\exp\{-a/(t-T)^2\} $. We set $C=1$ (for $\delta t = C h^{2\theta}$) for Crank-Nicolson, and $C=5$ for implicit Euler, to have a number of timesteps that is always greater than $1$. For reasons of computational resources, we made one less refinement in the implicit Euler case.
+In particular, we set $h_f = 0.03125$, and $h = 2^l h_f$, for $l$ integer, where we refer to $2^l$ as ``multiplier". We report the orders of convergence $\ds OOC =  \frac{\log Q_h-\log Q_{2h}}{\log h - \log 2h}$ in four cases, corresponding to $\theta =1, 1/2$ and $a = 0.05, 0$, where $\eta =\exp\{-a/(t-T)^2\} $. We set $C=1$ (for $\delta t = C h^{2\theta}$) for Crank-Nicolson, and $C=5$ for implicit Euler, to have a number of timesteps that is always greater than $1$. For reasons of computational resources, we made one less refinement in the implicit Euler case.
 %
 %\begin{table}[h]
 %\centering
@@ -2489,10 +2641,10 @@ $Q_h$ & $0.0594$ & $0.0126$ & $0.005$ & $0.0011$ & $0.0$\\ \hline
 \caption{Order of convergence study with implicit Euler}\label{tab:ooc_IE}
 \end{table}
 
-Of course we register an infinite order of convergence when the refinement brings us from $2h_f$ to $h_f$. Moreover, the order of convergence value in the second-last refinement is always larger than expected, most probably because of a "saturation" effect. We nonetheless think that, at least in the case $a>0$, these results confirm the theoretical considerations in  \cref{sec:d-t-o_IE}. In particular, we note the following facts:
+Of course we register an infinite order of convergence when the refinement brings us from $2h_f$ to $h_f$. Moreover, the order of convergence value in the second-last refinement is always larger than expected, most probably because of a ``saturation" effect. We nonetheless think that, at least in the case $a>0$, these results confirm the theoretical considerations in  \cref{sec:d-t-o_IE}. In particular, we note the following facts:
 
 \begin{itemize}
-	\item the above tables suggest a superconvergence effect, for the implicit Euler's method, even with "rough" displacement vector fields, cfr. \cref{cor:superconvergence_sd_fd_IE}
+	\item \cref{tab:ooc_IE} suggest an $O(h^2+\delta t)$ superconvergence effect, for the implicit Euler's method, even with ``rough" displacement vector fields, cfr. \cref{cor:superconvergence_sd_fd_IE}
 	\item although we haven't given a proof of the convergence behaviour in the case of the Crank-Nicolson method and a discretize-then-optimize approach, the above results suggest that the quantity $Q_h$ is $O(h^2+\delta t^2)$, as we suspected. Note, also here it suffices to test with $W^{1,\infty}$ displacements, to obtain the spatial superconvergence effect
 	\item the value of $1.5225$ in \cref{tab:ooc_CN} might be due to a lack of regularity of the adjoint states, since $a=0$. This does not contradict our predictions, which were done in conditions of $a>0$
 \end{itemize}
@@ -2514,8 +2666,9 @@ There are some interesting directions in which our work can be expanded:
 	\item one could at first prove that discretization and optimization commute also for Crank-Nicolson, see e.g. \cite{flaig} for a promising starting direction (which needs however adaptations to accommodate our analysis of smooth geometries)
 	\item from here, fully discrete estimates analogous to those for implicit Euler, should be obtainable
 	\item the error estimates for the shape gradients were derived assuming a specific form of $U_h$: it could be worth to try to eliminate the requirement that $\partial U_h$ must interpolate $\partial U$. Moreover, one could try to explicitly account for the fact that $U=\tau (U_r), U_h = \tau(U_{r,h})$, in these estimates
-\end{itemize}
 	\item it could be worth to experiment with higher order finite elements, both theoretically and in the implementation, to obtain better error estimates for the shape gradients and thus, potentially, better shape optimization results
+\end{itemize}
+
 %
 %\renewcommand{\appendixname}{Appendice}
 %\renewcommand{\appendixpagename}{Appendici}
@@ -2601,7 +2754,7 @@ In any case, $\Omega$ is an extension domain for $W^{1,\infty}(\Omega)$ (see \ci
 
 Let $u \in  W^{1,\infty}(\Omega)$. By \cite{leoni}, 11.50 at page 339, because $\Omega$ is an extension domain, we obtain that $u$ has a representative $\bar{u}$ that is bounded Lipschitz. Let $\phi \in C_c^\infty(\Omega)$. By The Kirszbraun theorem (see e.g. \cite{kirszbraun}), we can extend $\bar{u}$ to a Lipschitz on $\mathbb{R}^n$. Then, by Fubini's theorem and integration by parts for AC functions, we conclude $\ds \int_\Omega\bar{u}\partial_i\phi =-\int_{\Omega} \partial_i \bar{u} \phi $, so that $\nabla \bar{u} = \nabla u$ almost everywhere.
 
-Conversely, let $u$ be bounded Lipschitz. The above reasoning shows that $u$ has ( bounded) weak derivatives equal to the a.e. classical derivatives. Their measurability follows by approximation by difference quotients.
+Conversely, let $u$ be bounded Lipschitz. The above reasoning shows that $u$ has (bounded) weak derivatives equal to the a.e. classical derivatives. Their measurability follows by approximation by difference quotients.
 \end{mproof}
 
 %Therefore, for $\phi \in C_c^\infty(\Omega)$ we get $\ds -\int_\Omega u \phi_{,i}\ds = \int_\Omega \partial_i u\phi =  \int_\Omega g_i \phi$.
@@ -2687,7 +2840,7 @@ Let $X$ be separable Banach. $f \in L^1(I,X)$ has at most a continuous represent
 %
 %\end{mproof}
 
-We now check that a vector valued test function has weak derivatives of all orders.
+%We now check that a vector valued test function has weak derivatives of all orders.
 
 \begin{prop}[Weak derivatives of test functions]
 \label{prop:weak_class}
@@ -2702,20 +2855,20 @@ Then these classical derivatives coincide a.e. with the weak derivatives of $u$.
 Apply proposition 3.8 of \cite{kreuter} at page 26, thanks to theorem 6 at page 146 of \cite{mvt}, a mean value theorem for vector valued function.
 \end{mproof}
 
-We also need a time dependent trace lemma, which we provide in a space-time "tensor product" form, but under non-optimal regularity assumptions, for the sake of making some arguments more transparent.
+We also need a time dependent trace lemma, which we provide in a space-time ``tensor product" form, but under non-optimal regularity assumptions, for the sake of making some arguments more transparent.
 
 \begin{defn}[Time dependent trace]
 Let $\Omega$ be a bounded Lipschitz domain (in the sense of \cite{grisvard}, definition 1.2.1.1). For $k\geq 0$ we define $\tr_k: H^k(I,H^1(\Omega))\rightarrow H^k(I, H^{1/2} (\partial \Omega))$ by $\tr_K(u)(t):=\tr(u(t))$, so that we can drop the subscript $k$
 \end{defn}
 
-Below are some properties of this operator.
+%Below are some properties of this operator.
 
 \begin{prop}[Properties of trace operator]
 \label{prop:trace}
 The trace operator just defined:
 \begin{enumerate}
 \item is well posed, linear and bounded
-\item admits a linear bounded right inverse, for instance, $E_k(g)(t):=E(g(t))$ (for $E$ a right inverse of the "static" trace)
+\item admits a linear bounded right inverse, for instance, $E_k(g)(t):=E(g(t))$ (for $E$ a right inverse of the ``static" trace)
 \item $\tr_k u = \tr_0 u$, for $u \in L^2(I,H^1(\Omega))$ and $E_k g = E_0g$ gor $g \in L^2(I,H^{1/2}(\partial \Omega))$
 %\item for $k\geq 1$, $\tr u(0)=0 \iff E (\tr( u))(0)=0$ (in the sense of continuous representatives)
 %\item it coincides with the trace treated for instance in \cite{lions}
@@ -2725,9 +2878,7 @@ The trace operator just defined:
 
 \underline{Proof of the proposition}
 
-We recall that the trace operator is bounded surjective onto $H^{1/2}(\partial \Omega)$, with a right inverse $E$ (see theorem 3.37 at page 102 of \cite{mclean}). The first two points are consequences of this fact and of \cref{lemma:bochner_Hk_map}.
-
-The third property follows from the definition of $\tr, E$ and the fact that $H^l(I,H^1(\Omega))\subseteq H^k(I,H^1(\Omega))$, for $k\leq l$.
+We recall that the trace operator is bounded surjective onto $H^{1/2}(\partial \Omega)$, with a right inverse $E$ (see theorem 3.37 at page 102 of \cite{mclean}). The first two points are consequences of this fact and of \cref{lemma:bochner_Hk_map}, whereas the third property follows from the definition of $\tr, E$ and the fact that $H^l(I,H^1(\Omega))\subseteq H^k(I,H^1(\Omega))$, for $k\leq l$.
 
 %Let now $k\geq 1$. We know that $H^1, H^{1/2}$ are separable and Banach (the latter is separable because the continuos image of $H^1$ separable, and Banach (see \cite{grisvard}, page 20). Therefore, by \cite{evans}, theorem 2 of page 286, we obtain the embeddings $H^k(I,H^1)\emb C([0,T],H^1)$ and the same goes for $H^k(I,H^{1/2})$, and we conclude by continuity in time of $u$ and $\tr u$.
 
@@ -2821,26 +2972,32 @@ The third property follows from the definition of $\tr, E$ and the fact that $H^
 
 \begin{lemma}[Some interpolants]
 \label{lemma:pw_constant_appr}
-Let $X$ be a separable Banach space, and $u \in H^1(I,X)$. Discretize $I$ into uniform subintervals $I_k:=[t^k,t^{k+1}]$ of width $\delta t>0$.
+Let $X$ be a separable Banach space, and $u \in H^1(I,X)$, $w \in L^2(I,X)$. Discretize $I$ into uniform subintervals $I_k:=[t^k,t^{k+1}]$ of width $\delta t>0$.
 
-Call $\pi u $ the function $\pi u(t)=u(t^{k})$, for $t \in (t^k,t^{k+1})$, $\tilde{\pi}u(t) = u(t^{k+1})$ for $t \in (t^k,t^{k+1})$ and $\pi_1 u(t) = u(t^k)(t^{k+1}-t)/\delta t + u(t^{k+1})(t-t^k)/\delta t$ for $t \in (t^k,t^{k+1})$. Then:
+Call $\pi u $ the function $\pi u(t)=u(t^{k})$, for $t \in (t^k,t^{k+1})$, $\tilde{\pi}u(t) = u(t^{k+1})$ for $t \in (t^k,t^{k+1})$.
 
-\begin{itemize}
+Define $\ds \pi_1 u(t) = \frac{u(t^k)(t^{k+1}-t)}{\delta t} + \frac{u(t^{k+1})(t-t^k)}{\delta t}$ for $t \in (t^k,t^{k+1})$.
+
+Define $\ds \bar{w} = \delta t^{-1}\int_{I_k}w$ on $I_k$. Then:
+
+\begin{enumerate}
 	\item $\norm{u-\pi u}_{L^2(I,X)}, \norm{u-\tilde{\pi }u}_{L^2(I,X)}\leq C \delta t \norm{u'}_{L^2(I,X)}$, for $C=1/\sqrt{2}$
-	\item for $v \in H^2(I,X)$, if $X$ is Hilbert with $(\cdot, \cdot)_X$, there holds $\ds \int_I ((u-\pi_1 u)',v)_X \leq \delta t^2 \norm{u}_{H^2(I,X)}\norm{v}_{H^1(I,X)} $
-	\item if $u \in H^2(I,X)$, then $\norm{u-\pi_1 u}_{L^2(I,X)}\leq C\delta t^2\norm{u''}_{L^2(I,X)}$, $C = 1/4\sqrt{3}$.
-\end{itemize}
+	\item for $u \in H^2(I,X), v \in H^1(I,X)$, if $X$ is Hilbert with $(\cdot, \cdot)_X$, there holds $\ds \int_I ((u-\pi_1 u)',v)_X \leq \delta t^2 \norm{u}_{H^2(I,X)}\norm{v}_{H^1(I,X)} $
+	\item if $u \in H^2(I,X)$, then $\norm{u-\pi_1 u}_{L^2(I,X)}\leq C\delta t^2\norm{u''}_{L^2(I,X)}$, $C = 1/4\sqrt{3}$
+	\item $\ds \delta t^{-1} \sum_{k=0}^{K-1}\norm{\bar{w}|_{I_k}}_X^2\leq C \norm{w}_{L^2(I,X)}^2$
+\end{enumerate}
 
 \end{lemma}
 
 \begin{mproof}
-There holds $\ds \int_{I_k}\norm{\pi u - u(t)}_X^2 dt = \int_{I_k} \norm{\int_{t^k}^{t} u'(s)ds}_X^2 dt\leq \int_{I_k}\left ( \int_{t^k}^{t} \norm{u'(s)}_X ds \right )^2 dt$. 
-
+For $1$: there holds $\ds \int_{I_k}\norm{\pi u - u(t)}_X^2 dt = \int_{I_k} \norm{\int_{t^k}^{t} u'(s)ds}_X^2 dt\leq \int_{I_k}\left ( \int_{t^k}^{t} \norm{u'(s)}_X ds \right )^2 dt$. 
 By Hölder's inequality we then see that $ \ds \int_{I_k}\norm{\pi u - u(t)}_X^2 dt \leq  \int_{I_k} \norm{u'(s)}_X^2 ds  \int_{I_k}(t-t^k)dt = \frac{\delta t ^2}{2} \norm{u'}_{L^2(I_k,X)}^2$. The result follows after summation. For $\tilde{\pi}$ the same reasonings work.
 
-Now, on $I_k$ there holds $(u-\pi_1 u)' = u'-\delta t^{-1}\ds \int_{I_k} u'$, so that by a straightforward adaptation of lemma 3.2 of \cite{lshou} one gets $\norm{u'-\delta t^{-1}\ds \int_{I_k} u'}_{L^2(I,X)}^2\leq \delta t^2 \norm{u'}_{H^1(I_k,X)}^2$. To conclude, note that $\ds \int_{I_k} \left ( u' - \delta t^{-1} \int_{I_k}u', v\right )_X = \int_{I_k} \left ( u' - \delta t^{-1} \int_{I_k}u', v - \delta t^{-1} \int_{I_k}v\right )_X$ and apply the just derived $L^2(I,X)$ estimate to both arguments ot $(\cdot,\cdot)_X$.
+For $2$: on $I_k$ there holds $(u-\pi_1 u)' = u'-\delta t^{-1}\ds \int_{I_k} u'$, so that by a straightforward adaptation of lemma 3.2 of \cite{lshou} one gets $\norm{u'-\delta t^{-1}\ds \int_{I_k} u'}_{L^2(I,X)}^2\leq \delta t^2 \norm{u'}_{H^1(I_k,X)}^2$. Note that $\ds \int_{I_k} \left ( u' - \delta t^{-1} \int_{I_k}u', v\right )_X = \int_{I_k} \left ( u' - \delta t^{-1} \int_{I_k}u', v - \delta t^{-1} \int_{I_k}v\right )_X$ and apply the just derived $L^2(I,X)$ estimate to both arguments ot $(\cdot,\cdot)_X$, to conclude.
 
-For the last result, it suffices to note that $\pi_1 u(t) - u(t) = \ds \int_{I_k} \dfrac{(t^{k+1}-\max(t,s))(\min(t, s)-t^k)}{\delta t}u''$ on $I_k$ and suitably estimate the latter integral using the Cauchy-Schwarz inequality and some algebraic computations.
+For $3$ it suffices to note that $\pi_1 u(t) - u(t) = \ds \int_{I_k} \dfrac{(t^{k+1}-\max(t,s))(\min(t, s)-t^k)}{\delta t}u''$ on $I_k$ and suitably estimate the latter integral using the Cauchy-Schwarz inequality and some algebraic computations.
+
+$4$ is a minor reworking of lemma 3.2 of \cite{lshou} itself.
 \end{mproof}
 
 \chapter{Parabolic equations}
@@ -3672,7 +3829,7 @@ Elliptic $H^2$ regularity results that can be found in chapter 2 of \cite{grisva
 
 \section{Alternative reformulations}
 
-The two parabolic equations of interest contained in \cref{pb:pdes} can be recasted into \cref{pb:mix} and in particular, into finding $u\in W(I,V)$, $u(0)=0$, $u_t+Au=F$ for a.e. $t$ in $V^*$, a proper right hand side $F \in L^2(I, V^*)$ and $V := H^1_{0,m}$, the space of $H^1$ functions vanishing on the moving boundary $\Gamma_m$, or $V=H^1_0$. If inhomogeneous Dirichlet data are present, we always refer to the equivalent form \ref{pb:diri_ext}. 
+The two parabolic equations of interest contained in \cref{pb:pdes} can be recasted into \cref{pb:mix} and in particular, into finding $u\in W(I,V)$, $u(0)=0$, $u_t+Au=F$ for a.e. $t$ in $V^*$, a proper right hand side $F \in L^2(I, V^*)$ and $V := H^1_{0,m}$, the space of $H^1$ functions vanishing on the moving boundary $\Gamma_m$, or $V=H^1_0$. If inhomogeneous Dirichlet data are present, we always refer to the equivalent form \cref{pb:diri_ext}. 
 
 Here, $Au \in L^2(I, V^*)$ too (because $A\in L(V,V^*)$, and by \cref{lemma:bochner_Hk_map}).
 Call then $\pazocal{E}(u):=u_t+Au-F \in L^2(I,V^*)$ and $W_0(I,V)$ the set of $W(I,V)$ functions with zero initial value. Then, the differential equation reads $\langle \pazocal{\pazocal{E}}(u)(t),v\rangle_{V^*,V}=0$ for all $v\in V$, for a.a. $t$, equivalently, $\pazocal{E}(u)=0$ for a.a. $t$. Thus, we are interested in the abstract problem:
@@ -4252,7 +4409,7 @@ Finally, $\tr_U f\circ \tau|_{\partial \Omega} = tr_U (f\circ \tau)(\beta \circ 
 \begin{prop}[Isomorphism between $Q$ spaces]
 \label{prop:change_boch}
 
-Let $\tau \in \cT$ be small enough for point $7$ for \ref{thm:change} to hold. Then:
+Let $\tau \in \cT$ be small enough for point $7$ for \cref{thm:change} to hold. Then:
 
 $$\circ \tau : Q(I,V_\tau)\rightarrow Q(I,V), Q_0(I,V_\tau)\rightarrow Q_0(I,V)$$
 
@@ -4363,7 +4520,7 @@ Here, $A_\tau:=  (D\tau)^{-1}(D\tau)^{-t}|\det(D\tau)|$.
 
 \chapter{FEM and smooth domains}
 \label{chap:inh_fem}
-Handling smooth geometries in finite element analysis is not a trivial task. On one hand, finite element discretizations are naturally set up on polygonal/polyhedral domains, whereas the smoothness of the analytical solutions required to obtain optimal order error estimates, can only be achieved with a smooth boundary (or more generally, when $U$ is convex, which it isn't, in our case). An apparent contradiction therefore arises, and many authors simply conduct theoretical analysis on the polyhedral domains, but assuming enough smoothness of the solutions (this is the contradiction of "polygonal smooth" domains, mentioned in \cite{tiihonen}): an example of this in a setting close to ours, is contained in \cite{paganini}. 
+Handling smooth geometries in finite element analysis is not a trivial task. On one hand, finite element discretizations are naturally set up on polygonal/polyhedral domains, whereas the smoothness of the analytical solutions required to obtain optimal order error estimates, can only be achieved with a smooth boundary (or more generally, when $U$ is convex, which it isn't, in our case). An apparent contradiction therefore arises, and many authors simply conduct theoretical analysis on the polyhedral domains, but assuming enough smoothness of the solutions (this is the contradiction of ``polygonal smooth" domains, mentioned in \cite{tiihonen}): an example of this in a setting close to ours, is contained in \cite{paganini}. 
 
 There are few different ways to go about this dilemma, many of them are only a partially satisfactory answer to the problem. For instance, finite elements formulated directly on arbitrarily curved simplices have been studied in \cite{zlamal}. This requires complete knowledge of the (curved) boundary of the computational domain. Optimal order estimates are also observed in \cite{bramble}. Their techniques work with smooth and rough data, but also require complete knowledge of a parametrization of the boundary, and are not easily extendable to a dimension higher than $2$. Interestingly, shape optimization techniques can be applied to analyze the discrepancy between discrete and smooth geometry in the solution process, see \cite{tiihonen}: the techniques therein presented only yield optimal order estimates in the $H^1$ norm.
 
@@ -4373,7 +4530,7 @@ We chose an approach that was as little intrusive as possible with regards to th
 
 In short, the discrete solution is computed on a polygonal/polyhedral approximation $U_h$ of the smooth domain $U$, where the nodes of $\partial U_h$ lie on $\partial U$, and the Dirichlet conditions are imposed strongly at every time step. The boundary data is substituted by its Langrange interpolant, thus requiring its knowledge only on the boundary nodes of $\partial U_h$.
 
-We have to ask "unnatural" smoothness to the boundary data, because we evaluate it pointwise ("unnatural" is compared to he hypothesis necessary to obtain $H^2$ regularity in the elliptic case, i.e. $H^{1/2}$ smoothness for Neumann data and $H^{3/2}$ smoothness for Dirichlet data: we will require both to be $H^2$ on the boundary). A surplus of smoothness is however present in the majority of the other works that analyze the change in geometry in detail. Strong imposition of Dirichlet boundary conditions, on the other hand, may not me the best solution for all PDEs, see e.g. \cite{hughes}.
+We have to ask ``unnatural" smoothness to the boundary data, because we evaluate it pointwise (``unnatural" is compared to he hypothesis necessary to obtain $H^2$ regularity in the elliptic case, i.e. $H^{1/2}$ smoothness for Neumann data and $H^{3/2}$ smoothness for Dirichlet data: we will require both to be $H^2$ on the boundary). A surplus of smoothness is however present in the majority of the other works that analyze the change in geometry in detail. Strong imposition of Dirichlet boundary conditions, on the other hand, may not me the best solution for all PDEs, see e.g. \cite{hughes}.
 
 The approach we took is based on the work of \cite{elliott}, \cite{ranner}, \cite{bernardi} and \cite{edelmann}. We remark that all the estimates we are about to obtain will be $U$ dependent, and this dependence will not be tracked, for simplicity.
 
@@ -4520,7 +4677,7 @@ Let $v_h, w_h \in S^1_h$, $v,w \in H^2(U)$, $\delta \te_h \in (S^1_h)^n$ ($n$ is
 \end{prop}
 
 \begin{mproof}
-See \cite{edelmann}. Only the last three points are not already present in the literature, but they follow with very similar arguments as the others. See for instance, section 6 of \cite{elliott}: one needs to apply a change of variables to the integrals on $U_h$, and then use the approximation properties in \cref{prop:G_h}. To obtain $O(h^2)$ estimates, the "narrow band" inequality lemma 6.3, \cite{elliott}, as suggested in  lemma 6.4 of \cite{elliott}, has to be used.
+See \cite{edelmann}. Only the last three points are not already present in the literature, but they follow with very similar arguments as the others. See for instance, section 6 of \cite{elliott}: one needs to apply a change of variables to the integrals on $U_h$, and then use the approximation properties in \cref{prop:G_h}. To obtain $O(h^2)$ estimates, the ``narrow band" inequality lemma 6.3, \cite{elliott}, as suggested in  lemma 6.4 of \cite{elliott}, has to be used.
 
 %\underline{Proof of $5$}
 %
@@ -5136,7 +5293,9 @@ This bound is:
 	\int_I \norm{u_h'''(t)}_{-1,h}^2\lesssim \int_I \norm{f''_h}_{-1,h}^2+\int_I\norm{g_{N,h}''}_{L^2(\Gamma_{N,h})}^2 + \int_I\norm{G_{D,h}'''}_{H^1(U_h)}^2 + \norm{\delta_{h}(0)''}_{L^2(U_h)}^2
 \end{align*}
 
-But $\norm{g_{N,h}''}_{L^2(\Gamma_{N,h})}=\norm{\Pi_h g_{N}''}_{L^2(\Gamma_{N,h})}$, where $\Pi_h$ is the nodal interpolator (see \cref{ass:discr_reg}). By \cref{prop:lin_appr}, $\norm{g_{N,h}''}_{L^2(\Gamma_{N,h})}\lesssim \norm{\Pi_c g_{N}''}_{L^2(\Gamma_{N})}\leq (1+h)\norm{ g_{N}''}_{H^{3/2}(\Gamma_{N})}$, where we also used \cref{prop:interp_curv}. 
+But $\norm{g_{N,h}''}_{L^2(\Gamma_{N,h})}=\norm{\Pi_h g_{N}''}_{L^2(\Gamma_{N,h})}$, where $\Pi_h$ is the nodal interpolator (see \cref{ass:discr_reg}). 
+
+By \cref{prop:lin_appr}, $\norm{g_{N,h}''}_{L^2(\Gamma_{N,h})}\lesssim \norm{\Pi_c g_{N}''}_{L^2(\Gamma_{N})}\leq (1+h)\norm{ g_{N}''}_{H^{3/2}(\Gamma_{N})}$, where we also used \cref{prop:interp_curv}. 
 
 Moreover $\norm{G_{D,h}'''}_{H^1(U_h)} = \norm{\Pi_h G_D'''}_{H^1(U_h)}\lesssim  \norm{\Pi_c G_D'''}_{H^1(U)}\lesssim (1+h)\norm{G_D'''}_{H^2(U)}\lesssim \norm{g_D'''}_{H^{3/2}(\Gamma_D)}$.
 Therefore:
@@ -5428,7 +5587,7 @@ where we used the first part of the proof.
 %where we also used \cref{cor:L2_deriv_est}.
 \end{mproof}
 
-Suitably combining the last estimates one can obtain estimates of the error between continuous and fully discrete solutions. We refrain from doing this, since we will not need such estimates to be spelled in detail, in \cref{sec:d-t-o_IE}.
+By suitably combining the last results, one can obtain estimates of the error between continuous and fully discrete solutions. We refrain from writing proofs of these facts, which we don't need spelled in detail in \cref{sec:d-t-o_IE}.
 
 \end{appendices}
 
