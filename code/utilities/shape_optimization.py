@@ -217,6 +217,7 @@ class ShapeOptimizationProblem:
             self.T = self.exact_pde_dict["T"]
 
             heq = HeatEquation()
+            heq.interpolate_data = True    # super important for the modified Crank-Nicolson, see pdes.py, include_neumann
             N_steps = self.exact_pde_dict["N_steps"]
             heq.set_mesh(self.exact_domain.mesh, self.exact_domain.facet_function)
             heq.set_ODE_scheme(self.exact_pde_dict["ode_scheme"])
@@ -295,9 +296,10 @@ class ShapeOptimizationProblem:
         self.V_vol = FunctionSpace(self.optimization_domain.mesh, L1_vol)
 
         self.v_equation = HeatEquation(efficient=True)
-        self.w_equation = HeatEquation(efficient=True)
+        self.w_equation = HeatEquation(efficient=False) # in order to have the correct CN: not the midpoint one (plus, no speed-up is observed)
 
         self.v_equation.set_ODE_scheme(self.optimization_pde_dict["ode_scheme"])
+        self.v_equation.interpolate_data = True # important for the correct functioning of CN
         self.v_equation.verbose = True
         self.v_equation.set_time_discretization(self.T,
                                                 N_steps=int(self.optimization_pde_dict["N_steps"]),
@@ -305,6 +307,7 @@ class ShapeOptimizationProblem:
 
         self.w_equation.set_ODE_scheme(self.optimization_pde_dict["ode_scheme"])
         self.w_equation.verbose = True
+        self.w_equation.interpolate_data = True
         self.w_equation.set_time_discretization(self.T,
                                                 N_steps=int(self.optimization_pde_dict["N_steps"]),
                                                 relevant_mesh_size=self.exact_domain.mesh.hmax())
