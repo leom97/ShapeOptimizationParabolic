@@ -210,13 +210,21 @@ class HeatEquation:
                         raise Exception("Wrong type of boundary condition")
 
                 else:
-                    if hasattr(f_N, 't'):
-                        f_N.t = t
 
-                    if self.interpolate_data:
-                        L += dt * interpolate(f_N, self.S1h) * v * ds(self.mesh)
-                    else:
-                        L += dt * f_N * v * ds(self.mesh)
+                    if not isinstance(t, list):
+                        t = [t]
+
+                    for tau in t:
+                        # huge problem here... t is updated for all copies of f_N inside my form, so, leave interpolate
+
+                        if hasattr(f_N, 't'):
+                            f_N.t = tau
+
+                        if self.interpolate_data:
+                            L += dt/len(t) * interpolate(f_N, self.S1h) * v * ds(self.mesh)
+                        else:
+                            logging.critical("This should not be happening, and it surely should be fixed")
+                            L += dt/len(t) * f_N * v * ds(self.mesh)
 
         return L
 
@@ -230,13 +238,17 @@ class HeatEquation:
     def include_source(self, t, L, dt, v, dx):
 
         if self.f is not None:
-            if hasattr(self.f, 't'):
-                self.f.t = t
+            if not isinstance(t, list):
+                t = [t]
 
-            if self.interpolate_data:
-                L += dt * interpolate(self.f, self.S1h) * v * dx
-            else:
-                L += dt * self.f * v * dx
+            for tau in t:
+                if hasattr(self.f, 't'):
+                    self.f.t = tau
+
+                if self.interpolate_data:
+                    L += dt/len(t) * interpolate(self.f, self.S1h) * v * dx
+                else:
+                    L += dt/len(t) * self.f * v * dx
 
         return L
 
@@ -296,9 +308,10 @@ class HeatEquation:
         elif ode_scheme_index == 1:  # CN (standard)
             t = self.times[time_index]
             t_prev = self.times[time_index - 1]
-            t_neumann = (t + t_prev) / 2
+            # t_neumann = (t + t_prev) / 2
+            t_neumann = [t_prev, t]
             t_dirichlet = t
-            t_source = (t + t_prev) / 2
+            t_source = [t_prev, t]
 
             a += dt / 2 * inner(grad(u), grad(v)) * dx
             L += - dt / 2 * inner(grad(last_solution), grad(v)) * dx
