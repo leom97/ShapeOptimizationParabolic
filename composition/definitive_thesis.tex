@@ -2441,13 +2441,13 @@ We chose finite element functions on the sphere for simplicity. A downside that 
 As previously mentioned, to obtain the needed boundary data to perform shape optimization, we simulate the heat equation for $w$ on the exact computational domain $\Omega_{e,h}$. Because we are in a ``volumetric" setting, we give the Neumann data and obtain the Dirichlet nodal values, unlike in \cite{harbrecht}, where the opposite is done. In fact, in our setting, the finite element Neumann trace need not to have a boundary representation, so that the implementation becomes complicated.
 %, plus, we found it more complicated from a code point of view, at least with the tools at our disposal, to deform the Neumann trace 
 
-Using the same discretization parameters to generate the synthetic data, and then perform shape optimization, will result in committing an ``inverse crime" (see \cite{wirgin}). To avoid this, there are at least two possibilities: either some noise is added to the synthetic data, or different computational models must be employed in synthesis and inversion/optimization. We experiment with both options, and in particular, for the second, we synthethize the data with a finer discretization than during the optimization process. We mention that in \cite{harbrecht}, synthesis and inversion are performed by solving integral equations of different kinds, but on the same discretization. The authors also add noise to the synthetic data.  
+Using the same discretization parameters to generate the synthetic data, and then perform shape optimization, will result in committing an ``inverse crime" (see \cite{wirgin}). To avoid this, there are at least two possibilities: either some noise is added to the synthetic data, or different computational models must be employed in synthesis and inversion/optimization. We experiment with both options, and in particular, for the second, we synthethize the needed data with a finer discretization than during the optimization process. We mention that in \cite{harbrecht}, synthesis and inversion are performed by solving integral equations of different kinds, but on the same discretization. The authors also add noise to the synthetic data.  
 
 \underline{Finite elements}
 
 We are adopting, as already mentioned, linear (instead of e.g. quadratic) finite elements, for simplicity, but also computational efficiency. This is in constrast with \cite{harbrecht}, where the authors employ order $2$ isoparametric elements (in the context of the boundary element method). The framework of \cref{chap:inh_fem} could nonetheless potentially accommodate higher order isoparametric elements, see the works of e.g. \cite{edelmann}, \cite{elliott}, \cite{ranner}. Isoparametric elements are necessary, when adopting higher order basis functions, in order to preserve optimal accuracy (see section 4.4 of \cite{strang} for a discussion on this). The version of FEniCS we are using (2019.1) doesn't provide support for curved geometries, and the latest release FEniCSx is not yet interfaced with dolfin-adjoint. Alternatively, Firedrake (see \cite{firedrake}) could be employed, which has compatibility with dolfin-adjoint, although we encountered several difficulties in the transfering of functions between non conforming meshes, something we needed at several places throughout our code.
 
-Also, we recall that the motivation for using the FEM method is that the analysis of \cite{paganini}, which we partially repeated in our setting, suggests that the volume form of the shape gradient is more accurate a boundary form, when PDEs are discretized with the finite element method. Finite elements are also appreciated and widespread in the engineering community.
+Also, we recall that the motivation for using the FEM method is that the analysis of \cite{paganini}, which we partially repeated in our setting, suggests that the volume form of the shape gradient is more accurate than a boundary form, when PDEs are discretized with the finite element method. Finite elements are also appreciated and widespread in the engineering community.
 The main drawback of adopting a distributed setting is the added computational cost: the entire domain must be meshed, and the solution computed on interior nodes too.
 
 \underline{Optimization}
@@ -2460,7 +2460,7 @@ With regards to the temporal weight (see \cref{sec:o-t-d} for details), we chose
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.5\columnwidth]{Images/Eta.pdf}
+\includegraphics[width=0.6\columnwidth]{Images/Eta.pdf}
 \caption{The temporal weight $\eta$}\label{fig:eta}
 \end{figure}
 
@@ -2473,7 +2473,7 @@ For simplicity we work in two dimensions and with $D:=B_2(0)$, $\Omega_r := B_{1
 
 \subsection{Shape optimization results}
 
-We set $T=2$ throughout. Note that in the following plots, the ``exact" control (yielding the exact domain $\Omega_{e,h}$ is always interpolated into the finite element space of the control $\tilde{\sigma}_h$, to emphasize what is the best possible result that can be attained by the optimization routine.
+We set $T=2$ throughout. Note that in the following plots, the ``exact" control (yielding the exact domain $\Omega_{e,h}$) is always interpolated into the finite element space of the control $\tilde{\sigma}_h$, to emphasize what is the best possible result that can be attained by the optimization routine.
 %
 %\begin{figure}[H]
 %\centering
@@ -2536,7 +2536,7 @@ We now show a visual comparison of the same example $g_1$, run with three differ
 \caption{From outside to inside: run with $g_1$ and $a=0$, $a = 0.05$, $a=0.005$ and exact solution in blue}\label{fig:eta_run}
 \end{figure}
 
-Some very small differences can be noticed: it seems that small values of $a$ yield an improvement over a $0$ value of $a$. Our hypothesis for this is in accordance with the behaviour of \cref{fig:comparison_compatibility}: $a=0$ means losing some compatibility. A too large value of $a$, on the other hand, perturbs the problem too much (so that the plot corresponding to $a=0.005$ yields the best result here). From here, we conjecture that $a$ should be chosen small enough, but positive.
+Some very small differences can be noticed: it seems that small values of $a$ yield an improvement over a $0$ value of $a$. Our hypothesis for this is in accordance with the behaviour of \cref{fig:comparison_compatibility}: $a=0$ means losing some compatibility, hence, possibly, accuracy. A too large value of $a$, on the other hand, perturbs the problem too much (so that the plot corresponding to $a=0.005$ yields the best result here). From here, we conjecture that $a$ should be chosen small enough, but positive.
 
 
 \underline{Inner product}
@@ -2572,7 +2572,7 @@ We did experience these phenomena: up to a certain number of L-BFGS iterations, 
 
 The solution obtained at around $25$ iterations remains unchanged and stable until about iteration $35$, then the cost function is further reduced, along some spurious descent direction. Note the oscillatory behaviour of the gradient norm.
 
-This degeneration is even more evident and quicker, in case the implicit Euler method is used during optimization, in place of the Crank-Nicolson one, all the other parameters being unchanged (so that the exact data is still generated with the Crank-Nicolson method). This is because the implicit Euler's method converges more slowly in time, so that the discrepancy in the computed PDEs and the synthetic PDEs, is $O(\delta t)$ and not $O(\delta t^2)$. This is one of the reasons for adopting the Crank-Nicolson method: the implicit Euler method yields a faster, worse degeneration of the boundary, and a less accurate one, when early stopping is applied. We have nonetheless analyzed the implicit Euler case in \cref{chap:discretization} because this method has already been successfully employed in less ill-posed parabolic shape optimization (see \cite{lindemann2}). We show reconstruction, cost function and gradient history for a run with implicit Euler.
+This degeneration is even more evident and quicker, in case the implicit Euler method is used during optimization, in place of the Crank-Nicolson one, leaving all the other parameters unchanged (so that the exact data is still generated with the Crank-Nicolson method). This is because the implicit Euler method converges more slowly in time, so that the discrepancy in the computed PDEs and the synthetic PDEs, is $O(\delta t)$ and not $O(\delta t^2)$. This is one of the reasons for adopting the Crank-Nicolson method: the implicit Euler method yields a faster, worse degeneration of the boundary, and a less accurate one, when early stopping is applied. We have nonetheless analyzed the implicit Euler case in \cref{chap:discretization} because this method has already been successfully employed in less ill-posed parabolic shape optimization (see \cite{lindemann2}). We show reconstruction, cost function and gradient history for a run with implicit Euler.
 
 \begin{figure}[H]
 \centering
@@ -2586,9 +2586,9 @@ This degeneration is even more evident and quicker, in case the implicit Euler m
 
 Let us avoid the inverse crime in a different way, through application of noise to the problem data $f,g$. We therefore set the discretization parameters for the synthetization to be equal to those used for the inversion. The noise level is $1$\%, with respect to the $L^\infty(I,L^\infty)$ norm of the data, and the perturbation is random uniform. 
 
-We noticed that the optimization process is much more stable with the number of iterations, than when different discretizations are adopted, for inversion and synthesis. The reconstructed boundary is very similar to those of the above runs, and it starts to present spurious oscillations  very late (only after iteration $80$, in the case of the $g_1$ run). The discrepancy between exact data and data available during optimization, is randomly distributed and of zero mean, whereas we noted that it presents a ``trend" given by the chosen PDEs discretization algorithm, when different discretizations are employed. This seems to be a key ingredient to the degeneration behaviour that we observed. 
+We noticed that the optimization process is much more stable with the number of iterations, than when different discretizations are adopted, for inversion and synthesis. The reconstructed boundary is very similar to those of the above runs, and it starts to present spurious oscillations  very late (only after iteration $80$, in the case of the $g_1$ run). The discrepancy between exact data and data available during optimization, is randomly distributed and of zero mean, whereas we noted that it presents a ``trend" given by the chosen PDEs discretization algorithm, when different discretizations are employed. This seems to be a key ingredient for the degeneration behaviour that we observed. 
 
-We did most of the experiments with different discretizations between inversion and synthesis, because this approach better highlited the ill-posedness of the problem. Moreover, in a real-world situation, the bonudary data can be interpreted to be sampled from a solution with discretization parameters tending to zero, this is another reason to proceed as we did.
+We did most of the experiments with different discretizations between inversion and synthesis, because this approach better highlited the ill-posedness of the problem. Moreover, in a real-world situation, the actual boundary data can be interpreted to be sampled from a solution with discretization parameters tending to zero: this is another reason to proceed as we did.
 
 \textit{Second order information}
 
@@ -2643,7 +2643,8 @@ $$Q_h:=\max_{i=1,...,30}\frac{|J'_{h_f,\delta t_f}(U_{h_f})[\delta \te_{h_f,\til
 
 where $h_f \ll h$, $\delta t_f \ll \delta t$.
 
-In particular, we set $h_f = 0.015625$, and $h = 2^{l} h_f$, for $l$ integer, where we refer to $2^l$ as ``multiplier". We report the orders of convergence $\ds OOC =  \frac{\log Q_h-\log Q_{2h}}{\log h - \log 2h}$ in four cases, corresponding to $\theta =1, 1/2$ and $a = 0.05, 0$, where $\eta =\exp\{-a/(t-T)^2\} $.
+In particular, we set $h_f = 0.015625$, and $h = 2^{l} h_f$, for $l$ integer, where we refer to $2^l$ as ``multiplier". We report the orders of convergence $\ds OOC =  \frac{\log Q_h-\log Q_{2h}}{\log h - \log 2h}$ in three cases:
+
 %We set $C=1$ (for $\delta t = C h^{2\theta}$) for Crank-Nicolson, and $C=5$ for implicit Euler, to have a number of timesteps that is always greater than $1$. For reasons of computational resources, we made one less refinement in the implicit Euler case.
 %
 %\begin{table}[h]
@@ -2688,7 +2689,7 @@ In particular, we set $h_f = 0.015625$, and $h = 2^{l} h_f$, for $l$ integer, wh
 %$Q_h$ & $0.0594$ & $0.0126$ & $0.005$ & $0.0011$ & $0.0$\\ \hline
 %\textit{OOC} & $2.5864$ & $1.5225$ & $2.2349$ & $\infty$ & $-$ \\ \hline
 \end{tabular}
-\caption{Order of convergence study with implicit Euler}\label{tab:ooc_IE}
+\caption{Order of convergence study with implicit Euler: the last two refinement are not done, due to issues of computing power}\label{tab:ooc_IE}
 \end{table}
 
 Of course we register an infinite order of convergence when the refinement brings us from $2h_f$ to $h_f$. Moreover, the order of convergence value in the second-last refinement is always larger than expected, most probably because of a ``saturation" effect. We think that these results confirm the theoretical considerations of \cref{sec:d-t-o_IE}. In particular, we note the following facts:
@@ -2717,7 +2718,7 @@ There are some interesting directions in which our work can be expanded:
 	\item the error estimates for the shape gradients were derived assuming a specific form of $U_h$: it could be worth to try to eliminate the requirement that $\partial U_h$ must interpolate $\partial U$, or to devise a finite dimensional domain parametrization that is e.g. $C^2$, so that is is clear which domain $U_h$ is interpolating, during shape optimization. Moreover, one could try to explicitly account for the fact that $U=\tau (U_r), U_h = \tau_h(U_{r,h})$, in these estimates, i.e. making the contribution of $\tau, \tau_h$ explicit
 	\item experimenting with higher order finite elements, both theoretically and in the implementation, should yield better error estimates for the shape gradients and, potentially, better shape optimization results. The framework of \cref{chap:inh_fem} naturally extends in this direction, see e.g. \cite{ranner}, \cite{elliott}
 	\item one could repeat the analysis with time-dependent domains, \cite{ranner} provides a good foundation for this, too, at least for the finite element discretization
-	\item finally, one could experiment with schemes that don't require so much regularity in time, so as to eliminate the temporal weight $\eta$
+	\item finally, one could experiment with schemes that don't require so much regularity in time, so as to eliminate the need for the temporal weight $\eta$
 \end{itemize}
 
 %
@@ -2750,7 +2751,7 @@ $$\int_\Omega f \partial_i g = -\int_\Omega g \partial_i f+\int_{\partial \Omega
 \end{thm}
 \begin{mproof}
 
-This follows from \cite{leoni}, theorem 18.1 at page 592, where $g$ needs to be $C^1_c(\mR^n)$. But \cite{adams}, theorem 3.18 at page 54, says that (thanks to the smoothness of the boundary) the set of the restrictions to $\Omega$ of such functions is dense in $W^{1,q}(\Omega)$, so that we can conclude by a density argument.
+This follows from \cite{leoni}, theorem 18.1 at page 592, where $g$ needs to be $C^1_c(\mR^n)$. But from \cite{adams}, theorem 3.18 at page 54, thanks to the smoothness of the boundary, the set of the restrictions to $\Omega$ of such functions is dense in $W^{1,q}(\Omega)$, so that we can conclude by a density argument.
 \end{mproof}
 
 %\begin{lemma}
@@ -2803,7 +2804,7 @@ This means that $u\in W^{1,\infty}(\Omega)$ if and only if $u$ has a (unique) re
 
 In any case, $\Omega$ is an extension domain for $W^{1,\infty}(\Omega)$ (see \cite{leoni}, theorem 13.17 at page 425, 13.13 at page 424, and definition 9.57 at page 273).
 
-Let $u \in  W^{1,\infty}(\Omega)$. By \cite{leoni}, 11.50 at page 339, because $\Omega$ is an extension domain, we obtain that $u$ has a representative $\bar{u}$ that is bounded Lipschitz. Let $\phi \in C_c^\infty(\Omega)$. By The Kirszbraun theorem (see e.g. \cite{kirszbraun}), we can extend $\bar{u}$ to a Lipschitz on $\mathbb{R}^n$. Then, by Fubini's theorem and integration by parts for AC functions, we conclude $\ds \int_\Omega\bar{u}\partial_i\phi =-\int_{\Omega} \partial_i \bar{u} \phi $, so that $\nabla \bar{u} = \nabla u$ almost everywhere.
+Let $u \in  W^{1,\infty}(\Omega)$. By \cite{leoni}, 11.50 at page 339, because $\Omega$ is an extension domain, we obtain that $u$ has a representative $\bar{u}$ that is bounded Lipschitz. Let $\phi \in C_c^\infty(\Omega)$. By The Kirszbraun theorem (see e.g. \cite{kirszbraun}), we can extend $\bar{u}$ to a Lipschitz on $\mathbb{R}^n$. Then, by Fubini's theorem and integration by parts for $AC$ functions, we conclude $\ds \int_\Omega\bar{u}\partial_i\phi =-\int_{\Omega} \partial_i \bar{u} \phi $, so that $\nabla \bar{u} = \nabla u$ almost everywhere.
 
 Conversely, let $u$ be bounded Lipschitz. The above reasoning shows that $u$ has (bounded) weak derivatives equal to the a.e. classical derivatives. Their measurability follows by approximation by difference quotients.
 \end{mproof}
@@ -2836,7 +2837,7 @@ Conversely, let $u$ be bounded Lipschitz. The above reasoning shows that $u$ has
 \begin{prop}[Bochner integral and bounded operators]
 \label{lemma:bochner_Hk_map}
 %\label{prop:bochner_bound}
-Let $X,Y$ be separable Banach, let $T \in L(X,Y)$ be a linear bounded operator. For $f \in L^1(I,X)$ define $Tf (t):= T(f(t))$. Then $Tf \in L^1(I,Y)$ with $T\int_I f = \int_I Tf$.
+Let $X,Y$ be separable Banach, let $T \in L(X,Y)$ be a linear bounded operator. For $f \in L^1(I,X)$ define $Tf (t):= T(f(t))$. Then $Tf \in L^1(I,Y)$ with $\ds T\int_I f = \int_I Tf$.
 
 More generally, for $k\geq 0$, $1\leq p < \infty$, $f \in W^{k,p}(I,X)\implies Tf \in W^{k,p}(I,Y)$, with weak derivatives $\partial_{t^i}Tf = T\partial_{t^i}f$, $0\leq i \leq k$.
 
@@ -2851,7 +2852,7 @@ For almost all $t$, $T(f_n(t)) \rightarrow T(f(t))=Tf(t)$ in $Y$, so that $Tf$ i
 
 By dominated convergence (corollary 2.6 of \cite{kreuter}), $Tf$ is integrable. Thus $\int_T Tf = \lim_n \int_I  Tf_n = \lim_n T\int_I  f_n$, because $f_n$ is simple. And now, by the choice of $f_n$, $\int_T Tf = \lim_n T\int_I  f_n = T \lim_n \int_I  f_n = T \int_I f$.
 
-The rest of the claim is an easy consequence of this first part.
+The rest of the claim is a straightforward consequence of this first part.
 \end{mproof}
 
 %\begin{cor}	[Derivations and bounded operators]
@@ -2910,11 +2911,11 @@ We also need a time dependent trace lemma, which we provide in a space-time ``te
 
 \begin{prop}[Time dependent trace]
 \label{prop:trace}
-Let $\Omega$ be a bounded Lipschitz domain (in the sense of \cite{grisvard}, definition 1.2.1.1). For $k\geq 0$ we define $\tr_k: H^k(I,H^1(\Omega))\rightarrow H^k(I, H^{1/2} (\partial \Omega))$ by $\tr_K(u)(t):=\tr(u(t))$, so that we can drop the subscript $k$. The trace operator just defined:
+Let $\Omega$ be a bounded Lipschitz domain (in the sense of \cite{grisvard}, definition 1.2.1.1). For $k\geq 0$ we define $\tr_k: H^k(I,H^1(\Omega))\rightarrow H^k(I, H^{1/2} (\partial \Omega))$ by $\tr_k(u)(t):=\tr(u(t))$. The trace operator just defined:
 \begin{enumerate}
 \item is well posed, linear and bounded
 \item admits a linear bounded right inverse, for instance, $E_k(g)(t):=E(g(t))$ (for $E$ a right inverse of the ``static" trace)
-\item $\tr_k u = \tr_0 u$, for $u \in L^2(I,H^1(\Omega))$ and $E_k g = E_0g$ gor $g \in L^2(I,H^{1/2}(\partial \Omega))$
+\item $\tr_k u = \tr_0 u$, for $u \in L^2(I,H^1(\Omega))$ and $E_k g = E_0g$ gor $g \in L^2(I,H^{1/2}(\partial \Omega))$, and we can thus drop the subscript $k$
 %\item for $k\geq 1$, $\tr u(0)=0 \iff E (\tr( u))(0)=0$ (in the sense of continuous representatives)
 %\item it coincides with the trace treated for instance in \cite{lions}
 \end{enumerate}
@@ -2923,7 +2924,7 @@ Let $\Omega$ be a bounded Lipschitz domain (in the sense of \cite{grisvard}, def
 
 \underline{Proof of the proposition}
 
-We recall that the trace operator is bounded surjective onto $H^{1/2}(\partial \Omega)$, with a right inverse $E$ (see theorem 3.37 at page 102 of \cite{mclean}). The first two points are consequences of this fact and of \cref{lemma:bochner_Hk_map}, whereas the third property follows from the definition of $\tr, E$ and the fact that $H^l(I,H^1(\Omega))\subseteq H^k(I,H^1(\Omega))$, for $k\leq l$.
+We recall that the trace operator is bounded surjective onto $H^{1/2}(\partial \Omega)$, with a right inverse $E$ (see theorem 3.37 at page 102 of \cite{mclean}). The first two points are consequences of this fact and of \cref{lemma:bochner_Hk_map}, whereas the third property follows from the definition of the time independent $\tr, E$ and the fact that $H^l(I,H^1(\Omega))\subseteq H^k(I,H^1(\Omega))$, for $k\leq l$.
 
 %Let now $k\geq 1$. We know that $H^1, H^{1/2}$ are separable and Banach (the latter is separable because the continuos image of $H^1$ separable, and Banach (see \cite{grisvard}, page 20). Therefore, by \cite{evans}, theorem 2 of page 286, we obtain the embeddings $H^k(I,H^1)\emb C([0,T],H^1)$ and the same goes for $H^k(I,H^{1/2})$, and we conclude by continuity in time of $u$ and $\tr u$.
 
@@ -3029,7 +3030,7 @@ Define $\ds \bar{w} = \delta t^{-1}\int_{I_k}w$ on $I_k$. Then:
 	\item $\norm{u-\pi u}_{L^2(I,X)}, \norm{u-\tilde{\pi }u}_{L^2(I,X)}\leq C \delta t \norm{u'}_{L^2(I,X)}$, for $C=1/\sqrt{2}$
 	\item for $u \in H^2(I,X), v \in H^1(I,X)$, if $X$ is Hilbert with $(\cdot, \cdot)_X$, there holds $\ds \int_I ((u-\pi_1 u)',v)_X \leq \delta t^2 \norm{u}_{H^2(I,X)}\norm{v}_{H^1(I,X)} $
 	\item if $u \in H^2(I,X)$, then $\norm{u-\pi_1 u}_{L^2(I,X)}\leq C\delta t^2\norm{u''}_{L^2(I,X)}$, $C = 1/4\sqrt{3}$
-	\item $\ds \delta t^{-1} \sum_{k=0}^{K-1}\norm{\bar{w}|_{I_k}}_X^2\leq C \norm{w}_{L^2(I,X)}^2$
+	\item $\ds \delta t^{-1} \sum_{k=0}^{K-1}\norm{\bar{w}|_{I_k}}_X^2\leq C \norm{w}_{L^2(I,X)}^2$, $C>0$ independent of $w$
 \end{enumerate}
 
 \end{lemma}
@@ -3040,7 +3041,7 @@ By Hölder's inequality we then see that $ \ds \int_{I_k}\norm{\pi u - u(t)}_X^2
 
 For $2$: on $I_k$ there holds $(u-\pi_1 u)' = u'-\delta t^{-1}\ds \int_{I_k} u'$, so that by a straightforward adaptation of lemma 3.2 of \cite{lshou} one gets $\norm{u'-\delta t^{-1}\ds \int_{I_k} u'}_{L^2(I,X)}^2\leq \delta t^2 \norm{u'}_{H^1(I_k,X)}^2$. Note that $\ds \int_{I_k} \left ( u' - \delta t^{-1} \int_{I_k}u', v\right )_X = \int_{I_k} \left ( u' - \delta t^{-1} \int_{I_k}u', v - \delta t^{-1} \int_{I_k}v\right )_X$ and apply the just derived $L^2(I,X)$ estimate to both arguments ot $(\cdot,\cdot)_X$, to conclude.
 
-For $3$ it suffices to note that $\pi_1 u(t) - u(t) = \ds \int_{I_k} \dfrac{(t^{k+1}-\max(t,s))(\min(t, s)-t^k)}{\delta t}u''$ on $I_k$ and suitably estimate the latter integral using the Cauchy-Schwarz inequality and some algebraic computations.
+For $3$ it suffices to note that $\pi_1 u(t) - u(t) = \ds \int_{I_k} \dfrac{(t^{k+1}-\max(t,s))(\min(t, s)-t^k)}{\delta t}u''ds$ on $I_k$ and suitably estimate the latter integral using the Cauchy-Schwarz inequality and some algebraic computations.
 
 $4$ is a minor reworking of lemma 3.2 of \cite{lshou} itself.
 \end{mproof}
@@ -3048,7 +3049,7 @@ $4$ is a minor reworking of lemma 3.2 of \cite{lshou} itself.
 \chapter{Parabolic equations}
 \label{chap:parab_eq}
 
-Let us discuss the functional analytic formulation for the various (parabolic) PDEs we are concerned with. We start with an abstract approach, which we then apply to a general boundary value problem comprehensive of the the PDEs from \cref{pb:pdes} and \cref{prop:gateaux_diff}.
+Let us discuss the functional analytic formulation for the various (parabolic) PDEs we are concerned with. We start with an abstract approach, which we then apply to a general boundary value problem comprehensive of the PDEs from \cref{pb:pdes} and \cref{prop:gateaux_diff}.
 
 \section{Abstract theory}
 
@@ -3460,8 +3461,9 @@ Here we apply the results of the last section to tackle a general inhomogeneous 
 Call $H=L^2(U)$, $V=\{ v \in H^1(U), \tr u = 0 \text{ on } \Gamma_D\}=:H^1_{0,D}$. $V$ is a closed subspace of $H^1$, which is Hilbert separable, hence also Hilbert separable. We norm it with the full $H^1$ norm. Because $H^1_0(U)$ is dense in $H$, so is $V$ and we obtain a Gelfand triple. 
 
 %That $V$ is a closed subspace of $H^1$ follows from the observation that if $u_n\rightarrow u$ in the $V$ norm, then $\tr u_n \rightarrow \tr u$ in $L^2(\partial U)$. We can take an almost everywhere pointwise convergent sequence, so that $\tr u_n \rightarrow \tr u$ a.e., and by the fact that $\Gamma_m$ has positive Hausdorff measure, we conclude $\tr u = 0$ on $\Gamma_m$.
+\mbox{}\\
 
-We define $A$ by $(Au)v:=\int_u\nabla u \nabla v$. The general heat equation is then:
+We define $A$ by $(Au)v:=\ds\int_u\nabla u \nabla v$. The general heat equation is then:
 %
 %The problem under consideration is the following. For $U = D\setminus \Omega$ we have:
 %
@@ -3884,7 +3886,7 @@ Call then $\pazocal{E}(u):=u_t+Au-F \in L^2(I,V^*)$ and $W_0(I,V)$ the set of $W
 Given a function $\pazocal{E}: W(I,V)\rightarrow L^2(I,V^*)$, find $u\in W_0(I,V)$, such that $\pazocal{E}(u)=0$ for a.a. $t$.
 \end{pb}
  
-We can view $L^2(I,V^*)\cong L^2(I,V)^*$. Hence $\langle \pazocal{E}(u), v\rangle_{L^2(I,V)^*, L^2(I,V)}=\int_I \langle \pazocal{E}(u)(t),v(t) \rangle_{V^*,V} dt$ (see \cite{hinze}, theorem 1.31 at page 39). We are now ready to restrict both state and adjoint space, in view of the proof of \cref{prop:gateaux_diff}.
+We can view $L^2(I,V^*)\cong L^2(I,V)^*$, and $\ds\langle \pazocal{E}(u), v\rangle_{L^2(I,V)^*, L^2(I,V)}=\int_I \langle \pazocal{E}(u)(t),v(t) \rangle_{V^*,V} dt$ (see \cite{hinze}, theorem 1.31 at page 39). We are now ready to restrict both state and adjoint space, in view of the proof of \cref{prop:gateaux_diff}.
 
 \begin{defn}[$Q(I,V)$]
 \label{def:Q}
@@ -3898,7 +3900,7 @@ There holds:
 	\item $Q=Q(I,V)$ is Hilbert with $(v,w)_{L^2(I,V)} + (v_t,w_t)_{L^2(I,H)}$ 
 	\item $Q(I,V)$ is dense in $L^2(I,V)$
 	\item $Q(I,V)\emb C([0,T],H)$
-	\item $Q_0(I,V)$ is dense in $L^2(I,V)$, $Q_0(I,V)$ being the space of $Q(I,V)$ function with zero initial value
+	\item $Q_0(I,V)$ is dense in $L^2(I,V)$, $Q_0(I,V)$ being the space of $Q(I,V)$ functions with zero initial value
 	\item $Q(I,V) = W(I,V)\cap H^1(I,H)$, $Q_0(I,V) =  W_0(I,V)\cap H^1(I,H)$ as sets
 	\item integration by parts in time holds: $\ds \int_I(v_t,w)_H = -\int_I(w_t,v)_H +(v(T),w(T))_H-(v(0),w(0))_H$
 	\item if $q_n$ is bounded in $Q(I,V)$, then there exists a weakly convergent subsequence $q_k$ such that $q_k\weakc q$ in $L^2(I,H)$, $\nabla q_k\weakc \nabla q$ in $L^2(I,H)$ and $q_k'\weakc q'$ in $L^2(I,H)$
@@ -4188,7 +4190,7 @@ Let $\delta \te \in W^{1,\infty}(\mR^n;\mR^n)$, $\tau \in \cT$. Then:
 \end{itemize}
 \end{prop}
 \begin{mproof}
-These are exacly lemme 2.2 at page II .8 and (4.12) of remarque 4.1, page IV.6 of \cite{murat}. 
+These are exacly lemme 2.2 at page II.8 and (4.12) of remarque 4.1, page IV.6 of \cite{murat}. 
 \end{mproof}
 
 \begin{prop}[Small perturbations of $\cT$]
@@ -4457,7 +4459,7 @@ Finally, $\tr_U f\circ \tau|_{\partial \Omega} = tr_U (f\circ \tau)(\beta \circ 
 
 Let $\tau \in \cT$ be such that point $7$ for \cref{thm:change} to hold. Then:
 
-$$\circ \tau : Q(I,V_\tau)\rightarrow Q(I,V), Q_0(I,V_\tau)\rightarrow Q_0(I,V)$$
+$$\circ \tau : Q(I,V_\tau)\rightarrow Q(I,V),\circ \tau^{-1}:Q_0(I,V_\tau)\rightarrow Q_0(I,V)$$
 
 are linear isomorphisms. In particular, $(u\circ \tau)' = u'\circ \tau$.
 
@@ -4570,17 +4572,17 @@ Here, $A_\tau:=  (D\tau)^{-1}(D\tau)^{-t}|\det(D\tau)|$.
 \label{chap:inh_fem}
 Handling smooth geometries in finite element analysis is not a trivial task. On one hand, finite element discretizations are naturally set up on polygonal/polyhedral domains, whereas the smoothness of the analytical solutions required to obtain optimal order error estimates, can only be achieved with a smooth boundary (or more generally, when $U$ is convex, which it isn't, in our case). An apparent contradiction therefore arises, and many authors simply conduct theoretical analysis on the polyhedral domains, but assuming enough smoothness of the solutions (this is the contradiction of ``polygonal smooth" domains, mentioned in \cite{tiihonen}): an example of this in a setting close to ours, is contained in \cite{paganini}. 
 
-There are few different ways to go about this dilemma, many of them are only a partially satisfactory answer to the problem. For instance, finite elements formulated directly on arbitrarily curved simplices have been studied in \cite{zlamal}. This requires complete knowledge of the (curved) boundary of the computational domain. Optimal order estimates are also observed in \cite{bramble}. Their techniques work with smooth and rough data, but also require complete knowledge of a parametrization of the boundary, and are not easily extendable to a dimension higher than $2$. Interestingly, shape optimization techniques can be applied to analyze the discrepancy between discrete and smooth geometry in the solution process, see \cite{tiihonen}: the techniques therein presented only yield optimal order estimates in the $H^1$ norm.
+There are few different ways to go about this dilemma, many of them are only a partially satisfactory answer to the problem. For instance, finite elements formulated directly on arbitrarily curved simplices have been studied in \cite{zlamal}. This approach requires complete knowledge of the (curved) boundary of the computational domain. Optimal order estimates are observed in \cite{bramble}. Their techniques work with smooth and rough data, but also require complete knowledge of a parametrization of the boundary, and are not easily extendable to a dimension higher than $2$. Interestingly, shape optimization techniques can be applied to analyze the discrepancy between discrete and smooth geometry in the solution process, see \cite{tiihonen}: the techniques therein presented only yield optimal order estimates in the $H^1$ norm.
 
 The presence of Dirichlet boundary conditions further complicates the analysis. The Dirichlet values might be imposed strongly, i.e. enforced at the boundary nodes, or weakly (see e.g. \cite{chiba} for the elliptic case, or, more generally, the discussion in \cite{chouly}, and that in \cite{benner} for the parabolic case). The latter solution is viable only if one can extend the boundary data to the whole volume, or to a strip around it.
 
 We chose an approach that was as little intrusive as possible with regards to the exact geometry and data: it only requires the knowledge of the smooth domain and boundary data at some points of the smooth boundary. It is straightforward to implement, both from a meshing point of view and from a finite element code point of view. Standard meshing tools can be used without modification, GMSH being our choice (\cite{gmsh}), and powerful finite element libraries (e.g. Fenics (\cite{fenics})) can be directly employed to simulate the partial differential equations.
 
-In short, the discrete solution is computed on a polygonal/polyhedral approximation $U_h$ of the smooth domain $U$, where the nodes of $\partial U_h$ lie on $\partial U$, and the Dirichlet conditions are imposed strongly at every time step. The boundary data is substituted by its Langrange interpolant, thus requiring its knowledge only on the boundary nodes of $\partial U_h$. To compare the smooth solution $u$ defined on $U$, and the discrete one $u_h$, defined on $u_h$, we will make use of a certain lifting map $G_h : U_h\rightarrow U$ and study $u-u_h\circ G_h^{-1}$.
+In short, the discrete solution is computed on a polygonal/polyhedral approximation $U_h$ of the smooth domain $U$, where the nodes of $\partial U_h$ lie on $\partial U$, and the Dirichlet conditions are imposed strongly at every time step. The boundary data is substituted by its Langrange interpolant, thus requiring its knowledge only at the boundary nodes of $\partial U_h$. To compare the smooth solution $u$ defined on $U$, and the discrete one $u_h$, defined on $u_h$, we will make use of a certain lifting map $G_h : U_h\rightarrow U$ and study $u-u_h\circ G_h^{-1}$.
 
 We mention that we have to ask ``unnatural" smoothness to the boundary data, because we evaluate it pointwise (``unnatural" is compared to the hypothesis necessary to obtain $H^2$ regularity in the elliptic case, i.e. $H^{1/2}$ smoothness for Neumann data and $H^{3/2}$ smoothness for Dirichlet data: we will require both to be $H^2$ on the boundary). A surplus of smoothness is however present in the majority of the other works that analyze the change in geometry in detail. Strong imposition of Dirichlet boundary conditions, on the other hand, may not me the best solution for all PDEs, see e.g. \cite{hughes}.
 
-The approach we took is based on the work of \cite{elliott}, \cite{ranner}, \cite{bernardi} and \cite{edelmann}. We remark that all the estimates we are about to obtain will be $U$ dependent, and this dependence will not be tracked, for simplicity.
+The approach we took is based on the work of \cite{elliott}, \cite{ranner}, \cite{bernardi} and \cite{edelmann}. We remark that all the estimates we are about to obtain are $U$ dependent, and this dependence will not be tracked, for simplicity.
 
 %We mention that one might alternatively solve the PDEs resulting from shape optimization, on the reference domain, rather than on the moving domain. This would be an argument for adopting one of the aforemention This however complicates the analysis and the variational formulation, and in the case of more difficult equations (more than a Poisson, or a heat equation in our case), already existing high performance solvers may be unavailable. Moreover, the reference domain might change during the shape optimization process (because of e.g. remeshing steps) an
 
@@ -4595,7 +4597,7 @@ We define a polygonal/polyhedral meshing $U_h$ of $U$ made of triangles/tetrahed
 
 Denoting by $\Gamma_D, \Gamma_N \subseteq \partial U$ subsets of $\partial U$ where Dirichlet and Neumann boundary conditions will be imposed, we call their discretizations $\Gamma_{D,h}, \Gamma_{N,h}$.
 
-We assume $\Gamma_D \neq \emptyset $ for simplicity (but many of the following arguments work with suitable adaptations otherwise), and $\overline{\Gamma_D}\cap \overline{\Gamma_N} = \emptyset$.
+We assume $\Gamma_D \neq \emptyset $ for simplicity (but many of the following arguments still work with suitable adaptations), and $\overline{\Gamma_D}\cap \overline{\Gamma_N} = \emptyset$.
 
 \end{ass}
 
@@ -4837,7 +4839,7 @@ Now, for the stability: by uniform coercivity and the definition of $R_h$: $\nor
 
 For the $H^1$ error bound, we refer to \cite{ranner}, in particular to the proof of lemma 3.8 at page 1720. Note that $H^2$ stability of $R_h$ is sufficient, instead of the stronger $H^1$ stability the authors employ.
 
-For the $L^2$ error bound, we apply a variant of the Aubin-Nitsche trick. Call $e:= z - R_c z \in H^1(U)$ (this holds by \cref{prop:lift}), and define $w$ by:
+For the $L^2$ error bound, we apply the Aubin-Nitsche trick. Call $e:= z - R_c z \in H^1(U)$ (this holds by \cref{prop:lift}), and define $w$ by:
 
 $$
 \left\{\begin{matrix}
@@ -4862,7 +4864,7 @@ $$\norm{z-R_c z}_{L^2(U)}\lesssim h^2\norm{z}_{H^2(U)} + \norm{z-\Pi_c z}_{L^2(\
 
 \underline{Commutation with time derivative}
 
-Follows from \cref{lemma:bochner_Hk_map}, and the fact that $R_c$ is linear and bounded. The latter is true as lifting a finite element function is a linear bounded map, see \cref{prop:lift}.
+It follows from \cref{lemma:bochner_Hk_map}, and the fact that $R_c$ is linear and bounded. The latter is true as lifting a finite element function is a linear bounded map, see \cref{prop:lift}.
 \end{mproof}
 
 \begin{ass}[Smoothness requirement on continuous solution]
@@ -4894,7 +4896,7 @@ We are making the following assumptions:
 	\item $u_0\in H^2(U$), with the compatibility condition $u_{0} = g_{D}(0)$ on $\Gamma_{D}$, and $u_{0h}:=\Pi_h u_0$
 \end{itemize}
 
-(note that these assumptions can be relaxed for proving the well-posedness of the scheme, but are needed as they are for error estimates, and that other choices of the discrete data might be possible. In particular, one could choose $f_h=\Pi_h f$, for $f\in L^2(I, H^2(U))$ and obtain the same results).
+Note that these assumptions can be relaxed for proving the well-posedness of the scheme, but are needed as they are for error estimates, and that other choices of the discrete data might be possible. In particular, one could choose $f_h=\Pi_h f$, for $f\in L^2(I, H^2(U))$ and obtain the same results.
 
 \end{ass}
 
@@ -5310,7 +5312,7 @@ C^2:=\ds \int_I \norm{f^{(1/\theta)}_h}_{-1,h}^2+\int_I\norm{ g_{N}^{(1/\theta)}
 
 \begin{mproof}
 
-Recall the semidiscrete problem, \cref{pb:inh_parabolic_discr}, for  $u_h \in H^1(I, S^1_h)$. For the $L^2, H^1$ estimate we refer to \cite{quarteroni}, page 385 and following, specifically to theorem 11.3.1 and 11.3.2. In particular, calling $e_h^k:=u_h^k-u_h(t^k)$, and $\delta f_h^k:=f_h^k-f_h(t^k)$:
+Recall the semidiscrete problem, \cref{pb:inh_parabolic_discr}, for  $u_h \in H^1(I, S^1_h)$. For the $L^2, H^1$ estimates, we refer to \cite{quarteroni}, page 385 and following, specifically to theorem 11.3.1 and 11.3.2. In particular, calling $e_h^k:=u_h^k-u_h(t^k)$, and $\delta f_h^k:=f_h^k-f_h(t^k)$:
 
 \begin{align}
 \label{eqn:discr_err}
@@ -5319,7 +5321,7 @@ e_h^{k+1}=0  \text{,  on } \Gamma_{D,h}\\
 e_h^0=0
 \end{align}
 
-where we defined $Q_h^k:\ds =\frac{u_{h}(t^{k+1})-u_h(t^k)}{\delta t} -\theta \partial_t u_h(t^{k+1}) - (1-\theta)\partial_tu_h(t^k)$. The proof now consists in deriving discrete stability estimates for \cref{eqn:discr_err}, exactly how it is done in \cite{quarteroni}. We only remark a few facts that will be referenced in other proofs.
+where we defined $Q_h^k:\ds =\frac{u_{h}(t^{k+1})-u_h(t^k)}{\delta t} -\theta \partial_t u_h(t^{k+1}) - (1-\theta)\partial_tu_h(t^k)$. The proof now consists in deriving discrete stability estimates for \cref{eqn:discr_err}, as in \cite{quarteroni}. We only remark a few facts that will be referenced in other proofs.
 
 \underline{Estimating $Q_h^k$}
 
@@ -5397,7 +5399,7 @@ The proof for $\theta=1$ is very similar.
 %\norm{ \frac{e_{h}^{k+1}-e_h^k}{\delta t}}_{(H^1_{0,D,h}(U_h))^*} \lesssim  \norm{\theta e_h^{k+1}+(1-\theta)e^k_h}_{H^1(U_h)} + \norm{\theta \delta f_h^{k+1}+(1-\theta)\delta f_h^k + Q_h^k}_{-1,h}
 %\end{align*}
 
-and we can conlude by the above estimates on $Q_h^k$ and the $H^1$ estimate.
+%and we can conlude by the above estimates on $Q_h^k$ and the $H^1$ estimate.
 \end{mproof}
 
 %\begin{thm}[Fully discrete estimates]
@@ -5639,7 +5641,7 @@ where we used the first part of the proof.
 %where we also used \cref{cor:L2_deriv_est}.
 \end{mproof}
 
-By suitably combining the last results, one can obtain estimates of the error between continuous and fully discrete solutions. We refrain from writing proofs of these facts, which we don't need spelled in detail in \cref{sec:d-t-o_IE}.
+By suitably combining the last results, one can obtain estimates of the error between continuous and fully discrete solutions. We refrain from writing proofs of these facts, which we don't need to be spelled in detail, in \cref{sec:d-t-o_IE}.
 
 \end{appendices}
 
