@@ -178,10 +178,10 @@
 \noindent
 I hereby declare that this thesis is my own work and that no other sources have been used except those clearly indicated and referenced.
 \\[1cm]
-Garching, ... November 2022
-\begin{figure}[H]
-\includegraphics[width=0.3\columnwidth]{Images/signature.pdf}
-\end{figure}
+Garching, 30 November 2022
+%\begin{figure}[H]
+%\includegraphics[width=0.3\columnwidth]{Images/signature.pdf}
+%\end{figure}
 
 \newpage
 
@@ -5583,8 +5583,8 @@ We again perform a separation into semidiscretization in space, and then full di
 With reference to the proof of \cref{prop:d_vd_sd}, let us bound $Q_h^k$ in the stronger $L^2$ norm. From the definitions of $Q_h^k$ (also see \cite{quarteroni}, pages 388, 389), there holds $\delta t \sum_{k=0}^{K-1} \norm{Q_h^k}_{L^2(U_h)}^2\leq \delta t^{2/\te} \norm{u_h^{(1+1/\te)}}_{L^2(I,{L^2(U_h)})}^2$, also by an application of the Cauchy-Schwarz inequality. The latter norm can be bounded uniformly on $h$. This is achieved by the same reasonings as in the proof of \cref{thm:const_track}:
 
 \begin{align*}
-\norm{u_h^{(1+1/\te)}}_{L^2(I,{L^2(U_h)})}^2\lesssim\\ \norm{G_{D,h}^{(1+1/\te)}}_{L^2(I,{H^1(U_h)})}^2 + \norm{g_{N,h}^{(1+1/\te)}}_{L^2(I,{L^2(\Gamma_{N,h})})}^2 +\norm{\delta_h^{(1/\te)}(0)}_{H^1(U_h)}^2 + \norm{f_h^{(1/\te)}}^2_{L^2(I,L^2(U_h))} \\
- \lesssim \norm{g_D^{(1+1/\te)}}_{L^2(I,{H^{3/2}(U)})}^2 + \norm{g_{N}^{(1+1/\te)}}_{L^2(I,{H^{3/2}(\Gamma_{N})})}^2 +\norm{\delta_h^{(1/\te)}(0)}_{H^1(U_h)}^2 + \norm{f_h^{(1/\te)}}^2_{L^2(I,L^2(U_h))}=:E^2
+\norm{u_h^{(1+1/\te)}}_{L^2(I,{L^2(U_h)})}^2\lesssim\\ \norm{G_{D,h}^{(1+1/\te)}}_{L^2(I,{H^1(U_h)})}^2 + \norm{g_{N,h}^{(1+1/\te)}}_{L^2(I,{L^2(\Gamma_{N,h})})}^2 +\norm{\delta_h^{(1/\te)}(0)}_{H^1(U_h)}^2 + \norm{f_h^{(1/\te)}}^2_{L^2(I,L^2(U_h))} 
+ \lesssim\\ \norm{g_D^{(1+1/\te)}}_{L^2(I,{H^{3/2}(U)})}^2 + \norm{g_{N}^{(1+1/\te)}}_{L^2(I,{H^{3/2}(\Gamma_{N})})}^2 +\norm{\delta_h^{(1/\te)}(0)}_{H^1(U_h)}^2 + \norm{f_h^{(1/\te)}}^2_{L^2(I,L^2(U_h))}=:E^2
 \end{align*}
 
 % This is the extended term:
