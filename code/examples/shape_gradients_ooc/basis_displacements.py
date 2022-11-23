@@ -193,6 +193,9 @@ def create_cost_functional(V_sph, V_def, V_vol, M2, exact_domain, exact_pde_dict
         I = Identity(exact_domain.mesh.ufl_cell().geometric_dimension())
         A = div(h) * I - grad(h) - grad(h).T
 
+        # result
+        dj_mine = 0
+
         # part due to cost functional
         cost_part = div(h) * Constant(0.0) * dx(exact_domain.mesh)  # the div term is not to have arity mismatches
         # for (v, w) in zip(v_equation.solution_list[1:], w_equation.solution_list[1:]):
@@ -207,10 +210,15 @@ def create_cost_functional(V_sph, V_def, V_vol, M2, exact_domain, exact_pde_dict
                 else:
                     cost_part += Constant(1 / 2) * dt * div(h) * fs * (v - w) ** 2 * dx
 
+                if i % 600 == 599:  # to make sure I don't hit weird recursion limits
+                    dj_mine += assemble(cost_part)
+                    cost_part = div(h) * Constant(0.0) * dx(exact_domain.mesh)
+
         # part due to p, v
         pv_part = div(h) * Constant(0.0) * dx(exact_domain.mesh)
-        for (vj, vjm, pj, pjm) in zip(v_equation.solution_list[1:], v_equation.solution_list[:-1],
-                                      p_equation.solution_list[1:], p_equation.solution_list[:-1]):
+        for (vj, vjm, pj, pjm, i) in zip(v_equation.solution_list[1:], v_equation.solution_list[:-1],
+                                      p_equation.solution_list[1:], p_equation.solution_list[:-1],
+                                         range(len(p_equation.solution_list[:-1]))):
             if adjoint_scheme == "implicit_explicit_euler":
                 P = pjm
                 V = vj
@@ -218,11 +226,15 @@ def create_cost_functional(V_sph, V_def, V_vol, M2, exact_domain, exact_pde_dict
                 P = (pjm + pj) / 2
                 V = (vjm + vj) / 2
             pv_part += ((vj - vjm) / dt * P * div(h) + inner(A * grad(V), grad(P))) * dt * dx(exact_domain.mesh)
+            if i % 600 == 599:
+                dj_mine += assemble(pv_part)
+                pv_part = div(h) * Constant(0.0) * dx(exact_domain.mesh)
 
         # part due to q, w
         qw_part = div(h) * Constant(0.0) * dx(exact_domain.mesh)
-        for (wj, wjm, qj, qjm) in zip(w_equation.solution_list[1:], w_equation.solution_list[:-1],
-                                      q_equation.solution_list[1:], q_equation.solution_list[:-1]):
+        for (wj, wjm, qj, qjm, i) in zip(w_equation.solution_list[1:], w_equation.solution_list[:-1],
+                                      q_equation.solution_list[1:], q_equation.solution_list[:-1],
+                                         range(len(p_equation.solution_list[:-1]))):
 
             if adjoint_scheme == "implicit_explicit_euler":
                 Qa = qjm
@@ -231,8 +243,11 @@ def create_cost_functional(V_sph, V_def, V_vol, M2, exact_domain, exact_pde_dict
                 Qa = (qjm + qj) / 2
                 Wa = (wjm + wj) / 2
             qw_part += ((wj - wjm) / dt * Qa * div(h) + inner(A * grad(Wa), grad(Qa))) * dt * dx(exact_domain.mesh)
+            if i % 600 == 599:
+                dj_mine += assemble(qw_part)
+                qw_part = div(h) * Constant(0.0) * dx(exact_domain.mesh)
 
-        dj_mine = assemble(cost_part + pv_part + qw_part)
+        dj_mine += assemble(cost_part + pv_part + qw_part)
         return dj_mine
 
 
@@ -344,7 +359,7 @@ u_N = _u_N(t=0)
 
 # %% Setting up the tests
 
-manual = False  # it means, manual expression of the shape gradient
+manual = True  # it means, manual expression of the shape gradient
 if not manual:
     from dolfin_adjoint import *
 
