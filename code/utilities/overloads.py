@@ -15,15 +15,6 @@ import logging
 
 # %% All the rest
 
-########################################################################################################################
-# Note, we heavily rely on the usage of first order finite elements here...
-########################################################################################################################
-
-# Useful sources
-# 1) projection onto simplex: https://fenicsproject.discourse.group/t/nearest-point-on-boundary-to-exterior-point/6687/4
-# 2) building FEM base: https://fenicsproject.discourse.group/t/accessing-the-basis-function-of-a-finite-element/2426/2
-
-
 def compute_spherical_transfer_matrix(V_vol, V_sph, p=None):
     """
     We compute a matrix that from a function defined on V_sph (a spherical function), actually, from the vector of its
@@ -85,28 +76,6 @@ def compute_spherical_transfer_matrix(V_vol, V_sph, p=None):
             M[i, j] = basis_sph(j, vol_points_sphere_dof[i, :])
 
     return M
-
-
-def compute_CG1_to_CG2_transfer_matrix(V1, V2):
-    """
-    From the nodal values of u \in V1 we return the nodal values of interpolate(u, V2)
-    """
-
-    V1_dim = V1.dim()
-    V2_dim = V2.dim()
-    V1_dofs = range(V1_dim)
-    V2_dofs = range(V2_dim)
-
-    M = np.zeros((V2_dim, V1_dim))  # operator from sphere to volume
-
-    logging.info(f"Assembling transfer matrix from CG1 to CG2")
-    for j in tqdm(V1_dofs):
-        phi = Function(V1)
-        phi.vector()[j] = 1
-        M[:, j] = interpolate(phi, V2).vector()[:]
-
-    return M
-
 
 def radial_function_to_square(x, L=1):
     """
