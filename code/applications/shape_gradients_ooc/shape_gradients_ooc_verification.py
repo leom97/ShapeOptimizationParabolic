@@ -9,7 +9,7 @@ coupling between spatial and temporal discretization parameters).
 Note: the run for the implicit euler method is very computationally expensive, consider downscaling the experiment
 
 Head to configuration.py to set up the experiment (or leave as is to reproduce the results from the thesis).
-This script depends also on code/tools/OOC_verification.py
+This script depends also on code/tools/ooc_verification.py
 
 Then, run the script normally through e.g. the command line.
 
@@ -24,7 +24,7 @@ from tqdm import tqdm
 
 from utilities.overloads import radial_displacement, backend_radial_displacement
 from utilities.shape_optimization import ShapeOptimizationProblem
-from utilities.OOC_verification import get_spiky_radial_function, get_assembled_shape_gradient, W1i_norm, \
+from utilities.ooc_verification import get_spiky_radial_function, get_assembled_shape_gradient, W1i_norm, \
     string_to_vector_field
 from applications.shape_gradients_ooc.configuration import _f, _g
 
