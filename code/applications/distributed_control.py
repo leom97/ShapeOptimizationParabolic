@@ -83,5 +83,5 @@ taylor_test(j, s_opt, s_opt)
 #     heq.f.vector()[:] -= rate * dJ.vector()
 #     logging.info(f"{i}) energy value: {energy}, gradient norm: {sqrt(assemble(dJ ** 2 * dx(heq.mesh)))}")
 
-vtkfile = File("/home/leonardo_mutti/PycharmProjects/masters_thesis/code/examples/u.pvd")
+vtkfile = File("/home/leonardo_mutti/PycharmProjects/masters_thesis/code/applications/u.pvd")
 vtkfile << s_opt

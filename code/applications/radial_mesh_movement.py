@@ -94,7 +94,7 @@ taylor_test(ReducedFunctional(J2, Control(g)), g, h)
 # %% Inspection of the mesh
 
 print(W(2, 0))
-vtkfile = File("/home/leonardo_mutti/PycharmProjects/masters_thesis/code/examples/u.pvd")
+vtkfile = File("/home/leonardo_mutti/PycharmProjects/masters_thesis/code/applications/u.pvd")
 u = Function(V_vol)
 vtkfile << u
 
