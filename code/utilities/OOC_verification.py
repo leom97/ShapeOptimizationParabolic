@@ -1,5 +1,5 @@
 """
-Helper file for code/examples/shape_gradients_ooc/shape_gradients_ooc_verification.py
+Helper file for code/applications/shape_gradients_ooc/shape_gradients_ooc_verification.py
 """
 
 # %% Imports
