@@ -1,3 +1,10 @@
+"""
+Implements a class representing the shape optimization problem, with several methods to solve it, and visualize the
+results. It is used in shape_optimization_main.py.
+"""
+
+# %% Imports
+
 from dolfin import *
 from dolfin_adjoint import *
 import numpy as np
@@ -141,6 +148,10 @@ class ShapeOptimizationProblem:
 
     def create_optimal_geometry(self, exact_geometry_dict, reusables_dict=None):
 
+        """
+        Create the domain which we will later want to reconstruct.
+        """
+
         logging.info("Creating optimal geometry")
 
         with stop_annotating():
@@ -195,6 +206,12 @@ class ShapeOptimizationProblem:
             pickle.dump(firedrake_dict, handle)
 
     def simulate_exact_pde(self, exact_pde_dict, reusables_dict=None):
+
+        """
+        This step is performed to generate the Dirichlet boundary data, to then be used to carry out the shape
+        optimization, as describe in section 4.1
+        """
+
         if self.exact_domain is None:
             raise Exception("Call first create_optimal_geometry")
 
@@ -217,7 +234,7 @@ class ShapeOptimizationProblem:
             self.T = self.exact_pde_dict["T"]
 
             heq = HeatEquation()
-            heq.interpolate_data = True    # super important for the modified Crank-Nicolson, see pdes.py, include_neumann
+            heq.interpolate_data = True  # super important for the modified Crank-Nicolson, see pdes.py, include_neumann
             N_steps = self.exact_pde_dict["N_steps"]
             heq.set_mesh(self.exact_domain.mesh, self.exact_domain.facet_function)
             heq.set_ODE_scheme(self.exact_pde_dict["ode_scheme"])
@@ -261,8 +278,6 @@ class ShapeOptimizationProblem:
 
         optimization_geometry_dict = self.exact_geometry_dict.copy()
         optimization_geometry_dict["reload_xdmf"] = False
-        # if simulated_geometry_dict["domain_resolution"] is not None:
-        #     optimization_geometry_dict["domain"]["resolution"] = simulated_geometry_dict["domain_resolution"]
         if simulated_geometry_dict["additional_domain_data"] is not None:
             for key in simulated_geometry_dict["additional_domain_data"].keys():
                 optimization_geometry_dict["domain"][key] = simulated_geometry_dict["additional_domain_data"][key]
@@ -285,21 +300,17 @@ class ShapeOptimizationProblem:
         if simulated_pde_dict["N_steps"] is not None:
             self.optimization_pde_dict["N_steps"] = simulated_pde_dict["N_steps"]
 
-        # logging.fatal("Remove perturbation from here, put it elsewhere")
-        # if self.exact_exterior_BC == "N":
-        #     self.u_D.perturb(simulated_pde_dict["noise_level_on_exact_BC"])
-        # elif self.exact_exterior_BC == "D":
-        #     self.u_N.perturb(simulated_pde_dict["noise_level_on_exact_BC"])
-
         # Generic set-up
         L1_vol = FiniteElement("Lagrange", self.optimization_domain.mesh.ufl_cell(), 1)
-        self.V_vol = FunctionSpace(self.optimization_domain.mesh, L1_vol)
+        self.V_vol = FunctionSpace(self.optimization_domain.mesh, L1_vol)  # linear finite elements on the moving domain
 
-        self.v_equation = HeatEquation(efficient=True)
-        self.w_equation = HeatEquation(efficient=False) # in order to have the correct CN: not the midpoint one (plus, no speed-up is observed)
+        self.v_equation = HeatEquation(
+            efficient=True)  # to save some time for the dirichlet condition, expensive to evaluate
+        self.w_equation = HeatEquation(
+            efficient=False)  # in order to have the correct CN: not the midpoint one (plus, no speed-up is observed)
 
         self.v_equation.set_ODE_scheme(self.optimization_pde_dict["ode_scheme"])
-        self.v_equation.interpolate_data = True # important for the correct functioning of CN
+        self.v_equation.interpolate_data = True  # important for the correct functioning of CN
         self.v_equation.verbose = True
         self.v_equation.set_time_discretization(self.T,
                                                 N_steps=int(self.optimization_pde_dict["N_steps"]),
@@ -324,43 +335,19 @@ class ShapeOptimizationProblem:
         external_DBC = PreAssembledBC(self.u_ex, self.v_equation.times[1:], self.V_vol)
         external_NBC = PreAssembledBC(self.u_N, times, self.V_vol)
 
+        # Add noise
         external_NBC.perturb(simulated_pde_dict["noise_level_on_exact_BC"])
         external_DBC.perturb(simulated_pde_dict["noise_level_on_exact_BC"])
 
         self.pre_assembled_BCs = {"ext_neumann": external_NBC, "ext_dirichlet": external_DBC}
 
-    # def save_problem_data(self, path):
-    #
-    #     if self.optimization_dict is None:
-    #         raise Exception("No optimization options were found")
-    #
-    #     pickles_path = path
-    #     import os
-    #     os.makedirs(path, exist_ok=False)
-    #     with open(pickles_path + "exact_geometry_dict" + '.pickle', 'wb') as handle:
-    #         pickle.dump(self.exact_geometry_dict, handle)
-    #     with open(pickles_path + "exact_pde_dict" + '.pickle', 'wb') as handle:
-    #         pickle.dump(self.exact_pde_dict, handle)
-    #
-    #     simulated_geometry_dict = {
-    #         "domain_resolution": self.optimization_geometry_dict["domain"]["resolution"],
-    #         "sphere_resolution": self.optimization_geometry_dict["sphere"]["resolution"],
-    #     }
-    #
-    #     simulated_pde_dict = {
-    #         "ode_scheme": self.optimization_pde_dict["ode_scheme"],
-    #         "N_steps": self.optimization_pde_dict["N_steps"]
-    #     }
-    #
-    #     with open(pickles_path + "simulated_geometry_dict" + '.pickle', 'wb') as handle:
-    #         pickle.dump(simulated_geometry_dict, handle)
-    #     with open(pickles_path + "simulated_pde_dict" + '.pickle', 'wb') as handle:
-    #         pickle.dump(simulated_pde_dict, handle)
-    #
-    #     with open(pickles_path + "optimization_dict" + '.pickle', 'wb') as handle:
-    #         pickle.dump(self.optimization_dict, handle)
-
     def initialize_from_data(self, path, regenerate_exact_data=True):
+
+        """
+        Initializes the shape optimization problem. If regenerate_exact_data is False, it will attempt to reload cached
+        files, otherwise fresh ones will be generated.
+        """
+
         self.problem_folder = path
         try:
             import importlib.util
@@ -394,10 +381,6 @@ class ShapeOptimizationProblem:
                 self.simulate_exact_pde(exact_pde_dict, reusables_dict)
             except:
                 raise Exception("Could not load exact data from files")
-                # simulated_geometry_dict["additional_domain_data"]["reload_xdmf"] = False
-                # exact_geometry_dict["domain"]["reload_xdmf"] = False
-                # self.create_optimal_geometry(exact_geometry_dict)
-                # self.simulate_exact_pde(exact_pde_dict)
 
         self.initialize_optimization_domain(simulated_geometry_dict)
         self.initialize_pde_simulation(simulated_pde_dict)
@@ -413,8 +396,8 @@ class ShapeOptimizationProblem:
     def create_cost_functional(self, disable_radial_parametrization=False, start_at_optimum=False):
 
         """
+        Creates the cost functional to be later optimized, a dolfin adjoint object
 
-        :param time_steps_factor: we can increase or decrease the timesteps, this is a debugging option
         :param disable_radial_parametrization: debugging option, the displacement field will be the optimization variable itself
         :param start_at_optimum: if True, the initial deformation is the interpolated optimum
         :return:
@@ -423,16 +406,18 @@ class ShapeOptimizationProblem:
         logging.info("Setting up the cost functional")
 
         L1_sph = FiniteElement("Lagrange", self.optimization_sphere.mesh.ufl_cell(), 1)
+        self.V_sph = FunctionSpace(self.optimization_sphere.mesh,
+                                   L1_sph)  # spherical controls live here: piecewise linear,
+        # scalar FEM on the unit sphere
+        self.V_def = VectorFunctionSpace(self.optimization_domain.mesh, "Lagrange",
+                                         1)  # deformation fields on the reference domain induced by the scalar controls
 
-        self.V_sph = FunctionSpace(self.optimization_sphere.mesh, L1_sph)
-        self.V_def = VectorFunctionSpace(self.optimization_domain.mesh, "Lagrange", 1)
-
-        with stop_annotating():
+        with stop_annotating():  # matrices to go from the sphere to the volume
             M = compute_spherical_transfer_matrix(self.V_vol, self.V_sph, p=self.optimization_domain.center)
             M2 = compute_radial_displacement_matrix(M, self.V_def, p=self.optimization_domain.center,
                                                     f_D=self.optimization_domain.boundary_radial_function)
 
-        # Mesh movement
+        # Mesh movement: register the domain parametrization in dolfin-adjoint
         if disable_radial_parametrization:
             if start_at_optimum:
                 self.q_opt = radial_displacement(interpolate(self.q_ex, self.V_sph), M2, self.V_def)
@@ -446,27 +431,6 @@ class ShapeOptimizationProblem:
                 self.q_opt = Function(self.V_sph)  # null displacement (but doesn't need to be so)
             W = radial_displacement(self.q_opt, M2, self.V_def)
             ALE.move(self.optimization_domain.mesh, W)
-
-        # V = FunctionSpace(self.optimization_domain.mesh, "CG", 1)
-        # u = Function(V)
-        #
-        # w = TrialFunction(V)
-        # v = TestFunction(V)
-        # bcs = DirichletBC(V, 0, "on_boundary")
-        #
-        # DX = Measure("dx", domain=self.optimization_domain.mesh)
-        #
-        # solve(inner(grad(w), grad(v)) * DX == v * DX, u, bcs)
-        #
-        # J = assemble(sin(u) * DX)
-        #
-        # Jhat = ReducedFunctional(J, [Control(self.q_opt)])
-        # d = Function(self.V_sph)
-        # d.vector()[:] = (np.random.rand(len(d.vector())) - .5) * 1e-5
-        # td = taylor_to_dict(Jhat, self.q_opt, d)
-        #
-        # print(td['R2']['Rate'])
-        # print(td['R2'])
 
         # PDEs definitions
         u0 = Function(self.V_vol)  # zero initial condition
@@ -540,7 +504,6 @@ class ShapeOptimizationProblem:
                 J += self.cost_functional_dict["H1_smoothing"] * assemble(
                     inner(grad(self.q_opt), grad(self.q_opt)) * dx(self.optimization_sphere.mesh))
 
-        # J+=1e-3*assemble(self.q_opt**2*dx(self.optimization_sphere.mesh)+1e-2*inner(grad(self.q_opt), grad(self.q_opt)) * dx(self.optimization_sphere.mesh))
         self.j = ReducedFunctional(J, Control(self.q_opt))
 
         return M, M2
@@ -624,7 +587,7 @@ class ShapeOptimizationProblem:
     def plot_boundary(self, path):
 
         lw = 1
-        b = (0, 219/255, 1)
+        b = (0, 219 / 255, 1)
         r = (.89, 0, 0)
 
         self.j(self.q_opt)
@@ -640,7 +603,7 @@ class ShapeOptimizationProblem:
 
         ext_dofs = u.vector()[:] < -.5
 
-        mesh_coords_dofs = self.optimization_domain.mesh.coordinates()[dof_to_vertex_map(self.V_vol),...]
+        mesh_coords_dofs = self.optimization_domain.mesh.coordinates()[dof_to_vertex_map(self.V_vol), ...]
 
         Bxytmp = mesh_coords_dofs[int_dofs]
         Btheta = np.arctan2(Bxytmp[:, 1], Bxytmp[:, 0])
@@ -658,7 +621,7 @@ class ShapeOptimizationProblem:
 
         self.j(interpolate(self.q_ex, self.V_sph))
 
-        mesh_coords_dofs = self.optimization_domain.mesh.coordinates()[dof_to_vertex_map(self.V_vol),...]
+        mesh_coords_dofs = self.optimization_domain.mesh.coordinates()[dof_to_vertex_map(self.V_vol), ...]
         u = Function(self.V_vol)
 
         dbc_int = DirichletBC(self.V_vol, 1, self.optimization_domain.facet_function, 3)
@@ -687,7 +650,7 @@ class ShapeOptimizationProblem:
         plot(self.optimization_domain.mesh, linewidth=lw, color=r)
         plt.savefig(path + "estimated_domain.pdf", bbox_inches="tight", pad_inches=0)
         plt.clf()
-        plt.plot(np.log(np.array(self.opt_results.gradient_infty_hist)),color=b)
+        plt.plot(np.log(np.array(self.opt_results.gradient_infty_hist)), color=b)
         plt.savefig(path + "gradient_infty_norm.pdf", bbox_inches="tight", pad_inches=0)
         plt.clf()
         plt.plot(np.log(np.array(self.opt_results.energy_hist)), color=b)
