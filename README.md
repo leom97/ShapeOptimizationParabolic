@@ -4,4 +4,8 @@ Here I have collected every cooding tool I utilized to run the simulations that 
 
 The code constantly references the thesis itself, with pointers to sections, figures and tables.
 
-Head to `intructions` for instructions on how to set up your enviroment, in order to be able to execute the code, and for guidance on how to reproduce the results contained in the thesis.
+To get this code, perform the following instructions (on Linux):
+- `mkdir thesis`
+- `cd thesis`
+- `git clone https://github.com/leom97/Master-s-thesis.git`
+- head to `intructions` for instructions on how to set up your enviroment, and for guidance on how to reproduce the results contained in the thesis.
