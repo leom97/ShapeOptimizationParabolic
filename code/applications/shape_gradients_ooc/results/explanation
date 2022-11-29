@@ -1,5 +1,0 @@
-"rough" means that a coarse sphere is used as a basis of the radial functions: this yields spiky vector fields
-"eta" means that we are using the temporal down-weighting
-"CN" and "IE" are clear
-"CN_otd" is the optimize then discretize CN scheme
-"all" means both smooth and rough fields
