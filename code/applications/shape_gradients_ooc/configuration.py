@@ -35,7 +35,6 @@ geometry_dict = {
 # The resolution of the domain mesh is dictated by the following vector: every entry correspond to a mesh width,
 # which should get progressively finer
 h_tentative = 1 / (2 ** np.arange(0, experiment_dict["N_it"]))
-h_tentative = h_tentative[experiment_dict["start_index"]:]
 
 # Change "ode_scheme" to "implicit_euler" or "crank_nicolson"
 pde_dict = {
