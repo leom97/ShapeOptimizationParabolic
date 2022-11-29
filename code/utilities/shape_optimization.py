@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 import moola
 from tqdm import tqdm
 
-from utilities.meshing import AnnulusMesh, CircleMesh, SquareAnnulusMesh, EfficientAnnulusMesh, \
+from utilities.meshing import AnnulusMesh, CircleMesh, SquareAnnulusMesh, \
     SmoothedSquareAnnulusMesh, sea_urchin
 from utilities.pdes import HeatEquation, TimeExpressionFromList, PreAssembledBC
 from utilities.overloads import compute_spherical_transfer_matrix, \
@@ -109,17 +109,6 @@ class ShapeOptimizationProblem:
                                        ext_refinement=domain_dict["ext_refinement"],
                                        xdmf_path=xdmf_path
                                        )
-        elif domain_dict["type"] == "efficient_annulus":
-            domain = EfficientAnnulusMesh(resolution=domain_dict["resolution"],
-                                          path=self.problem_folder + subfolder,
-                                          int_refinement=domain_dict["int_refinement"],
-                                          ext_refinement=domain_dict["ext_refinement"],
-                                          inner_radius=domain_dict["inner_radius"],
-                                          outer_radius=domain_dict["outer_radius"],
-                                          center=domain_dict["center"],
-                                          xdmf_path=xdmf_path,
-                                          power=domain_dict["power"]
-                                          )
         elif domain_dict["type"] == "smoothed_square_annulus":
             domain = SmoothedSquareAnnulusMesh(resolution=domain_dict["resolution"],
                                                path=self.problem_folder + subfolder,
@@ -191,20 +180,6 @@ class ShapeOptimizationProblem:
             if reusables_dict is None:
                 return M2
 
-    def save_firedrake_files(self, path):
-        """
-        We obtain some interesting Firedrake stuff and then save it to file
-        """
-
-        vtd = vertex_to_dof_map(self.u_ex.solution_list[-1].function_space())
-        dtv = dof_to_vertex_map(self.u_ex.solution_list[-1].function_space())
-
-        firedrake_dict = {"vertex_to_dof_map": vtd,
-                          "dof_to_vertex_map": dtv}
-
-        with open(path + "firedrake_data" + '.pickle', 'wb') as handle:
-            pickle.dump(firedrake_dict, handle)
-
     def simulate_exact_pde(self, exact_pde_dict, reusables_dict=None):
 
         """
@@ -249,7 +224,6 @@ class ShapeOptimizationProblem:
                                  dirichlet_BC=[
                                      u_D_inner])  # note, no copy is done, the attributes of heq are EXACTLY these guys
             elif self.exact_exterior_BC == "D":
-                logging.warning("Be sure that the order of the markers in the configuration file is correct")
                 heq.set_PDE_data(u0, marker_neumann=self.marker_neumann, marker_dirichlet=self.marker_dirichlet,
                                  dirichlet_BC=[self.u_D, u_D_inner])
 
@@ -436,10 +410,7 @@ class ShapeOptimizationProblem:
         u0 = Function(self.V_vol)  # zero initial condition
         u_D_inner = Constant(0.0)  # zero inner BC
 
-        logging.warning(
-            "Working under the assumptions that the marker 2 is for the outer boundary, and 3 for the inner one")
-
-        # Dirichlet state
+        # Dirichlet state (2 is external boundary, 3 internal)
         self.v_equation.set_mesh(self.optimization_domain.mesh, self.optimization_domain.facet_function, self.V_vol,
                                  order=1)
         self.v_equation.set_PDE_data(u0, marker_dirichlet=[2, 3],
@@ -584,61 +555,6 @@ class ShapeOptimizationProblem:
         plt.title("Logarithm of cost function value")
         plt.show()
 
-    def plot_boundary(self, path):
-
-        lw = 1
-        b = (0, 219 / 255, 1)
-        r = (.89, 0, 0)
-
-        self.j(self.q_opt)
-        u = Function(self.V_vol)
-
-        dbc_int = DirichletBC(self.V_vol, 1, self.optimization_domain.facet_function, 3)
-        dbc_int.apply(u.vector())
-
-        int_dofs = u.vector()[:] > .5
-
-        dbc_ext = DirichletBC(self.V_vol, -1, self.optimization_domain.facet_function, 2)
-        dbc_ext.apply(u.vector())
-
-        ext_dofs = u.vector()[:] < -.5
-
-        mesh_coords_dofs = self.optimization_domain.mesh.coordinates()[dof_to_vertex_map(self.V_vol), ...]
-
-        Bxytmp = mesh_coords_dofs[int_dofs]
-        Btheta = np.arctan2(Bxytmp[:, 1], Bxytmp[:, 0])
-        Binds = np.argsort(Btheta)
-        Bxy = np.vstack((Bxytmp[Binds, :], Bxytmp[Binds[0], :]))
-        fig, ax = plt.subplots(1, 1)
-        ax.set_aspect("equal", "box")
-        ax.plot(Bxy[:, 0], Bxy[:, 1], '-', color=r, linewidth=lw)
-
-        Bxytmp = mesh_coords_dofs[ext_dofs]
-        Btheta = np.arctan2(Bxytmp[:, 1], Bxytmp[:, 0])
-        Binds = np.argsort(Btheta)
-        Bxy = np.vstack((Bxytmp[Binds, :], Bxytmp[Binds[0], :]))
-        ax.plot(Bxy[:, 0], Bxy[:, 1], '-', color=b, linewidth=lw)
-
-        self.j(interpolate(self.q_ex, self.V_sph))
-
-        mesh_coords_dofs = self.optimization_domain.mesh.coordinates()[dof_to_vertex_map(self.V_vol), ...]
-        u = Function(self.V_vol)
-
-        dbc_int = DirichletBC(self.V_vol, 1, self.optimization_domain.facet_function, 3)
-        dbc_int.apply(u.vector())
-
-        int_dofs = u.vector()[:] > .5
-
-        Bxytmp = mesh_coords_dofs[int_dofs]
-        Btheta = np.arctan2(Bxytmp[:, 1], Bxytmp[:, 0])
-        Binds = np.argsort(Btheta)
-        Bxy = np.vstack((Bxytmp[Binds, :], Bxytmp[Binds[0], :]))
-        ax.plot(Bxy[:, 0], Bxy[:, 1], '-', color=b, linewidth=lw)
-
-        plt.savefig(path + "comparison.pdf", bbox_inches="tight", pad_inches=0, transparent=True)
-
-        self.j(self.q_opt)
-
     def save_results_to_file(self, path):
         lw = 1
         b = (0, 219 / 255, 1)
@@ -710,152 +626,4 @@ class ShapeOptimizationProblem:
         with open(path + "reusables" + '.pickle', 'wb') as handle:
             pickle.dump(reusables_dict, handle)
 
-        self.save_firedrake_files(path)
-
         logging.info("Exact data successfully saved")
-
-    def reset(self, disable_radial_parametrization=False,
-              start_at_optimum=False):  # resets the optimization to the initial conditions
-        logging.info("Resetting the problem")
-        self.initialize_optimization_domain(self.simulated_geometry_dict)
-        self.create_cost_functional(disable_radial_parametrization=disable_radial_parametrization,
-                                    start_at_optimum=start_at_optimum)
-
-    def debug_generic(self, path):
-
-        logging.info("Debugging")
-
-        consistency_error = self.j(interpolate(self.q_ex, self.V_sph))
-
-        # Solve equations on the perturbed domains, apparently the solution vectors are not automatically updated, after calling
-        self.w_equation.solve()
-        self.v_equation.solve()
-
-        # logging.info(f"Energy at interpolated optimum is {consistency_error}")
-        # derivative_at_optimum = self.j.derivative()
-        # logging.info(f"Gradient at interpolated optimum:\n{derivative_at_optimum.vector()[:][:, None]}")
-        #
-        # File(path + "gradient_at_interpolated_optimum.pvd") << derivative_at_optimum
-        #
-        # boundary_mesh_optimization = BoundaryMesh(self.optimization_domain.mesh,
-        #                                           "exterior")  # at the interpolated optimum
-        # # Let's plot the boundary values of w, that should be close to the boundary values of u_ex
-        # fw = File(path + "/w_dirichlet_plot/w_dirichlet_at_interpolated_optimum.pvd")
-        # fu = File(path + "/u_dirichlet_plot/u_dirichlet.pvd")
-        # Nw = len(self.w_equation.solution_list)
-        # wb = adjf.mesh_to_boundary(self.w_equation.solution_list[0], boundary_mesh_optimization)
-        # ub = adjf.mesh_to_boundary(self.w_equation.solution_list[0], boundary_mesh_optimization)
-        #
-        # ext_boundary_errors = []
-        # mf = self.w_equation.facet_indicator
-        # logging.info("Computing L2 norms of w-u on the boundary")
-        # for i in tqdm(range(Nw)):
-        #     w = self.w_equation.solution_list[i]
-        #
-        #     # Put everything to zero, but on the external boundary
-        #     ww = Function(self.V_vol)
-        #     dbc = DirichletBC(self.V_vol, w, mf, 2)
-        #     dbc.apply(ww.vector())
-        #
-        #     wb.vector()[:] = (adjf.mesh_to_boundary(ww, boundary_mesh_optimization)).vector()[:]
-        #     fw << wb
-        #
-        #     self.u_ex.t = self.w_equation.times[i]
-        #     u = interpolate(self.u_ex, self.V_vol)
-        #
-        #     # Let's also put everything to zero here
-        #     uu = Function(self.V_vol)
-        #     dbc = DirichletBC(self.V_vol, u, mf, 2)
-        #     dbc.apply(uu.vector())
-        #
-        #     ub.vector()[:] = (adjf.mesh_to_boundary(uu, boundary_mesh_optimization)).vector()[:]
-        #
-        #     fu << ub
-        #
-        #     ext_boundary_errors.append(errornorm(self.u_ex, w))
-        #
-        # logging.info(f"L2 norms of w-u on the boundary:\n{np.array(ext_boundary_errors)[:, None]}")
-        #
-        # logging.info("Studying PDEs discretization error")
-        # e_l2t = []
-        # a = 9
-        # b = 13
-        # sol_ie_past = []
-        # sol_cn_past = []
-        # change_ie = []
-        # change_cn = []
-        # for i in range(a, b):
-        #     self.w_equation.set_ODE_scheme("implicit_euler")
-        #     self.w_equation.set_time_discretization(self.T, int(2 ** i))
-        #     self.w_equation.solve()
-        #     sol_ie = []
-        #     for w in self.w_equation.solution_list:
-        #         u = Function(self.V_vol)
-        #         u.assign(w)
-        #         sol_ie.append(u)
-        #     self.w_equation.set_ODE_scheme("crank_nicolson")
-        #     self.w_equation.set_time_discretization(self.T, int(2 ** i))
-        #     self.w_equation.solve()
-        #     sol_cn = []
-        #     for w in self.w_equation.solution_list:
-        #         u = Function(self.V_vol)
-        #         u.assign(w)
-        #         sol_cn.append(u)
-        #     e = 0
-        #     for k in range(len(sol_ie)):
-        #         e += self.w_equation.dts[0] * assemble((sol_ie[k] - sol_cn[k]) ** 2 * dx(self.optimization_domain.mesh))
-        #     e_l2t.append(e)
-        #     if i > a:
-        #         rel_change_ie = 0
-        #         rel_change_cn = 0
-        #         for j in range(2 ** i // 2):
-        #             rel_change_ie += self.w_equation.dts[0] * assemble(
-        #                 (sol_ie[2 * j] - sol_ie_past[j]) ** 2 * dx(self.optimization_domain.mesh))
-        #             rel_change_cn += self.w_equation.dts[0] * assemble(
-        #                 (sol_cn[2 * j] - sol_cn_past[j]) ** 2 * dx(self.optimization_domain.mesh))
-        #         change_ie.append(rel_change_ie)
-        #         change_cn.append(rel_change_cn)
-        #
-        #     sol_ie_past = sol_ie
-        #     sol_cn_past = sol_cn
-
-        logging.info("Studying error behaviour")
-        a = 9
-        b = 10
-        coarse_sol = []
-        for i in range(a, b):
-            self.v_equation.set_ODE_scheme("implicit_euler")
-            self.v_equation.set_time_discretization(self.T, int(self.T * 2 ** i))
-            ts = self.v_equation.times
-            self.v_equation.set_time_discretization(self.T, custom_times_array=ts)
-            self.v_equation.solve()
-            for w in self.v_equation.solution_list:
-                u = Function(self.V_vol)
-                u.assign(w)
-                coarse_sol.append(u)
-        un = TimeExpressionFromList(0, self.v_equation.times, coarse_sol)
-
-        a = 10
-        b = 11
-        esol = []
-        for i in range(a, b):
-            self.v_equation.set_ODE_scheme("crank_nicolson")
-            self.v_equation.set_time_discretization(self.T, int(self.T * 2 ** i))
-            self.v_equation.solve()
-            for w in self.v_equation.solution_list:
-                u = Function(self.V_vol)
-                u.assign(w)
-                esol.append(u)
-        ue = TimeExpressionFromList(0, self.v_equation.times, esol)
-
-        data = []
-        point = [-1.5, 0]
-        for t in un.discrete_times:
-            ue.t = t
-            un.t = t
-            data.append(-ue(*point) + un(*point))
-
-        plt.plot(ts, data)
-        plt.show()
-
-        self.reset()
