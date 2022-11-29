@@ -32,7 +32,7 @@ runs_path = "./runs/"  # try with absolute path should this not work
 
 # %% Solution setup
 
-problem_name = "thesis_example"
+problem_name = "examplary_run"
 problem_path = runs_path + problem_name + "/"
 
 problem = ShapeOptimizationProblem()
