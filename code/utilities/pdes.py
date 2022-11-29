@@ -178,7 +178,7 @@ class HeatEquation:
         if not hasattr(self, "mesh"):
             raise Exception("A mesh needs to be defined at first")
         if V is None:
-            logging.warning("No finite element space was provided, using default one")
+            logging.warning("No finite element space was provided, using piecewise linears")
             L1 = FiniteElement("Lagrange", self.mesh.ufl_cell(), order)  # only linear FEM for now
             self.S1h = FunctionSpace(self.mesh, L1)
         else:
