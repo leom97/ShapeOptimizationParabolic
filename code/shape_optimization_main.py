@@ -37,7 +37,7 @@ problem_path = runs_path + problem_name + "/"
 
 problem = ShapeOptimizationProblem()
 problem.initialize_from_data(problem_path,
-                             regenerate_exact_data=False)  # initialize from the problem_data.py config file
+                             regenerate_exact_data=True)  # initialize from the problem_data.py config file
 problem.save_exact_data(problem_path)  # save exact geometry (the one to be reconstructed) and exact PDEs, for caching
 _, _ = problem.create_cost_functional(start_at_optimum=False)
 # problem.do_taylor_test()
