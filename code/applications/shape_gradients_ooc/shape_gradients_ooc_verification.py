@@ -55,6 +55,7 @@ try:
     experiment_dict = pd.experiment_dict
     smooth_displacements_dict = pd.smooth_displacements_dict
     manual = pd.manual
+    h_tentative = pd.h_tentative
 except:
     raise Exception("Couldn't load configuration file from path")
 
@@ -64,9 +65,6 @@ g = _g(t=0)
 
 if not manual:
     from dolfin_adjoint import *
-
-h_tentative = 1 / (2 ** np.arange(0, experiment_dict["N_it"]))
-h_tentative = h_tentative[experiment_dict["start_index"]:]
 
 if pde_dict["ode_scheme"] == "crank_nicolson":
     dt_power = 1
