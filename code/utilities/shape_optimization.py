@@ -505,14 +505,7 @@ class ShapeOptimizationProblem:
         import time
         duration = -time.time()
 
-        if self.optimization_dict["solver"] == "scipy_BFGS":
-            logging.warning("Optimization in the L2 scalar product")
-            # the scipy way
-            bounds = None
-            self.q_opt, self.opt_results = minimize(self.j, tol=1e-6, options=self.optimization_dict["options"],
-                                                    bounds=bounds,
-                                                    callback=callback)
-        elif self.optimization_dict["solver"] == "moola_BFGS":
+        if self.optimization_dict["solver"] == "moola_BFGS":
             # the moola way
             # Set up moola problem and solve optimisation
             problem_moola = MoolaOptimizationProblem(self.j)
