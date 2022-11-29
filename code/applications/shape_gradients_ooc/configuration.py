@@ -54,7 +54,7 @@ cost_functional_dict = {
 
 # Smooth_displacements_dict["x"][i], smooth_displacements_dict["y"][i], represents a smooth vector field
 # Add as many smooth vector fields as you wish, respecting the syntax rules of
-# code/utilities/OOC_verification.py -> string_to_vector_field
+# code/utilities/ooc_verification.py -> string_to_vector_field
 smooth_displacements_dict = {
     "x": ["x^3", ".5*x", ".5*y^3", ".2*y", ".2*x+.2*y^2", ".2*x+.2*y^2", ".2*x*y+.2*y*2", "-.5*x-.2*x*y", ".5*x+.4*x*y",
           "x"],
