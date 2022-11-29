@@ -177,16 +177,3 @@ taylor_test(j, q_opt, h)
 #    N    Tit     Tnf  Tnint  Skip  Nact     Projg        F
 #    63    172    184      1     0     0   3.419D-09   2.943D-11
 #   F =   2.9434237016963961E-011
-
-
-# %% Todo
-# 1) implement H1 smoothing (bound on derivatives, could be interfaced with minimize)
-# 2) try elasticity method
-# 3) try a square as external boundary
-# 4) try implicit euler on the same example that I saved
-# 5) make PDE code faster
-# 6) how important is e^-1/t^2 in the initial condition? Does it give use OOC of 2?
-# 8) solving the reference PDE on a much finer scale, does it help?
-# 9) complicate the boundary conditions to highly spatially varying
-# 10) add timing and profiling
-# 11) a smaller domain helps out?
