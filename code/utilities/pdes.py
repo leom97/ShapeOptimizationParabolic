@@ -1,3 +1,9 @@
+"""
+Everything we need in order to solve the heat equation numerically.
+"""
+
+# %% Imports
+
 from dolfin import *
 from dolfin_adjoint import *
 import numpy as np
@@ -31,7 +37,7 @@ class HeatEquation:
         self.solution_list = []
         self.implemented_time_schemes = ["implicit_euler", "crank_nicolson", "crank_nicolson_midpoint",
                                          "implicit_explicit_euler"]
-        self.interpolate_data = False   # if true, we use interpolated data and not the actual data with quadrature
+        self.interpolate_data = False  # if true, we use interpolated data and not the actual data with quadrature
         self.verbose = False
 
         self.efficient = efficient
@@ -54,8 +60,9 @@ class HeatEquation:
         if ode_scheme not in self.implemented_time_schemes:
             raise Exception("Unrecognized time stepping")
         self.ode_scheme = ode_scheme
-        if ode_scheme=="implicit_euler":
-            logging.warning("A strange error is raised if I don't include a minuscule term to the right hand side of the instant variational formulation")
+        if ode_scheme == "implicit_euler":
+            logging.warning(
+                "A strange error is raised if I don't include a minuscule term to the right hand side of the instant variational formulation")
 
     def set_time_discretization(self, final_time, N_steps=None, custom_times_array=None, relevant_mesh_size=None):
         '''
@@ -191,16 +198,18 @@ class HeatEquation:
         self.domain_measure = assemble(Constant(1.0) * dx(self.mesh))
 
     def include_neumann_conditions(self, t, dt, L, v, time_index):
-        if (self.neumann_marker is not None): # note, let's add the neumann term even if we want to be efficient, as we need to attach a form to a vector, for dolfin adjoint
+        if (
+                self.neumann_marker is not None):  # note, let's add the neumann term even if we want to be efficient, as we need to attach a form to a vector, for dolfin adjoint
             for (f_N, marker) in zip(self.f_N, self.neumann_marker):
 
                 if self.efficient and marker in self.pre_assembled_BCs.keys():
                     if self.pre_assembled_BCs[marker]["type"] == "neumann":
                         # Check the index is correct
-                        assert(np.allclose(self.pre_assembled_BCs[marker]["data"].times[time_index-1],t))
+                        assert (np.allclose(self.pre_assembled_BCs[marker]["data"].times[time_index - 1], t))
                         # If so
                         f_N_real = Function(self.S1h)
-                        f_N_real.vector()[:] = self.pre_assembled_BCs[marker]["data"].interpolated_BC[time_index-1].vector()[:]
+                        f_N_real.vector()[:] = self.pre_assembled_BCs[marker]["data"].interpolated_BC[
+                                                   time_index - 1].vector()[:]
 
                         if self.interpolate_data:
                             L += dt * interpolate(f_N_real, self.S1h) * v * ds(self.mesh)
@@ -221,10 +230,10 @@ class HeatEquation:
                             f_N.t = tau
 
                         if self.interpolate_data:
-                            L += dt/len(t) * interpolate(f_N, self.S1h) * v * ds(self.mesh)
+                            L += dt / len(t) * interpolate(f_N, self.S1h) * v * ds(self.mesh)
                         else:
                             logging.critical("This should not be happening, and it surely should be fixed")
-                            L += dt/len(t) * f_N * v * ds(self.mesh)
+                            L += dt / len(t) * f_N * v * ds(self.mesh)
 
         return L
 
@@ -246,9 +255,9 @@ class HeatEquation:
                     self.f.t = tau
 
                 if self.interpolate_data:
-                    L += dt/len(t) * interpolate(self.f, self.S1h) * v * dx
+                    L += dt / len(t) * interpolate(self.f, self.S1h) * v * dx
                 else:
-                    L += dt/len(t) * self.f * v * dx
+                    L += dt / len(t) * self.f * v * dx
 
         return L
 
@@ -320,7 +329,7 @@ class HeatEquation:
             t = self.times[time_index]
             t_last = self.times[time_index - 1]
             t_neumann = t_last
-            t_dirichlet = t_last # this could be changed, depending the kind of consistency want
+            t_dirichlet = t_last  # this could be changed, depending the kind of consistency want
             t_source = t_last
 
             a += dt * inner(grad(u), grad(v)) * dx
@@ -378,7 +387,9 @@ class HeatEquation:
                         if self.pre_assembled_BCs[marker]["type"] == "dirichlet":
                             # Check the index is correct
                             assert (np.allclose(self.pre_assembled_BCs[marker]["data"].times[time_index - 1], f_D.t))
-                            dirichlet_BC.append(DirichletBC(self.S1h, self.pre_assembled_BCs[marker]["data"].interpolated_BC[time_index -1], self.facet_indicator, marker))
+                            dirichlet_BC.append(DirichletBC(self.S1h,
+                                                            self.pre_assembled_BCs[marker]["data"].interpolated_BC[
+                                                                time_index - 1], self.facet_indicator, marker))
 
                         else:
                             raise Exception("Wrong boundary condition")
@@ -386,7 +397,6 @@ class HeatEquation:
                         dirichlet_BC.append(DirichletBC(self.S1h, f_D, self.facet_indicator, marker))
 
                     dirichlet_BC[-1].apply(C, b)
-
 
             solve(C, current_solution.vector(), b)
 
@@ -449,7 +459,7 @@ class HeatEquation:
             return solution_list, error_list
 
     def pre_assemblage(self):
-        a, _, _= self.get_instant_variational_formulation(1, Function(self.S1h))
+        a, _, _ = self.get_instant_variational_formulation(1, Function(self.S1h))
         self.A = assemble(a)
 
 
@@ -1278,7 +1288,7 @@ class PDETestProblems:
         return TimeExpressionFromList(t, times, solution_list)
 
 
-# Now, create an expression from solution list, hopefully it works
+# Now, create an expression from solution list
 class TimeExpressionFromList(UserExpression):
     def __init__(self, t, discrete_times, solution_list, reverse=False, **kwargs):
         super().__init__(self, **kwargs)
@@ -1346,7 +1356,8 @@ class TimeExpressionFromList(UserExpression):
 
 class PreAssembledBC():
     """
-    Given an expression depending on time, we return a list of functions, the interpolations at a time vector of the expression
+    Given an expression depending on time, we return a list of functions, the interpolations at a time vector of the
+    expression
     Noise can be applied
     """
 
@@ -1387,6 +1398,7 @@ class PreAssembledBC():
                 bc.assign(interpolate(self.expression, self.V))
                 bc.vector()[:] += self.noise_level * (np.random.rand(len(bc.vector())) * .5 - 1)
                 self.interpolated_BC.append(bc)
+
     def perturb(self, noise_level):
         sh = self.interpolated_BC[0].vector()[:].shape
         self.interpolated_BC_original = []

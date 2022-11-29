@@ -1,3 +1,9 @@
+"""
+Some custom modules for dolfin-adjoint. They implement, most notably, the star-shaped parametrization for the domains.
+"""
+
+# %% Imports
+
 from dolfin import *
 from dolfin_adjoint import *
 import numpy as np
@@ -6,6 +12,8 @@ from pyadjoint.overloaded_function import overload_function
 from tqdm import tqdm
 import logging
 
+
+# %% All the rest
 
 ########################################################################################################################
 # Note, we heavily rely on the usage of first order finite elements here...
@@ -77,64 +85,28 @@ def compute_spherical_transfer_matrix(V_vol, V_sph, p=None):
             M[i, j] = basis_sph(j, vol_points_sphere_dof[i, :])
 
     return M
+
+
 def compute_CG1_to_CG2_transfer_matrix(V1, V2):
     """
     From the nodal values of u \in V1 we return the nodal values of interpolate(u, V2)
     """
 
-    # tree_V1 = V1.mesh().bounding_box_tree()
-    #
-    # def basis_sph(j, x):
-    #     # here, i is dof order
-    #     cell_index = tree_V1.compute_closest_entity(Point(*x))[0]
-    #     while cell_index > V1.dim():  # seems cannot be avoided, this is a bug: https://fenicsproject.discourse.group/t/out-of-range-while-using-compute-closest-entity/8796/2
-    #         x += (np.random.rand() - .5) * 1e-8
-    #         cell_index = tree_V1.compute_closest_entity(Point(*x))[0]
-    #     cell_global_dofs = V1.dofmap().cell_dofs(cell_index)
-    #     for local_dof in range(0, len(cell_global_dofs)):
-    #         if (j == cell_global_dofs[local_dof]):
-    #             cell = Cell(V1.mesh(), cell_index)
-    #             return V1.element().evaluate_basis(local_dof, x,
-    #                                                   cell.get_vertex_coordinates(),
-    #                                                   cell.orientation())
-    #     # If none of this cell's shape functions map to the i-th basis function,
-    #     # then the i-th basis function is zero at x.
-    #     return np.array([0.0])
-    #
-    # # Building the matrix
-    #
-    # # NB: dofs = #mesh_points only for order one FEM!
     V1_dim = V1.dim()
     V2_dim = V2.dim()
     V1_dofs = range(V1_dim)
     V2_dofs = range(V2_dim)
-    #
+
     M = np.zeros((V2_dim, V1_dim))  # operator from sphere to volume
-    #
-    # vol_points_sphere_dof = vol_points_sphere[dof_to_vertex_map(V_vol),
-    #                         :]
 
     logging.info(f"Assembling transfer matrix from CG1 to CG2")
     for j in tqdm(V1_dofs):
         phi = Function(V1)
         phi.vector()[j] = 1
-        M[:,j] = interpolate(phi, V2).vector()[:]
+        M[:, j] = interpolate(phi, V2).vector()[:]
 
     return M
 
-
-# def backend_transfer_from_sphere(g, M, V_vol):
-#     """
-#     Takes g, a function on the sphere, returns f, f(x)=g(x/|x|)
-#     :param g: function on spherical mesh
-#     :param M: transfer matrix from that spherical mesh to V_vol
-#     :param V_vol: volumetric mesh
-#     :return: f
-#     """
-#     gv = g.vector()[:]
-#     f = Function(V_vol)
-#     f.vector()[:] = M @ gv
-#     return f
 
 def radial_function_to_square(x, L=1):
     """
@@ -213,39 +185,6 @@ def backend_radial_displacement(g, M2, VD):
     return W
 
 
-# dolfin-adjoint version
-# class TranferFromSphereBlock(Block):
-#     def __init__(self, g, M, V_vol, **kwargs):
-#         super(TranferFromSphereBlock, self).__init__()
-#         self.kwargs = kwargs
-#         self.add_dependency(g)
-#
-#         self.M = M  # 'interpolation' matrix bringing us from g.function_space() to V_vol
-#         self.V_vol = V_vol  # the volumetric function space, onto which we extend g radially
-#         self.V_sph_dim = g.function_space().dim()
-#
-#     def __str__(self):
-#         return 'TranferFromSphereBlock'
-#
-#     def recompute_component(self, inputs, block_variable, idx, prepared):
-#         # note, inputs is the list containing all the dependencies we specified above
-#         # therefore it will be a list of length 1, containing exactly func (actually, a copy of it)
-#         return backend_transfer_from_sphere(inputs[0], self.M, self.V_vol)
-#
-#     def evaluate_adj_component(self, inputs, adj_inputs, block_variable, idx, prepared=None):
-#         # Note: everything in automatic differentiation is just a vector. So, this method takes vectors (the adj_inputs) and returns vectors
-#
-#         # Explanation
-#         # A function is e.g. z = f(x,y). If idx==1, here, we must return (d/dy f (x,y))^T * z
-#         # In the specific case, z = f(x), so idx == 0 always
-#
-#         adj_input = adj_inputs[0]  # this is a vector, with which we test the adjoint jacobian
-#         adj_action = self.M.T @ adj_input
-#         output = Vector(MPI.comm_world, self.V_sph_dim)
-#         output[:] = adj_action
-#
-#         return output
-
 class RadialDisplacementBlock(Block):
     def __init__(self, g, M2, VD, **kwargs):
         super(RadialDisplacementBlock, self).__init__()
@@ -287,7 +226,6 @@ class RadialDisplacementBlock(Block):
     def evaluate_hessian_component(self, inputs, hessian_inputs, adj_inputs, block_variable, idx,
                                    relevant_dependencies, prepared=None):
         return self.evaluate_adj_component(inputs, hessian_inputs, block_variable, idx, prepared)
-
 
 
 # transfer_from_sphere = overload_function(backend_transfer_from_sphere, TranferFromSphereBlock)

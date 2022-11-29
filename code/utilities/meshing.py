@@ -1,3 +1,9 @@
+"""
+Everyhting we need for the domains, the geometries, the meshes.
+"""
+
+# %% Imports
+
 import pygmsh
 import gmsh
 import meshio
@@ -9,6 +15,8 @@ from dolfin_adjoint import *
 
 from utilities.overloads import radial_function_to_square
 
+
+# %% Class definition
 
 class AbstractMesh:
     """
@@ -258,26 +266,6 @@ class EfficientAnnulusMesh(AbstractMesh):
                     self.outer_radius - self.inner_radius)) ** self.power + rm
         )
 
-        # bdry_layer_dict = {"lcmin": 0.01, "lcmax": self.resolution, "distmin": 0.025, "distmax": 0.05}
-        #
-        # field0 = model.add_boundary_layer(
-        #     edges_list=circle.curve_loop.curves + hole.curve_loop.curves,
-        #     **bdry_layer_dict,
-        # )
-        #
-        # # Must include the joining points otherwise there will be holes in the mesh
-        # join_points = []
-        # for c in circle.curve_loop.curves:
-        #     join_points.append(c.points[0])
-        #     join_points.append(c.points[2])
-        # join_points = list(set(join_points))
-        # field1 = model.add_boundary_layer(
-        #     nodes_list=join_points,
-        #     **bdry_layer_dict,
-        # )
-        #
-        # model.set_background_mesh([field0, field1], operator="Min")
-
         # Sinchronize, before adding physical entities
         model.synchronize()
 
@@ -364,18 +352,6 @@ class SquareAnnulusMesh(AbstractMesh):
         # Create a model to add data to
         model = self.geometry.__enter__()
 
-        # # The square
-        # points = [model.add_point((c[0] - L / 2, c[1] - H / 2, 0)),
-        #           model.add_point((c[0] + L / 2, c[1] - H / 2, 0)),
-        #           model.add_point((c[0] + L / 2, c[1] + H / 2, 0)),
-        #           model.add_point((c[0] - L / 2, c[1] + H / 2, 0))]
-        #
-        # # Add lines between all points creating the rectangle
-        # channel_lines = [model.add_line(points[i], points[i + 1])
-        #                  for i in range(-1, len(points) - 1)]
-        #
-        # channel_loop = model.add_curve_loop(channel_lines, mesh_size=self.ext_refinement * resolution)
-        #
         # A hole
         hole = model.add_circle(c, r, mesh_size=self.int_refinement * resolution)
 
