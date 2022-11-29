@@ -620,3 +620,57 @@ class ShapeOptimizationProblem:
             pickle.dump(reusables_dict, handle)
 
         logging.info("Exact data successfully saved")
+
+    def plot_boundary(self, path):
+        lw = 1
+        b = (0, 219 / 255, 1)
+        r = (.89, 0, 0)
+
+        self.j(self.q_opt)
+        u = Function(self.V_vol)
+
+        dbc_int = DirichletBC(self.V_vol, 1, self.optimization_domain.facet_function, 3)
+        dbc_int.apply(u.vector())
+
+        int_dofs = u.vector()[:] > .5
+
+        dbc_ext = DirichletBC(self.V_vol, -1, self.optimization_domain.facet_function, 2)
+        dbc_ext.apply(u.vector())
+
+        ext_dofs = u.vector()[:] < -.5
+
+        mesh_coords_dofs = self.optimization_domain.mesh.coordinates()[dof_to_vertex_map(self.V_vol), ...]
+
+        Bxytmp = mesh_coords_dofs[int_dofs]
+        Btheta = np.arctan2(Bxytmp[:, 1], Bxytmp[:, 0])
+        Binds = np.argsort(Btheta)
+        Bxy = np.vstack((Bxytmp[Binds, :], Bxytmp[Binds[0], :]))
+        fig, ax = plt.subplots(1, 1)
+        ax.set_aspect("equal", "box")
+        ax.plot(Bxy[:, 0], Bxy[:, 1], '-', color=r, linewidth=lw)
+
+        Bxytmp = mesh_coords_dofs[ext_dofs]
+        Btheta = np.arctan2(Bxytmp[:, 1], Bxytmp[:, 0])
+        Binds = np.argsort(Btheta)
+        Bxy = np.vstack((Bxytmp[Binds, :], Bxytmp[Binds[0], :]))
+        ax.plot(Bxy[:, 0], Bxy[:, 1], '-', color=b, linewidth=lw)
+
+        self.j(interpolate(self.q_ex, self.V_sph))
+
+        mesh_coords_dofs = self.optimization_domain.mesh.coordinates()[dof_to_vertex_map(self.V_vol), ...]
+        u = Function(self.V_vol)
+
+        dbc_int = DirichletBC(self.V_vol, 1, self.optimization_domain.facet_function, 3)
+        dbc_int.apply(u.vector())
+
+        int_dofs = u.vector()[:] > .5
+
+        Bxytmp = mesh_coords_dofs[int_dofs]
+        Btheta = np.arctan2(Bxytmp[:, 1], Bxytmp[:, 0])
+        Binds = np.argsort(Btheta)
+        Bxy = np.vstack((Bxytmp[Binds, :], Bxytmp[Binds[0], :]))
+        ax.plot(Bxy[:, 0], Bxy[:, 1], '-', color=b, linewidth=lw)
+
+        plt.savefig(path + "comparison.pdf", bbox_inches="tight", pad_inches=0, transparent=True)
+
+        self.j(self.q_opt)
