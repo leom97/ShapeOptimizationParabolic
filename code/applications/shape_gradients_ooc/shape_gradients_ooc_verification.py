@@ -35,6 +35,8 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)-8s %(me
 set_log_level(LogLevel.ERROR)
 runs_path = "./"  # path to the directory containing this .py file, try to change to absolute path in case of problems
 mesh_path = "./mesh_data"
+from pathlib import Path
+Path(mesh_path).mkdir(parents=True, exist_ok=True)
 
 # %% Set-ups
 
