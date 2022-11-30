@@ -28,12 +28,12 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)-8s %(me
 
 set_log_level(LogLevel.ERROR)
 
-runs_path = "./runs/"  # try with absolute path should this not work
+runs_path = "./runs/"  # try with absolute path should this not work. Folder containing the various problem folders
 
 # %% Solution setup
 
-problem_name = "examplary_run"
-problem_path = runs_path + problem_name + "/"
+run_name = "examplary_run"
+problem_path = runs_path + run_name + "/"
 
 problem = ShapeOptimizationProblem()
 problem.initialize_from_data(problem_path,
