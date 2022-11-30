@@ -494,8 +494,10 @@ class ShapeOptimizationProblem:
     def solve(self):
 
         def callback(x):
+            plt.clf()
             plot(self.optimization_domain.mesh)
-            plt.show(block=False)
+            plt.draw()
+            plt.pause(0.001)
 
         logging.info("Shape optimization starts now")
         import time
@@ -509,8 +511,9 @@ class ShapeOptimizationProblem:
             m_moola = moola.DolfinPrimalVector(self.q_opt, inner_product=self.optimization_dict["inner_product"])
             solver = moola.CustomBFGS(problem_moola, m_moola, options=self.optimization_dict["options"])
 
-            self.q_opt, self.opt_results = solver.solve(callback=callback)
+            plt.ion()
             plt.show()
+            self.q_opt, self.opt_results = solver.solve(callback=callback)
 
         elif self.optimization_dict["solver"] == "moola_newton":
             problem_moola = MoolaOptimizationProblem(self.j)
@@ -518,8 +521,9 @@ class ShapeOptimizationProblem:
             m_moola = moola.DolfinPrimalVector(self.q_opt, inner_product=self.optimization_dict["inner_product"])
             solver = moola.RegularizedNewton(problem_moola, m_moola, options=self.optimization_dict["options"])
 
+            plt.ion()
+            plt.show()
             self.q_opt, self.opt_results = solver.solve(callback=callback)
-            plot.show()
         else:
             raise Exception("Unsupported solver")
 
@@ -532,16 +536,22 @@ class ShapeOptimizationProblem:
     def visualize_result(self):
         logging.info("Visualizing the geometries")
 
+        plt.ioff()
+
+        plt.figure()
         plot(self.exact_domain.mesh, title="Exact solution")
         plt.show()
 
+        plt.figure()
         plot(self.optimization_domain.mesh, title="Computed solution")
         plt.show()
 
+        plt.figure()
         plt.plot(np.log(np.array(self.opt_results.gradient_infty_hist)))
         plt.title("Logarithm of infinity norm of gradient")
         plt.show()
 
+        plt.figure()
         plt.plot(np.log(np.array(self.opt_results.energy_hist)))
         plt.title("Logarithm of cost function value")
         plt.show()
