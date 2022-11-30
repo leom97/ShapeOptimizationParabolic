@@ -8,7 +8,7 @@ Let us start from `shape_optimization_main.py`. This is the file that launches a
 
 To do so, a configuration file is needed, where details about the geometry, PDE data etc. are provided. 
 
-A sample version of such a configuration file is `./runs/exemplary_run/problem_data.py`, for a basic shape optimization run (see the other runs for more examples). It is required that the name of this file is `problem_data.py`. It should be placed in the folder of a specific run.
+A sample version of such a configuration file is `./runs/exemplary_run/problem_data.py`, it corresponds to a basic shape optimization example (see the other runs for more examples). It is required that the name of this file is `problem_data.py`. It should be placed in the folder of a specific run.
 
 The sample version is commented, to illustrate the various changes that are possible from this baseline.
 
