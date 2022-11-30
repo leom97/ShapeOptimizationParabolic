@@ -495,8 +495,7 @@ class ShapeOptimizationProblem:
 
         def callback(x):
             plot(self.optimization_domain.mesh)
-            plt.draw()
-            plt.show()
+            plt.show(block=False)
 
         logging.info("Shape optimization starts now")
         import time
@@ -511,6 +510,7 @@ class ShapeOptimizationProblem:
             solver = moola.CustomBFGS(problem_moola, m_moola, options=self.optimization_dict["options"])
 
             self.q_opt, self.opt_results = solver.solve(callback=callback)
+            plt.show()
 
         elif self.optimization_dict["solver"] == "moola_newton":
             problem_moola = MoolaOptimizationProblem(self.j)
@@ -519,6 +519,7 @@ class ShapeOptimizationProblem:
             solver = moola.RegularizedNewton(problem_moola, m_moola, options=self.optimization_dict["options"])
 
             self.q_opt, self.opt_results = solver.solve(callback=callback)
+            plot.show()
         else:
             raise Exception("Unsupported solver")
 
