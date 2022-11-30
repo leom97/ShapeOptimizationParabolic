@@ -7,3 +7,4 @@ mamba install -c conda-forge gmsh meshio
 pip install pygmsh
 pip install scipy
 pip install moola
+pip install ipython
