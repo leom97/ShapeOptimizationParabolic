@@ -1,6 +1,6 @@
 # Code basic usage
 
-This file goes on a very brief overview of the code usage.
+This file provides a brief overview of the code usage.
 
 ## `shape_optimization_main.py`
 
