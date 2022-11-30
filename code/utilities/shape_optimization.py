@@ -494,11 +494,8 @@ class ShapeOptimizationProblem:
     def solve(self):
 
         def callback(x):
-            # self.w_equation.solve()
-            # self.v_equation.solve()
-            # pl = plot(self.w_equation.solution_list[-1] - self.v_equation.solution_list[-1])
-            # plt.colorbar(pl)
             plot(self.optimization_domain.mesh)
+            plt.draw()
             plt.show()
 
         logging.info("Shape optimization starts now")
