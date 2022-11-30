@@ -14,7 +14,7 @@ import numpy as np
 exact_geometry_dict = {
     "domain": {"type": "annulus", "resolution": 0.05, "ext_refinement": 1.0, "int_refinement": 1.0, "inner_radius": 1,
                "outer_radius": 2,
-               "center": np.array([0, 0]), "reload_xdmf": True},
+               "center": np.array([0, 0]), "reload_xdmf": False},
     # set reload_xdmf to True if the mesh was already generated once and saved
     "sphere": {"dimension": 2, "resolution": 0.03},  # dimension refers to the embedding space, R^2. Don't change this
     "q_ex_lambda": 'lambda circle_coords: -.8 * circle_coords[:, 0] ** 2 +.2 * circle_coords[:, 1] ** 2'
