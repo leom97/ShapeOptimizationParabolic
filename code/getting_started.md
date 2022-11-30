@@ -8,19 +8,26 @@ Let us start from `shape_optimization_main.py`. This is the file that launches a
 
 To do so, a configuration file is needed, where details about the geometry, PDE data etc. are provided. 
 
-A sample version of such a configuration file is `./runs/exemplary_run/problem_data.py` (see the other runs for more examples). It is required that the name of this file is `problem_data.py`. It should be placed in the folder of a specific run.
+A sample version of such a configuration file is `./runs/exemplary_run/problem_data.py`, for a basic shape optimization run (see the other runs for more examples). It is required that the name of this file is `problem_data.py`. It should be placed in the folder of a specific run.
 
 The sample version is commented, to illustrate the various changes that are possible from this baseline.
 
 To run shape optimization the user should therefore:
 
-- create a problem folder inside e.g. `./runs`, with the name of the run
-- create the `problem_data.py` inside this folder
+- create a run folder inside e.g. `./runs`, with the name of the run
+- create the `problem_data.py` inside this run folder
 - make sure the variables `run_name` and `runs_path` in `shape_optimization_main.py` are correctly set. They come already configured for the basic example
-- run `shape_optimization_main.py`. We recommend doing this through an IDE (we used PyCharm), for a better visualization of the plots
+- run `shape_optimization_main.py`. We strongly recommend doing this through an IDE (we used PyCharm), for a better visualization of the plots.  The default version will run the basic example
 
+- For caching and reloading data, follow the instructions in `shape_optimization_main.py`
 
-For caching and reloading data, follow the instructions in `shape_optimization_main.py`.
+Here is what will happen (see the thesis for additional details):
+- the exact domain (the one to be reconstructed) is generated and meshed (or a pre-built mesh is loaded)
+- synthetic data is produced (or reloaded)
+- the cost functional from dolfin-adjoint is set up
+- shape optimization starts: in a window, the current shape of the optimization domain is visualized
+- to interrupt the process before convergence/the maximum number of iterations is reached, one can press CTRL + C
+- in any case, at the end of the optimization process, the results are visualized, and several plots are generated
 
 ## `applications/shape_gradients_ooc/shape_gradients_ooc_verification.py`
 
@@ -30,4 +37,6 @@ A (documented) configuration file is present here as well. The user should there
 
 - suitably tweak `applications/shape_gradients_ooc/configuration.py`
 - run `applications/shape_gradients_ooc/shape_gradients_ooc_verification.py`
+
+The computed orders of convergence are printed to the console. See the thesis for additional details.
 
