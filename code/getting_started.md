@@ -27,7 +27,7 @@ Here is what will happen (see the thesis for additional details):
 - the cost functional from dolfin-adjoint is set up
 - shape optimization starts: in a window, the current shape of the optimization domain is visualized
 - to interrupt the process before convergence/the maximum number of iterations is reached, one can press CTRL + C
-- in any case, at the end of the optimization process, the results are visualized, and several plots are generated
+- in any case, at the end of the optimization process, the results are visualized, and several plots are saved to file
 
 ## `applications/shape_gradients_ooc/shape_gradients_ooc_verification.py`
 
