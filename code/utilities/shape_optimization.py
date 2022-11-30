@@ -511,7 +511,7 @@ class ShapeOptimizationProblem:
             problem_moola = MoolaOptimizationProblem(self.j)
 
             m_moola = moola.DolfinPrimalVector(self.q_opt, inner_product=self.optimization_dict["inner_product"])
-            solver = moola.BFGS(problem_moola, m_moola, options=self.optimization_dict["options"])
+            solver = moola.CustomBFGS(problem_moola, m_moola, options=self.optimization_dict["options"])
 
             self.q_opt, self.opt_results = solver.solve(callback=callback)
 
