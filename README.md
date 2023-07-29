@@ -1,8 +1,6 @@
-# Code for my master's thesis
+# Code for my master's thesis: finite element-based shape optimization with parabolic PDEs
 
 Here I have collected the code I utilized to run the simulations that are reported in my master's thesis.
-
-The code has many references to the thesis itself (the file `./manuscript/thesis.pdf`), with pointers to sections, figures and tables, so that being familiar with the manuscript is beneficial to understand the implementation.
 
 To obtain the code, perform the following instructions (on Linux):
 - clone the GitHub repository: `git clone https://github.com/leom97/Master-s-thesis.git`
