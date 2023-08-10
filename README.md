@@ -15,6 +15,8 @@ With this code you can:
 - solve shape optimization test cases
 - analyze the approximation error of shape gradients
 
+## Getting started
+
 To obtain the code, perform the following instructions (on Linux):
 - clone the GitHub repository: `git clone https://github.com/leom97/ShapeOptimizationParabolic.git`
 - change the current directory: `cd ShapeOptimizationParabolic`
