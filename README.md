@@ -22,4 +22,4 @@ To obtain the code, perform the following instructions (on Linux):
 - change the current directory: `cd ShapeOptimizationParabolic`
 - head now to `intructions/environment_setup.md` for instructions on how to set up your enviroment
 
-In the setup instructions, additional details on how to utilize the code are given.
+In the setup instructions, additional details on how to utilize the code are given (see especially `code/getting_started.md`).
